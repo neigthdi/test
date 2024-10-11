@@ -17,22 +17,9 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, nextTick } from 'vue'
-// import {
-//   Engine,
-//   Scene,
-//   ArcRotateCamera,
-//   Vector3,
-//   HemisphericLight,
-//   MeshBuilder,
-//   Color3,
-//   Color4,
-//   Texture,
-//   GPUParticleSystem,
-//   ParticleSystem,
-//   CustomParticleEmitter
-// } from 'babylonjs'
-// import { GridMaterial } from 'babylonjs-materials';
 
+// import * as pkgMat from 'babylonjs-materials'
+// import * as pkg from 'babylonjs'
 import pkgMat from 'babylonjs-materials'
 import pkg from 'babylonjs'
 const {
@@ -179,7 +166,7 @@ const initScene = async() => {
     particleSystem.value.emitRate = numbers
     particleSystem.value.particleEmitterType = customEmitter
     particleSystem.value.particleTexture = new Texture(
-      './assets/images/grass.png',
+      '/images/grass.png',
       scene
     )
     particleSystem.value.textureMask = new Color4(0.11, 0.8, 0.1, 1)

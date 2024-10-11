@@ -7,17 +7,9 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, nextTick } from 'vue'
-// import {
-//   Engine,
-//   Scene,
-//   ArcRotateCamera,
-//   Vector3,
-//   HemisphericLight,
-//   MeshBuilder,
-//   Texture,
-// } from 'babylonjs'
-// import { CustomMaterial } from 'babylonjs-materials';
 
+// import * as pkgMat from 'babylonjs-materials'
+// import * as pkg from 'babylonjs'
 import pkgMat from 'babylonjs-materials'
 import pkg from 'babylonjs'
 const {
@@ -162,7 +154,7 @@ const initScene = async() => {
       scene
     )
     const grass = new CustomMaterial('grass', scene)
-    grass.diffuseTexture = new Texture('./assets/images/grass.png', scene)
+    grass.diffuseTexture = new Texture('/images/grass.png', scene)
     ground.material = grass
     materialShader(grass)
   }
@@ -170,7 +162,7 @@ const initScene = async() => {
   const createSphere = () => {
     const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 8 }, scene)
     const grass = new CustomMaterial('grass', scene)
-    grass.diffuseTexture = new Texture('./assets/images/grass.png', scene)
+    grass.diffuseTexture = new Texture('/images/grass.png', scene)
     sphere.material = grass
     sphere.position.y = 5
     materialShader(grass)

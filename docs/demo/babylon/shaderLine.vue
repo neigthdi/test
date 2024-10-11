@@ -7,19 +7,8 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, nextTick } from 'vue'
-// import {
-//   Engine,
-//   Scene,
-//   ArcRotateCamera,
-//   Vector3,
-//   Color4,
-//   Color3,
-//   HemisphericLight,
-//   MeshBuilder,
-//   Effect,
-//   ShaderMaterial
-// } from 'babylonjs'
 
+// import * as pkg from 'babylonjs'
 import pkg from 'babylonjs'
 const {
   Engine,

@@ -8,22 +8,8 @@
 <script lang="ts" setup>
 import { onMounted, ref, nextTick } from 'vue'
 import 'babylonjs-loaders'
-// import {
-//   Engine,
-//   Scene,
-//   ArcRotateCamera,
-//   Vector3,
-//   SpriteManager,
-//   Color3,
-//   HemisphericLight,
-//   MeshBuilder,
-//   Sprite,
-//   StandardMaterial,
-//   CubeTexture,
-//   Texture,
-//   SceneLoader
-// } from 'babylonjs'
 
+// import * as pkg from 'babylonjs'
 import pkg from 'babylonjs'
 const {
   Engine,
@@ -74,7 +60,7 @@ const initScene = async() => {
   const createTree = () => {
     const spriteManagerTree = new SpriteManager(
       'trees',
-      './assets/images/palm.png',
+      '/images/palm.png',
       2000,
       { width: 512, height: 1024 },
       scene
@@ -107,7 +93,7 @@ const initScene = async() => {
     )
     skyBoxMaterial.backFaceCulling = false
     skyBoxMaterial.reflectionTexture = new CubeTexture(
-      './assets/images/skybox',
+      '/images/skybox',
       scene
     )
     skyBoxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE
@@ -119,7 +105,7 @@ const initScene = async() => {
   const createVillage = () => {
     SceneLoader.ImportMeshAsync(
       '',
-      './assets/scenes/',
+      '/scenes/',
       'valleyvillage.glb'
     )
   }
