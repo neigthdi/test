@@ -1,0 +1,1 @@
+import{_ as e,c as a,o as t}from"./chunks/framework.BB87oCcu.js";const d=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"components/canvasSample.md","filePath":"components/canvasSample.md"}'),n={name:"components/canvasSample.md"};function o(s,c,p,r,m,l){return t(),a("div")}const i=e(n,[["render",o]]);export{d as __pageData,i as default};

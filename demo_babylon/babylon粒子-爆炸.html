@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Babylon.js sample code</title>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+		<script src="https://assets.babylonjs.com/generated/Assets.js"></script>
+		<script src="https://preview.babylonjs.com/ammo.js"></script>
+		<script src="https://preview.babylonjs.com/cannon.js"></script>
+		<script src="https://preview.babylonjs.com/Oimo.js"></script>
+		<script src="https://preview.babylonjs.com/earcut.min.js"></script>
+		<script src="https://preview.babylonjs.com/babylon.js"></script>
+		<script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+		<script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js">
+		</script>
+		<script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+		<script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+		<script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+		<script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+		<script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+		<style>
+			html,
+			body {
+				overflow: hidden;
+				width: 100%;
+				height: 100%;
+				margin: 0;
+				padding: 0;
+			}
+
+			#renderCanvas {
+				width: 100%;
+				height: 100%;
+				touch-action: none;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id='fps'
+			style="position: absolute;background: #fff;left: 50%;top: 0;transform: translateX(-50%);pointer-events: none;">
+		</div>
+		<canvas id="renderCanvas"></canvas>
+		<script>
+			var canvas = document.getElementById('renderCanvas')
+			var startRenderLoop = function(engine, canvas) {
+				engine.runRenderLoop(function() {
+					if (sceneToRender && sceneToRender.activeCamera) {
+						sceneToRender.render()
+
+						fps.innerHTML = engine.getFps().toFixed(2)
+					}
+				})
+			}
+			var engine = null
+			var scene = null
+			var sceneToRender = null
+			var createDefaultEngine = function() {
+				return new BABYLON.Engine(canvas, true, {
+					preserveDrawingBuffer: true,
+					stencil: true,
+					disableWebGL2Support: false
+				})
+			}
+
+			window.initFunction = async function() {
+
+				var asyncEngineCreation = async function() {
+					try {
+						return createDefaultEngine()
+					} catch (e) {
+						console.log(
+							'the available createEngine function failed. Creating the default engine instead'
+						)
+						return createDefaultEngine()
+					}
+				}
+
+				window.engine = await asyncEngineCreation()
+				if (!engine) throw 'engine should not be null.'
+				startRenderLoop(engine, canvas)
+				window.scene = createScene()
+			}
+			initFunction().then(() => {
+				scene.then(returnedScene => {
+					sceneToRender = returnedScene
+				})
+			})
+
+			window.addEventListener('resize', function() {
+				engine.resize()
+			})
+
+			const createScene = async function() {
+				const scene = new BABYLON.Scene(engine)
+				const camera = new BABYLON.ArcRotateCamera('camera', -Math.PI / 1.5, Math.PI / 2.2, 15, new BABYLON
+					.Vector3(0, 0, 0))
+				camera.upperBetaLimit = Math.PI / 2.2
+				camera.attachControl(canvas, true)
+				camera.setPosition(new BABYLON.Vector3(50, 50, 50))
+				scene.registerBeforeRender(() => {})
+				scene.debugLayer.show()
+
+
+
+
+
+				// todo.....
+				scene.enablePhysics(
+				  new BABYLON.Vector3(0, -9.81, 0),
+				  new BABYLON.CannonJSPlugin()
+				)
+				var light = new BABYLON.PointLight(
+					'Omni',
+					new BABYLON.Vector3(0, 100, 100),
+					scene
+				)
+
+				scene.clearColor = new BABYLON.Color4(0.6, 0.7, 0.6, 1)
+				let ground = BABYLON.MeshBuilder.CreateGround('ground', {
+					width: 100,
+					height: 100
+				})
+				ground.physicsImpostor = new BABYLON.PhysicsImpostor(
+					ground,
+					BABYLON.PhysicsImpostor.BoxImpostor, {
+						mass: 0,
+						restitution: 0.9
+					},
+					scene
+				)
+
+				let mat = new BABYLON.StandardMaterial('mat', scene)
+
+				// ground.material=mat
+
+				mat.disableLighting = true
+				mat.backFaceCulling = false
+				let noiseTexture = new BABYLON.NoiseProceduralTexture(
+					'perlin',
+					256,
+					scene
+				)
+				// 名字
+				// 定义纹理的大小，默认是256
+				// scene
+				// fallbackTexture:定义无法创建NoiseProceduralTexture时要使用的纹理
+				// generateMipMaps: boolean:定义是否必须生成mipmap（默认为true）
+
+				noiseTexture.animationSpeedFactor = 5
+				noiseTexture.persistence = 0.2
+				noiseTexture.brightness = 0.5
+				noiseTexture.octaves = 4
+
+				document.addEventListener('keydown', launchBarrel)
+				// launchBarrel()
+				// buildShockwave(new BABYLON.Vector3(0,5,0))
+				// buildFlash(new BABYLON.Vector3(0,10,0))
+				// buildFireBlast(new BABYLON.Vector3(0,10,0))
+				// buildSecondSmoke(new BABYLON.Vector3(0,10,0))
+				// buildSecondaryBlast(new BABYLON.Vector3(0,10,0))
+				// buildBlastSmoke(new BABYLON.Vector3(0,10,0))
+
+				buildDebris(new BABYLON.Vector3(0, 10, 0))
+
+				function launchBarrel() {
+					// 随机一些地形出来
+					var min = -10.0
+					var max = 10.0
+					var randPosX = Math.random() * (max - min) + min
+					var randPosZ = Math.random() * (max - min) + min
+					var randAngX = Math.random() * (max / 2 - min / 3) + min / 3
+					var randAngY = Math.random() * (max * 2 - max * 1.25) + max * 1.25
+					var randAngZ = Math.random() * (max / 2 - min / 3) + min / 3
+					var randRotX = Math.random() * (max / 5 - min / 5) + min / 5
+					var randRotY = Math.random() * (max / 5 - min / 5) + min / 5
+					var randRotZ = Math.random() * (max / 5 - min / 5) + min / 5
+					var randBounce = Math.floor(Math.random() * 4)
+
+					let bounces = 0
+					let exploded = false
+
+					let explodingBarrel = new BABYLON.MeshBuilder.CreateCylinder(
+						'Barrel', {
+							height: 1.33,
+							diameter: 1
+						},
+						scene
+					)
+					explodingBarrel.position = new BABYLON.Vector3(randPosX, 2, randPosZ)
+
+					// 加点物理特效
+					explodingBarrel.physicsImpostor = new BABYLON.PhysicsImpostor(
+						explodingBarrel,
+						BABYLON.PhysicsImpostor.CylinderImpostor, {
+							mass: 1,
+							restitution: 0.9
+						},
+						scene
+					)
+					explodingBarrel.physicsImpostor.setLinearVelocity(
+						new BABYLON.Vector3(randAngX, randAngY, randAngZ)
+					)
+					// 设置初始线速度
+					explodingBarrel.physicsImpostor.setAngularVelocity(
+						new BABYLON.Quaternion(randRotX, randRotY, randRotZ, 0)
+					)
+					// 设置一个初始角速度
+					// 从地面抛出一个圆柱体
+
+					explodingBarrel.physicsImpostor.registerOnPhysicsCollide(
+						ground.physicsImpostor,
+						(main, collided) => {
+							// 子弹和地板撞击的时候发生爆炸
+							bounces++
+							if (bounces > randBounce && !exploded) {
+								// 开始爆炸特效，这里要把子弹的位置传给爆炸粒子作为他的位置
+								Explode(explodingBarrel.position)
+								// 只给一个初始的位置
+
+								setTimeout(() => {
+									// explodingBarrel.physicsImpostor.dispose();
+									explodingBarrel.dispose(false, true)
+								}, 0)
+							}
+						}
+					)
+
+					function Explode(position) {
+						let emitterParent = new BABYLON.MeshBuilder.CreateBox(
+							'emitterParent', {
+								size: 1
+							},
+							scene
+						)
+						emitterParent.position = position
+
+						// 为爆炸产生的羽流设置动画
+						let plumeAnimation = new BABYLON.Animation(
+							'plumeAnimation',
+							'position.y',
+							60,
+							BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+							BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+						)
+						let keys = []
+						keys.push({
+							frame: 0,
+							value: 0
+						})
+
+						keys.push({
+							frame: 10,
+							value: 3
+						})
+
+						keys.push({
+							frame: 30,
+							value: 9
+						})
+
+						keys.push({
+							frame: 50,
+							value: 11
+						})
+
+						keys.push({
+							frame: 55,
+							value: 11.5
+						})
+
+						keys.push({
+							frame: 60,
+							value: 12
+						})
+
+						plumeAnimation.setKeys(keys)
+						emitterParent.animations.push(plumeAnimation)
+						scene.beginAnimation(emitterParent, 0, 60, false, 1, function() {
+							// DestoryEmitter(emitterParent,moveingEmitters)
+							// 删除所有爆炸画面
+							// 这里暂时还是不知道是哪个画面，反正是落地之后，一个盒子升到了最高
+						})
+					}
+				}
+
+				// 一些公用函数
+				// 初始化旋转
+				function initialRotation(system) {
+					system.minInitialRoatation = -Math.PI / 2
+					system.maxInitialRotation = Math.PI / 2
+				}
+				// 烟的颜色
+				function smokeColor(system) {
+					system.addColorGradient(
+						0.0,
+						new BABYLON.Color4(200 / 255, 200 / 255, 200 / 255, 0.0)
+					)
+					system.addColorGradient(
+						0.2,
+						new BABYLON.Color4(200 / 255, 200 / 255, 200 / 255, 128 / 255)
+					)
+					system.addColorGradient(
+						0.3,
+						new BABYLON.Color4(100 / 255, 100 / 255, 100 / 255, 60 / 255)
+					)
+					system.addColorGradient(
+						1.0,
+						new BABYLON.Color4(100 / 255, 100 / 255, 100 / 255, 0.0)
+					)
+					system.blendMode = BABYLON.ParticleSystem.BLENDMODE_MULTIPLY
+				}
+				// 初始旋转
+				function smokeRotationOverLife(system) {
+					system.addAngularSpeedGradient(0, 0)
+					system.addAngularSpeedGradient(1.0, -0.4, 0.4)
+				}
+
+				// 颜色
+				function fireColor(system) {
+					system.addColorGradient(
+						0.0,
+						new BABYLON.Color4(0.9245, 0.654, 0.0915, 0.0)
+					)
+					system.addColorGradient(
+						0.04,
+						new BABYLON.Color4(0.9062, 0.6132, 0.0942, 0.7 * 0.5)
+					)
+					system.addColorGradient(
+						0.29,
+						new BABYLON.Color4(0.7968, 0.3685, 0.1105, 0.86 * 0.5)
+					)
+					system.addColorGradient(
+						0.53,
+						new BABYLON.Color4(0.6886, 0.1266, 0.1266, 0.57 * 0.5)
+					)
+					system.addColorGradient(
+						0.9,
+						new BABYLON.Color4(0.3113, 0.0367, 0.0367, 0.11 * 0.5)
+					)
+					system.addColorGradient(
+						1.0,
+						new BABYLON.Color4(0.3113, 0.0367, 0.0367, 0.0)
+					)
+					system.blendMode = BABYLON.ParticleSystem.BLENDMODE_ADD
+				}
+
+				// 设置动画表
+				function setupAnimationSheet(
+					system,
+					texture,
+					width,
+					height,
+					numSpritesWidth,
+					numSpritesHeight,
+					animationSpeed,
+					isRandom
+				) {
+					// 指定动画参数:里面都是gif图
+					system.isAnimationSheetEnabled = true
+					system.particleTexture = new BABYLON.Texture(
+						texture,
+						scene,
+						false,
+						false
+					)
+					// system.spriteCellWidth=width/numSpritesWidth
+					// system.spriteCellWidth=height/numSpritesHeight
+
+					// let numberCells=numSpritesHeight*numSpritesWidth
+					// system.startSpriteCellID=0
+					// system.endSpriteCellID=numberCells-1
+					// system.spriteRandomStartCell=isRandom
+					// system.updateSpeed=1/60
+
+					// 上面这些被注释的，都需要自己自定义
+					system.startSpriteCellID = 0
+					system.endSpriteCellID = 9
+					system.spriteCellWidth = 64
+					system.spriteCellHeight = 64
+					system.spriteCellLoop = true
+					system.spriteCellChangeSpeed = 1
+				}
+				// 炮弹都一次降落是的爆炸粒子
+				function buildBlastSmoke(position) {
+					let blastSmoke = BABYLON.ParticleHelper.CreateDefault(position, 250)
+					blastSmoke.createHemisphericEmitter(3, 0.5)
+					blastSmoke.emitRate = 200
+
+					blastSmoke.addSizeGradient(0, 2, 6)
+					blastSmoke.addSizeGradient(1, 4, 10)
+
+					blastSmoke.minLifeTime = 3
+					blastSmoke.maxLifeTime = 5
+
+					blastSmoke.minEmitPower = 40
+					blastSmoke.maxEmitPower = 130
+
+					blastSmoke.addLimitVelocityGradient(0.0, 1.0)
+					blastSmoke.addLimitVelocityGradient(0.2, 0.95)
+					blastSmoke.addLimitVelocityGradient(0.3, 0.9)
+					blastSmoke.addLimitVelocityGradient(0.4, 0.8)
+					blastSmoke.addLimitVelocityGradient(0.5, 0.7)
+					blastSmoke.addLimitVelocityGradient(0.6, 0.6)
+					blastSmoke.addLimitVelocityGradient(0.7, 0.5)
+					blastSmoke.addLimitVelocityGradient(1.0, 0.3)
+
+					blastSmoke.limitVelocityDamping = 0.6
+					smokeColor(blastSmoke)
+					initialRotation(blastSmoke)
+					smokeRotationOverLife(blastSmoke)
+					setupAnimationSheet(
+						blastSmoke,
+						'https://playground.babylonjs.com/textures/player.png',
+						1024,
+						1024,
+						64,
+						64,
+						0,
+						false
+					)
+
+					blastSmoke.start(30)
+
+					blastSmoke.targetStopDuration = 2
+					blastSmoke.updateSpeed = 1 / 60
+					blastSmoke.renderingGroupId = 1
+				}
+
+				// 焰心的粒子特效
+				function buildFlash(position) {
+					let flash = BABYLON.ParticleHelper.CreateDefault(position, 400)
+					flash.emitRate = 400
+					flash.minScaleX = 10
+					flash.minScaleY = 70
+
+					flash.maxScaleX = 20
+					flash.maxScaleY = 100
+
+					flash.minLifeTime = 0.2
+					flash.maxLifeTime = 0.4
+
+					flash.minEmitPower = 1
+					flash.maxEmitPower = 30
+
+					flash.addColorGradient(0, new BABYLON.Color4(1, 0.896, 0, 1))
+					flash.addColorGradient(
+						0.4,
+						new BABYLON.Color4(0.7574, 0.1219, 0.0391, 1)
+					)
+					flash.addColorGradient(0.8, new BABYLON.Color4(0.3679, 0.0))
+
+					flash.minInitialRoatation = -0.78539816
+					flash.maxInitialRotation = 0.7839816
+
+					flash.particleTexture = new BABYLON.Texture(
+						'http://192.168.1.102:8080/source/image/flare.png'
+					)
+					flash.blendMode = BABYLON.ParticleSystem.BLENDMODE_ADD
+					flash.start()
+					// flash.targetStopDuration=0.2
+					flash.renderingGroupId = 2
+				}
+
+				//内焰粒子特效
+				function buildFireBlast(position) {
+					let fireBlast = BABYLON.ParticleHelper.CreateDefault(position, 1000)
+					// 半球发射器
+					fireBlast.createHemisphericEmitter(0.2, 0)
+					fireBlast.emitRate = 400
+					fireBlast.minSize = 2
+					fireBlast.maxSize = 8
+					fireBlast.minLifeTime = 0.5
+					fireBlast.maxLifeTime = 1
+					fireBlast.minEmitPower = 30
+					fireBlast.maxEmitPower = 60
+
+					fireBlast.addLimitVelocityGradient(0, 40)
+					fireBlast.addLimitVelocityGradient(0.12, 12.983)
+					fireBlast.addLimitVelocityGradient(0.445, 1.75)
+					fireBlast.addLimitVelocityGradient(0.691, 0.502)
+					fireBlast.addLimitVelocityGradient(0.983, 0.05)
+					fireBlast.addLimitVelocityGradient(1, 0)
+
+					fireBlast.limitVelocityDamping = 0.8
+					initialRotation(fireBlast)
+					setupAnimationSheet(
+						fireBlast,
+						'https://playground.babylonjs.com/textures/player.png',
+						1024,
+						1024,
+						64,
+						64,
+						0,
+						false
+					)
+
+					fireBlast.start(30)
+					// 定义启动系统前的延迟（以毫秒为单位）（默认为0）这里定义一个延迟执行的
+
+					// fireBlast.targetStopDuration=.9
+					fireColor(fireBlast)
+					fireBlast.updateSpeed = 1 / 60
+					fireBlast.renderingGroupId = 1
+				}
+
+				//外焰粒子特效
+				function buildSecondaryBlast(position) {
+					let secondaryBlast = BABYLON.ParticleHelper.CreateDefault(
+						position,
+						1000
+					)
+					secondaryBlast.createConeEmitter(2, 3)
+					secondaryBlast.radiusRange = 1
+					secondaryBlast.emitRate = 100
+					secondaryBlast.minSize = 8
+					secondaryBlast.maxSize = 16
+
+					secondaryBlast.minLifeTime = 0.5
+					secondaryBlast.maxLifeTime = 1
+
+					secondaryBlast.minEmitPower = 5
+					secondaryBlast.maxEmitPower = 10
+
+					secondaryBlast.addLimitVelocityGradient(0, 40)
+					secondaryBlast.addLimitVelocityGradient(0.12, 12.983)
+					secondaryBlast.addLimitVelocityGradient(0.445, 1.78)
+					secondaryBlast.addLimitVelocityGradient(0.691, 0.502)
+					secondaryBlast.addLimitVelocityGradient(0.93, 0.05)
+					secondaryBlast.addLimitVelocityGradient(1.0, 0)
+
+					secondaryBlast.limitVelocityDamping = 0.9
+
+					fireColor(secondaryBlast)
+					initialRotation(secondaryBlast)
+					setupAnimationSheet(
+						secondaryBlast,
+						'https://playground.babylonjs.com/textures/player.png',
+						1024,
+						1024,
+						64,
+						64,
+						0,
+						false
+					)
+
+					secondaryBlast.start(90)
+					secondaryBlast.targetStopDuration = 0.9
+					secondaryBlast.renderingGroupId = 1
+				}
+
+				//外层烟雾
+				function buildSecondSmoke(position) {
+					const secondarySmoke = BABYLON.ParticleHelper.CreateDefault(
+						position,
+						1000
+					)
+					// 这里的位置是起飞的块的位置
+					secondarySmoke.createConeEmitter(3, 2.5)
+					secondarySmoke.radiusRange = 1
+					secondarySmoke.emitRate = 200
+					secondarySmoke.addSizeGradient(0, 2, 6)
+					secondarySmoke.addSizeGradient(1, 4, 10)
+
+					secondarySmoke.minLifeTime = 3
+					secondarySmoke.maxLifeTime = 5
+
+					secondarySmoke.minEmitPower = 40
+					secondarySmoke.maxEmitPower = 170
+
+					secondarySmoke.addLimitVelocityGradient(0, 1)
+					secondarySmoke.addLimitVelocityGradient(0.2, 0.95)
+					secondarySmoke.addLimitVelocityGradient(0.3, 0.9)
+					secondarySmoke.addLimitVelocityGradient(0.4, 0.8)
+					secondarySmoke.addLimitVelocityGradient(0.5, 0.7)
+					secondarySmoke.addLimitVelocityGradient(0.6, 0.6)
+					secondarySmoke.addLimitVelocityGradient(0.7, 0.5)
+					secondarySmoke.addLimitVelocityGradient(1, 0.3)
+
+					smokeColor(secondarySmoke)
+					initialRotation(secondarySmoke)
+					setupAnimationSheet(
+						secondarySmoke,
+						'https://playground.babylonjs.com/textures/player.png',
+						1024,
+						1024,
+						64,
+						64,
+						0,
+						false
+					)
+
+					secondarySmoke.start(30)
+					secondarySmoke.targetStopDuration = 2
+					secondarySmoke.renderingGroupId = 1
+				}
+
+				// 爆炸残片:拖尾效果实现.
+				function buildDebris(position) {
+					let debris = BABYLON.ParticleHelper.CreateDefault(position, 10)
+					debris.createConeEmitter(0.2, 2)
+
+					debris.emitRate = 50
+
+					debris.minSize = 0.5
+					debris.maxSize = 0.8
+
+					debris.minLifeTime = 1.2
+					debris.maxLifeTime = 1.2
+
+					debris.minEmitPower = 16
+					debris.maxEmitPower = 30
+
+					debris.gravity = new BABYLON.Vector3(0, -20, 0)
+					// 这个是挺特殊的，就是这个才出现的残片降落的吧
+
+					// 第一个子触发器
+					// 一般的子触发器都是要等父粒子生命周期器完结之后才会触发，这里确实相反的，一开始就会触发，然后一起消失。所以才会有拖尾的效果
+					let fireSubEmitter = new BABYLON.SubEmitter(
+						new BABYLON.ParticleHelper.CreateDefault(position, 200)
+					)
+					setupAnimationSheet(
+						fireSubEmitter.particleSystem,
+						'https://playground.babylonjs.com/textures/player.png',
+						1024,
+						1024,
+						64,
+						64,
+						0,
+						false
+					)
+
+					let fireParticleSystem = fireSubEmitter.particleSystem
+					fireParticleSystem.emitter = new BABYLON.AbstractMesh('', scene)
+
+					fireParticleSystem.minLifeTime = 0.5
+					fireParticleSystem.maxLifeTime = 0.8
+
+					fireParticleSystem.minEmitPower = 0
+					fireParticleSystem.maxEmitPower = 0
+
+					fireParticleSystem.emitRate = 130
+
+					fireParticleSystem.minSize = 0.8
+					fireParticleSystem.maxSize = 1.2
+
+					fireParticleSystem.addStartSizeGradient(0, 1)
+					fireParticleSystem.addStartSizeGradient(0.7, 1)
+					fireParticleSystem.addStartSizeGradient(1, 0.2)
+
+					fireParticleSystem.minInitialRoatation = -(Math.PI / 2)
+					fireParticleSystem.maxInitialRotation = Math.PI / 2
+
+					fireParticleSystem.addColorGradient(
+						0.0,
+						new BABYLON.Color4(0.9245, 0.654, 0.0915, 1)
+					)
+					fireParticleSystem.addColorGradient(
+						0.04,
+						new BABYLON.Color4(0.9062, 0.6132, 0.0942, 1)
+					)
+					fireParticleSystem.addColorGradient(
+						0.29,
+						new BABYLON.Color4(0.7968, 0.3685, 0.1105, 1)
+					)
+					fireParticleSystem.addColorGradient(
+						0.53,
+						new BABYLON.Color4(0.6886, 0.1266, 0.1266, 1)
+					)
+					fireParticleSystem.addColorGradient(
+						0.9,
+						new BABYLON.Color4(0.3113, 0.0367, 0.0367, 1)
+					)
+					fireParticleSystem.addColorGradient(
+						1.0,
+						new BABYLON.Color4(0.3113, 0.0367, 0.0367, 1)
+					)
+
+					fireParticleSystem.targetStopDuration = 3
+
+					fireSubEmitter.type = BABYLON.SubEmitterType.ATTACHED
+					fireSubEmitter.inheritDirection = true
+					fireSubEmitter.blendMode = BABYLON.ParticleSystem.BLENDMODE_ADD
+					// 在粒子的生命周期内附着到粒子
+
+					// 还有一个类型是end:在粒子消亡时创建
+
+					// 第二个子触发器
+					let smokeSubEmitter = new BABYLON.SubEmitter(
+						new BABYLON.ParticleHelper.CreateDefault(position, 600)
+					)
+					setupAnimationSheet(
+						smokeSubEmitter.particleSystem,
+						'https://playground.babylonjs.com/textures/player.png',
+						1024,
+						1024,
+						4,
+						4,
+						0,
+						false
+					)
+					smokeSubEmitter.particleSystem.emitter = new BABYLON.AbstractMesh(
+						'',
+						scene
+					)
+
+					smokeSubEmitter.particleSystem.minLifeTime = 4
+					smokeSubEmitter.particleSystem.maxLifeTime = 7
+
+					smokeSubEmitter.particleSystem.minEmitPower = 0
+					smokeSubEmitter.particleSystem.maxEmitPower = 0
+
+					smokeSubEmitter.particleSystem.emitRate = 50
+
+					smokeSubEmitter.particleSystem.minSize = 1
+					smokeSubEmitter.particleSystem.maxSize = 2
+
+					smokeSubEmitter.particleSystem.addSizeGradient(0, 1)
+					smokeSubEmitter.particleSystem.addSizeGradient(1, 3)
+
+					smokeSubEmitter.particleSystem.addLifeTimeGradient(0, 6)
+					smokeSubEmitter.particleSystem.addLifeTimeGradient(1, 0.7)
+
+					smokeSubEmitter.particleSystem.targetStopDuration = 9
+					smokeSubEmitter.particleSystem.minInitialRotation = -(Math.PI / 2)
+
+					smokeSubEmitter.particleSystem.maxInitialRotation = Math.PI / 2
+
+					smokeSubEmitter.particleSystem.addColorGradient(
+						0.0,
+						new BABYLON.Color4(175 / 255, 160 / 255, 160 / 255, 0.0)
+					)
+					smokeSubEmitter.particleSystem.addColorGradient(
+						0.4,
+						new BABYLON.Color4(175 / 255, 160 / 255, 160 / 255, 60 / 255)
+					)
+					// smokeSubEmitter.particleSystem.addColorGradient(0.9, new BABYLON.Color4(150/255, 140/255, 140/255, 60/255))
+					// smokeSubEmitter.particleSystem.addColorGradient(0.0, new BABYLON.Color4(150/255, 140/255, 140/255, 1.0))
+					smokeSubEmitter.particleSystem.addColorGradient(
+						1.0,
+						new BABYLON.Color4(150 / 255, 140 / 255, 140 / 255, 0.0)
+					)
+
+					smokeSubEmitter.type = BABYLON.SubEmitterType.ATTACHED
+					smokeSubEmitter.inheritDirection = true
+					smokeSubEmitter.particleSystem.blendMode =
+						BABYLON.ParticleSystem.BLENDMODE_MULTIPLY
+					// 原来是这里错了，阿西吧
+					// 将当前颜色与粒子颜色相乘
+
+					debris.subEmitters = [
+						[fireSubEmitter, smokeSubEmitter]
+					]
+					// 一些是亮光，一些是黑色的烟雾光
+					debris.start()
+					// debris.targetStopDuration=0.2
+					debris.renderingGroupId = 1
+				}
+
+				// 爆炸冲击波
+				function buildShockwave(position) {
+					let shockwave = BABYLON.ParticleHelper.CreateDefault(position, 300)
+					shockwave.createCylinderEmitter(1, 0.5, 0, 0)
+					// 默认发的是那种上升的生活的图，需要加各种发射器才能出现自己想要的
+					shockwave.emitRate = 2000
+					shockwave.addSizeGradient(0, 1, 8)
+					shockwave.addSizeGradient(1, 3, 20)
+					shockwave.minLifeTime = 2
+					shockwave.maxLifeTime = 3
+
+					shockwave.minEmitPower = 90
+					shockwave.maxEmitPower = 90
+
+					shockwave.addLimitVelocityGradient(0, 70)
+					shockwave.addLimitVelocityGradient(0.25, 10)
+					shockwave.addLimitVelocityGradient(0.5, 2)
+					shockwave.addLimitVelocityGradient(1, 2)
+					shockwave.limitVelocityDamping = 0.9
+
+					shockwave.addColorGradient(
+						0.0,
+						new BABYLON.Color4(78 / 255, 64 / 255, 64 / 255, 0.0)
+					)
+					shockwave.addColorGradient(
+						0.2,
+						new BABYLON.Color4(68 / 255, 60 / 255, 60 / 255, 128 / 255)
+					)
+					shockwave.addColorGradient(
+						0.3,
+						new BABYLON.Color4(54 / 255, 47 / 255, 47 / 255, 60 / 255)
+					)
+					shockwave.addColorGradient(
+						1.0,
+						new BABYLON.Color4(54 / 255, 47 / 255, 47 / 255, 0.0)
+					)
+					shockwave.blendMode = BABYLON.ParticleSystem.BLENDMODE_MULTIPLY
+					// shockwave.particleTexture=new BABYLON.Texture('http://192.168.1.102:8080/source/image/flare.png')
+
+					initialRotation(shockwave)
+					smokeRotationOverLife(shockwave)
+					setupAnimationSheet(
+						shockwave,
+						'https://playground.babylonjs.com/textures/player.png',
+						1024,
+						1024,
+						64,
+						64,
+						0,
+						false
+					)
+					shockwave.start()
+					shockwave.targetStopDuration = 0.5
+
+					//渲染顺序
+					shockwave.renderingGroupId = 0
+				}
+
+
+
+
+
+
+
+				return scene
+			}
+		</script>
+	</body>
+
+</html>

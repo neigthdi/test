@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Babylon.js sample code</title>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+		<script src="https://assets.babylonjs.com/generated/Assets.js"></script>
+		<script src="https://preview.babylonjs.com/ammo.js"></script>
+		<script src="https://preview.babylonjs.com/cannon.js"></script>
+		<script src="https://preview.babylonjs.com/Oimo.js"></script>
+		<script src="https://preview.babylonjs.com/earcut.min.js"></script>
+		<script src="https://preview.babylonjs.com/babylon.js"></script>
+		<script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+		<script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js">
+		</script>
+		<script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+		<script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+		<script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+		<script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+		<script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+		<style>
+			html,
+			body {
+				overflow: hidden;
+				width: 100%;
+				height: 100%;
+				margin: 0;
+				padding: 0;
+			}
+
+			#renderCanvas {
+				width: 100%;
+				height: 100%;
+				touch-action: none;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id='fps' style="position: absolute;background: #fff;left: 50%;top: 0;transform: translateX(-50%);"></div>
+		<canvas id="renderCanvas"></canvas>
+		<script>
+			var canvas = document.getElementById('renderCanvas')
+			var startRenderLoop = function(engine, canvas) {
+				engine.runRenderLoop(function() {
+					if (sceneToRender && sceneToRender.activeCamera) {
+						sceneToRender.render()
+
+						fps.innerHTML = engine.getFps().toFixed(2)
+					}
+				})
+			}
+			var engine = null
+			var scene = null
+			var sceneToRender = null
+			var createDefaultEngine = function() {
+				return new BABYLON.Engine(canvas, true, {
+					preserveDrawingBuffer: true,
+					stencil: true,
+					disableWebGL2Support: false
+				})
+			}
+
+			window.initFunction = async function() {
+
+				var asyncEngineCreation = async function() {
+					try {
+						return createDefaultEngine()
+					} catch (e) {
+						console.log(
+							'the available createEngine function failed. Creating the default engine instead'
+						)
+						return createDefaultEngine()
+					}
+				}
+
+				window.engine = await asyncEngineCreation()
+				if (!engine) throw 'engine should not be null.'
+				startRenderLoop(engine, canvas)
+				window.scene = createScene()
+			}
+			initFunction().then(() => {
+				scene.then(returnedScene => {
+					sceneToRender = returnedScene
+				})
+			})
+
+			window.addEventListener('resize', function() {
+				engine.resize()
+			})
+
+			const createScene = async function() {
+				const scene = new BABYLON.Scene(engine)
+				const camera = new BABYLON.ArcRotateCamera('camera', -Math.PI / 1.5, Math.PI / 2.2, 15, new BABYLON
+					.Vector3(0, 0, 0))
+				camera.upperBetaLimit = Math.PI / 2.2
+				camera.attachControl(canvas, true)
+				camera.setPosition(new BABYLON.Vector3(100, 100, 100))
+				scene.registerBeforeRender(() => {})
+				scene.debugLayer.show()
+				var light = new BABYLON.HemisphericLight(
+					'light',
+					new BABYLON.Vector3(0, 1, 0),
+					scene
+				)
+				light.intensity = 2
+
+
+
+
+
+
+				// todo.....
+				var box1 = BABYLON.Mesh.CreateBox('Box1', 10.0, scene)
+				var materialBox = new BABYLON.StandardMaterial('texture1', scene)
+				// 绿色
+				materialBox.diffuseColor = new BABYLON.Color3(0, 1, 0)
+				// 应用材质
+				box1.material = materialBox
+				// 以 30 FPS 创建缩放动画
+				var animationBox = new BABYLON.Animation(
+					'tutoAnimation',
+					'scaling.x',
+					30,
+					BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+					BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE
+				)
+				// 这里选择了循环模式，但可以更改为：
+				// - 使用以前的值并增加它 (BABYLON.Animation.ANIMATIONLOOPMODE_RELATIVE)
+				// - 从初始值重新开始 (BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE)
+				// - 保留最终值 (BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT)
+				// Animation keys
+				var keys = []
+				// 在动画帧 0 处，缩放的值为 1
+				keys.push({
+					frame: 0,
+					value: 1
+				})
+				// 在动画帧 20 处，缩放的值为 0.2
+				keys.push({
+					frame: 20,
+					value: 0.2
+				})
+				// 在动画帧 100 处，缩放的值为 1
+				keys.push({
+					frame: 100,
+					value: 1
+				})
+				// 向动画对象添加关键点
+				animationBox.setKeys(keys)
+				// 然后将动画对象添加到box1
+				box1.animations.push(animationBox)
+				// 最后，在 box1 上启动动画，从 key 0 到 key 100 并激活循环
+				scene.beginAnimation(box1, 0, 100, true)
+				let t = 0
+				scene.onBeforeRenderObservable.add(() => {
+					t += engine.getDeltaTime() * 0.001
+					let d = Math.sin(t) * 30
+					console.log(animationBox.evaluate(d))
+				})
+
+
+
+
+
+				return scene
+			}
+		</script>
+	</body>
+
+</html>
