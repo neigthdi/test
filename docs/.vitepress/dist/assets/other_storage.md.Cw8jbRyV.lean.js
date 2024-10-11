@@ -1,0 +1,1 @@
+import{_ as a,c as e,o as t,a4 as s}from"./chunks/framework.BXFFLb3j.js";const g=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"other/storage.md","filePath":"other/storage.md"}'),i={name:"other/storage.md"},n=s("",3),o=[n];function r(d,p,h,c,l,_){return t(),e("div",null,o)}const u=a(i,[["render",r]]);export{g as __pageData,u as default};

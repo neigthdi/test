@@ -6,7 +6,7 @@ import {
 
 export default {
   title: 'Babylonjs',
-  base: '/babylonjs/',
+  base: '/',
   vite: {
     resolve: {
       alias: {
