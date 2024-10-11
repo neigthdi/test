@@ -34,9 +34,7 @@ import { onMounted, ref, nextTick } from 'vue'
 // import { GridMaterial } from 'babylonjs-materials';
 
 import pkgMat from 'babylonjs-materials'
-
 import pkg from 'babylonjs'
-
 const {
   Engine,
   Scene,
@@ -51,7 +49,6 @@ const {
   ParticleSystem,
   CustomParticleEmitter
 } = pkg
-
 const { GridMaterial } = pkgMat
 
 const fps = ref(0)

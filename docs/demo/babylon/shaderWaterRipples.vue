@@ -20,7 +20,6 @@ import { onMounted, ref, nextTick } from 'vue'
 
 import pkgMat from 'babylonjs-materials'
 import pkg from 'babylonjs'
-
 const {
   Engine,
   Scene,
@@ -30,7 +29,6 @@ const {
   MeshBuilder,
   Texture,
 } = pkg
-
 const { CustomMaterial } = pkgMat
 
 const fps = ref(0)

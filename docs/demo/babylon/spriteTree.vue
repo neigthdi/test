@@ -6,8 +6,8 @@
 </template>
 
 <script lang="ts" setup>
-import 'babylonjs-loaders'
 import { onMounted, ref, nextTick } from 'vue'
+import 'babylonjs-loaders'
 // import {
 //   Engine,
 //   Scene,
@@ -25,7 +25,6 @@ import { onMounted, ref, nextTick } from 'vue'
 // } from 'babylonjs'
 
 import pkg from 'babylonjs'
-
 const {
   Engine,
   Scene,

@@ -21,7 +21,6 @@ import { onMounted, ref, nextTick } from 'vue'
 // } from 'babylonjs'
 
 import pkg from 'babylonjs'
-
 const {
   Engine,
   Scene,
@@ -34,6 +33,7 @@ const {
   SpotLight,
   Animation,
 } = pkg
+
 
 const fps = ref(0)
 
