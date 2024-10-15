@@ -36,7 +36,7 @@ import {
 } from "./chunk-67UUJLDS.js";
 import "./chunk-BUSYA2B4.js";
 
-// node_modules/.pnpm/vitepress@1.3.0_@algolia+client-search@4.24.0_@types+node@18.17.15_search-insights@2.15.0_typescript@5.1.6/node_modules/vitepress/lib/vue-demi.mjs
+// node_modules/.pnpm/vitepress@1.3.0_@algolia+client-search@5.8.1_@types+node@18.17.15_search-insights@2.17.2_typescript@5.1.6/node_modules/vitepress/lib/vue-demi.mjs
 var isVue2 = false;
 var isVue3 = true;
 function set(target, key, val) {
@@ -56,7 +56,7 @@ function del(target, key) {
   delete target[key];
 }
 
-// node_modules/.pnpm/@vueuse+shared@10.11.0_vue@3.4.31/node_modules/@vueuse/shared/index.mjs
+// node_modules/.pnpm/@vueuse+shared@10.11.1_vue@3.5.11/node_modules/@vueuse/shared/index.mjs
 function computedEager(fn, options) {
   var _a;
   const result = shallowRef();
@@ -1553,7 +1553,7 @@ function whenever(source, cb, options) {
   return stop;
 }
 
-// node_modules/.pnpm/@vueuse+core@10.11.0_vue@3.4.31/node_modules/@vueuse/core/index.mjs
+// node_modules/.pnpm/@vueuse+core@10.11.1_vue@3.5.11/node_modules/@vueuse/core/index.mjs
 function computedAsync(evaluationCallback, initialState, optionsOrRef) {
   let options;
   if (isRef(optionsOrRef)) {

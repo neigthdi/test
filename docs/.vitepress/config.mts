@@ -6,6 +6,7 @@ import {
 
 export default {
   title: 'Babylonjs',
+  // base: '/',
   base: '/',
   vite: {
     resolve: {
@@ -24,13 +25,28 @@ export default {
     smoothScroll: true,
     nav: [
       {
-        text: 'api查询',
+        text: 'babylon文档',
         link: 'https://doc.babylonjs.com/typedoc/modules/BABYLON'
       },
-      { text: '官网例子', link: 'https://www.babylonjs-playground.com/' },
+      { 
+        text: 'babylon官网案例',
+        link: 'https://www.babylonjs-playground.com/'
+      },
       {
-        text: '其他案例',
+        text: 'babylon其他案例',
         link: 'https://example.cnbabylon.com/'
+      },
+      {
+        text: 'three案例及文档',
+        link: 'https://threejs.org/docs/index.html#manual/en/introduction/Creating-a-scene'
+      },
+      {
+        text: 'shader入门',
+        link: 'https://thebookofshaders.com/?lan=ch'
+      },
+      {
+        text: 'shader案例',
+        link: 'https://www.shadertoy.com/browse'
       }
     ],
     sidebar: {
@@ -101,6 +117,7 @@ function sidebarBase() {
         { text: '精灵', link: '/components/babylonSprite.md' },
         { text: '粒子', link: '/components/babylonParticle.md' },
         { text: 'shader', link: '/components/babylonShader.md' },
+        { text: '顶点数据', link: '/components/babylonVertexData.md' },
       ]
     },
     {
