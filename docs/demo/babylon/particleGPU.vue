@@ -20,8 +20,9 @@ import { onMounted, ref, nextTick } from 'vue'
 
 // import * as pkgMat from 'babylonjs-materials'
 // import * as pkg from 'babylonjs'
-import pkgMat from 'babylonjs-materials'
-import pkg from 'babylonjs'
+import { pkg, pkgMat } from './index.js'
+// import pkgMat from 'babylonjs-materials'
+// import pkg from 'babylonjs'
 const {
   Engine,
   Scene,
