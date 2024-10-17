@@ -56,7 +56,7 @@ const initScene = async() => {
   camera.upperBetaLimit = Math.PI / 2.2
   camera.wheelPrecision = 30
   camera.attachControl(ele, true)
-  camera.setPosition(new Vector3(20, 20, 20))
+  camera.setPosition(new Vector3(120, 50, 120))
 
   const createLight = () => {
     const light = new HemisphericLight('light',new Vector3(1, 1, 0), scene)
@@ -89,7 +89,7 @@ const initScene = async() => {
     if (min === max) {
       return min
     }
-    var random = Math.random()
+    const random = Math.random()
     return random * (max - min) + min
   }
 

@@ -1,4 +1,5 @@
 // lo-th.github.io/Oimo.js/license
+// 在使用 VitePress 或其他基于 Node.js 的构建工具时，window 对象是未定义的，因为 Node.js 环境没有提供浏览器环境中的 window 对象。window 对象是浏览器提供的全局对象，包含了浏览器窗口的所有属性和方法。
 var isBrowser = typeof window !== 'undefined'
 var customObj = null
 if(isBrowser) {
