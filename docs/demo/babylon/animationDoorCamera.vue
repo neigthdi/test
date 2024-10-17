@@ -9,9 +9,6 @@
 import { onMounted, ref, nextTick } from 'vue'
 
 import { pkg } from './index.js'
-
-// import * as pkg from 'babylonjs'
-// import pkg from 'babylonjs'
 const {
   Engine,
   Scene,

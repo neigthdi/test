@@ -9,10 +9,6 @@
 import { onMounted, ref, nextTick } from 'vue'
 
 import { pkg, pkgMat } from './index.js'
-// import * as pkgMat from 'babylonjs-materials'
-// import * as pkg from 'babylonjs'
-// import pkgMat from 'babylonjs-materials'
-// import pkg from 'babylonjs'
 const {
   Engine,
   Scene,
@@ -46,6 +42,7 @@ const initScene = async() => {
 
   const camera = new ArcRotateCamera('camera', -Math.PI / 1.5, Math.PI / 2.2, 15, new Vector3(0, 0, 0), scene)
   camera.upperBetaLimit = Math.PI / 2.2
+  camera.wheelPrecision = 30
   camera.attachControl(ele, true)
   camera.setPosition(new Vector3(20, 20, 20))
 
