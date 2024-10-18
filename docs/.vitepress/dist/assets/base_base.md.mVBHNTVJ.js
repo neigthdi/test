@@ -23,6 +23,8 @@ import{_ as s,c as i,o as a,a4 as n}from"./chunks/framework.BXFFLb3j.js";const y
 <span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">camera.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">attachControl</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">(canvas, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">true</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">)</span></span>
 <span class="line"><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;">// 停止通过鼠标旋转视角</span></span>
 <span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">camera.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">detachControl</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">()</span></span>
+<span class="line"><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;">// 相机的滚轮速度，数值越大，前进后退速度越慢</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">camera.wheelPrecision </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> 30</span></span>
 <span class="line"></span>
 <span class="line"><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;">// babylon.js默认左手坐标系，转成右手，因为游戏引擎的坐标基本上都是左手坐标系</span></span>
 <span class="line"><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;">// 左右手坐标系的X、Y方向都是一样，左手坐标系的Z的正方向是向前，右手则相反</span></span>
@@ -32,4 +34,4 @@ import{_ as s,c as i,o as a,a4 as n}from"./chunks/framework.BXFFLb3j.js";const y
 <span class="line"></span>
 <span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">window.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">addEventListener</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">&#39;resize&#39;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">, () </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=&gt;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> {</span></span>
 <span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">  engine.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">resize</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">()</span></span>
-<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">})</span></span></code></pre></div>`,7),k=[l];function t(p,e,r,E,d,g){return a(),i("div",null,k)}const F=s(h,[["render",t]]);export{y as __pageData,F as default};
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">})</span></span></code></pre></div>`,7),k=[l];function p(t,e,r,E,d,g){return a(),i("div",null,k)}const F=s(h,[["render",p]]);export{y as __pageData,F as default};

@@ -112,14 +112,15 @@ function sidebarBase() {
       text: '案例-babylon',
       collapsible: true,
       items: [
-        { text: '相机相关', link: '/components/babylonCamera.md' },
-        { text: '光照相关', link: '/components/babylonLight.md' },
+        { text: '相机', link: '/components/babylonCamera.md' },
+        { text: '光照', link: '/components/babylonLight.md' },
+        { text: '顶点数据', link: '/components/babylonVertexData.md' },
         { text: '动画', link: '/components/babylonAnimation.md' },
         { text: '精灵', link: '/components/babylonSprite.md' },
         { text: '粒子', link: '/components/babylonParticle.md' },
         { text: 'shader', link: '/components/babylonShader.md' },
-        { text: '顶点数据', link: '/components/babylonVertexData.md' },
         { text: '碰撞', link: '/components/babylonCollision.md' },
+        { text: '纹理', link: '/components/babylonTexture.md' },
       ]
     },
     {

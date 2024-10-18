@@ -68,9 +68,9 @@ const initScene = async() => {
       { width: 4, height: 6, depth: 0.1, position: { x: 2, y: 3 } },
       { width: 2, height: 2, depth: 0.1, position: { x: -1, y: 5 } },
       { width: 14, height: 6, depth: 0.1, position: { x: -3, y: 3, z: 7 } },
-      { width: 7, height: 6, depth: 0.1, position: { x: -10, y: 3, z: 3.5 }, rotation: { y: Math.PI / 2} },
-      { width: 7, height: 6, depth: 0.1, position: { x: 3, y: 3, z: 3.5 }, rotation: { y: Math.PI / 2} },
-      { width: 7, height: 6, depth: 0.1, position: { x: 4, y: -3, z: 3.5 }, rotation: { y: Math.PI / 2} },
+      { width: 7, height: 6, depth: 0.1, position: { x: -10, y: 3, z: 3.5 }, rotation: { y: Math.PI / 2 } },
+      { width: 7, height: 6, depth: 0.1, position: { x: 3, y: 3, z: 3.5 }, rotation: { y: Math.PI / 2 } },
+      { width: 7, height: 6, depth: 0.1, position: { x: 4, y: -3, z: 3.5 }, rotation: { y: Math.PI / 2 } },
     ]
     for(let i = 0; i < wallList.length; i++) {
       const cur = wallList[i]

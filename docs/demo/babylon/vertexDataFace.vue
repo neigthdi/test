@@ -1,8 +1,10 @@
 <template>
   <div>
-    <div>fps: {{ fps }}</div>
-    <div class="pointer" @click="useTexture">点击切换整面/线条（当前：{{ isAllFace ? '整面' : '线条' }}）</div>
-    <canvas id="spriteTree" class="stage"></canvas>
+    <div class="flex space-between">
+      <div>fps: {{ fps }}</div>
+      <div class="pointer" @click="useTexture">点击切换整面/线条（当前：{{ isAllFace ? '整面' : '线条' }}）</div>
+    </div>
+    <canvas id="vertexDataFace" class="stage"></canvas>
   </div>
 </template>
 
@@ -36,7 +38,7 @@ const useTexture = ()=>{
 }
 
 const initScene = async() => {
-  const ele = document.getElementById("spriteTree") as HTMLCanvasElement
+  const ele = document.getElementById("vertexDataFace") as HTMLCanvasElement
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动
@@ -673,9 +675,18 @@ onMounted(async() => {
 })
 </script>
 
-<style>
+<style scoped>
+.flex {
+  display: flex;
+}
+.space-between {
+  justify-content: space-between;
+}
 .pointer {
   cursor: pointer;
   color: coral;
+}
+.pointer:hover {
+  opacity: 0.7;
 }
 </style>

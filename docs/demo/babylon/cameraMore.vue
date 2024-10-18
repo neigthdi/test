@@ -1,5 +1,5 @@
 <template>
-  <div id="divCameraMore">
+  <div id="cameraMore">
     <div>fps: {{ fps }}</div>
     <canvas id="cameraMore0"></canvas>
 		<canvas id="cameraMore1"></canvas>
@@ -27,7 +27,7 @@ const fps = ref(0)
 const initScene = async() => {
   const ele =  document.createElement('canvas') as HTMLCanvasElement
 
-  const div = document.getElementById('divCameraMore') as HTMLElement
+  const div = document.getElementById('cameraMore') as HTMLElement
 
   div.addEventListener('wheel', function(event) {
     // 根据需要处理滚动

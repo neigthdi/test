@@ -34,6 +34,8 @@ const engine = new BABYLON.Engine(canvas, true),
 camera.attachControl(canvas, true)
 // 停止通过鼠标旋转视角
 camera.detachControl()
+// 相机的滚轮速度，数值越大，前进后退速度越慢
+camera.wheelPrecision = 30
 
 // babylon.js默认左手坐标系，转成右手，因为游戏引擎的坐标基本上都是左手坐标系
 // 左右手坐标系的X、Y方向都是一样，左手坐标系的Z的正方向是向前，右手则相反

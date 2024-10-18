@@ -11,7 +11,7 @@
         </div>
       </div>
     </div>
-    <canvas id="gpuParticle" class="stage"></canvas>
+    <canvas id="particleGPU" class="stage"></canvas>
   </div>
 </template>
 
@@ -60,7 +60,7 @@ const onUseGpu = () => {
 
 
 const initScene = async() => {
-  const ele = document.getElementById("gpuParticle") as HTMLCanvasElement
+  const ele = document.getElementById("particleGPU") as HTMLCanvasElement
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动
@@ -226,7 +226,7 @@ onMounted(async() => {
 })
 </script>
 
-<style>
+<style scoped>
 .flex {
   display: flex;
 }
@@ -236,5 +236,8 @@ onMounted(async() => {
 .pointer {
   cursor: pointer;
   color: coral;
+}
+.pointer:hover {
+  opacity: 0.7;
 }
 </style>

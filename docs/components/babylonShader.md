@@ -1,7 +1,7 @@
-## shader-线条
+## 线条
 <preview path="../demo/babylon/shaderLine.vue"></preview>
 
-## shader-水面波纹
+## 水面波纹
 学习  
 <font color=red>CustomMaterial</font>、
 <font color=green>Fragment_Definitions</font>、
