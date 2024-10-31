@@ -129,7 +129,6 @@ const initScene = async() => {
   const createLamp = async() => {
     const loaderResult =  await SceneLoader.ImportMeshAsync('', '/scenes/', 'lamp.babylon')
     const bulb: any = loaderResult.meshes.find(v => v.name === 'bulb')
-    console.log(bulb)
     // const bulb = scene.getMeshByName('bulb')
     bulb.material.emissiveColor = Color3.White()
     const lampLight = new SpotLight(
