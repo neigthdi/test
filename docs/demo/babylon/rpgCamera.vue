@@ -1,6 +1,8 @@
 <template>
   <div>
-    <div>fps: {{ fps }}</div>
+    <div>
+      <div>fps: {{ fps }}</div>
+    </div>
     <canvas id="rpgCamera" class="stage"></canvas>
   </div>
 </template>
@@ -30,7 +32,6 @@ const {
   ShadowGenerator,
   DeviceType,
   DeviceSourceManager,
-  Matrix,
 } = pkg
 
 const fps = ref(0)
@@ -273,7 +274,7 @@ const initScene = async() => {
   const newLight = createLight()
   setScene()
   setFirstCameraInfo(camera)
-  // createSecondCamera()
+  createSecondCamera()
   createGround()
   const box = createBox(camera)
   createShadow(newLight, box)
