@@ -6,7 +6,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, nextTick } from 'vue'
+import { onMounted, ref, nextTick, onUnmounted } from 'vue'
 import 'babylonjs-loaders'
 
 import { pkg } from './index.js'
@@ -24,6 +24,8 @@ const {
 } = pkg
 
 const fps = ref(0)
+
+let sceneResources
 
 
 const initScene = async() => {
@@ -256,13 +258,13 @@ const initScene = async() => {
     engine.runRenderLoop(function() {
       if (scene && scene.activeCamera) {
         scene.render()
-
+        
         fps.value = engine.getFps().toFixed(2)
       }
     })
   }
   
-  createLight()
+  const light = createLight()
   const ground = createGround()
   const sphere = createSphere()
   const sps = createSps(ground, sphere)
@@ -282,11 +284,34 @@ const initScene = async() => {
     sphere.position.y = 5.0 * Math.sin(k * 10) + sphereAltitude
     k += 0.01
   })
+
+  return {
+    scene,
+    engine, 
+    camera, 
+    light,
+    ground,
+    sphere,
+    sps
+  }
 }
 
 onMounted(async() => {
   await nextTick()
-  initScene()
+  sceneResources = await initScene()
 })
 
+
+onUnmounted(() => {
+  if(sceneResources) {
+    sceneResources.engine.stopRenderLoop() 
+    sceneResources.light.dispose()
+    sceneResources.ground.dispose()
+    sceneResources.sphere.dispose()
+    sceneResources.sps.dispose()
+    sceneResources.camera.dispose()
+    sceneResources.scene.dispose()
+    sceneResources = null
+  }
+})
 </script>
