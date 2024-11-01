@@ -1,4 +1,4 @@
-<!-- <template>
+<template>
   <div>
     <div>
       <div>fps: {{ fps }}</div>
@@ -339,4 +339,4 @@ onMounted(async() => {
   await nextTick()
   initScene()
 })
-</script> -->
+</script>
