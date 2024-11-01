@@ -5,6 +5,8 @@ import "@vitepress-demo-preview/component/dist/style.css";
 
 import "./custom.css";
 
+import './index_oimo.js'
+
 export default {
   ...DefaultTheme,
   enhanceApp({ app }) {

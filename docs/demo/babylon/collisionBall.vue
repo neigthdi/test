@@ -8,7 +8,7 @@
 <script lang="ts" setup>
 import { onMounted, ref, nextTick } from 'vue'
 
-import './index_oimo.js'
+// import './index_oimo.js'
 
 import { pkg } from './index.js'
 const {

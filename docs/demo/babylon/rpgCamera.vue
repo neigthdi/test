@@ -11,7 +11,7 @@
 import { onMounted, ref, nextTick } from 'vue'
 import 'babylonjs-loaders'
 
-import './index_oimo.js'
+// import './index_oimo.js'
 
 import { pkg } from './index.js'
 const {
