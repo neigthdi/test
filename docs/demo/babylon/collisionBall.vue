@@ -6,9 +6,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, nextTick } from 'vue'
-
-// import './index_oimo.js'
+import { onMounted, ref, nextTick, onUnmounted } from 'vue'
 
 import { pkg } from './index.js'
 const {
@@ -214,10 +212,26 @@ const initScene = async() => {
       }
     })
   })
+
+  return {
+    scene,
+    engine
+  }
 }
 
+let sceneResources
 onMounted(async() => {
   await nextTick()
-  initScene()
+  sceneResources = await initScene()
+})
+
+
+onUnmounted(() => {
+  if(sceneResources) {
+    sceneResources.engine.stopRenderLoop() 
+    sceneResources.engine.dispose()
+    sceneResources.scene.dispose()
+    sceneResources = null
+  }
 })
 </script>

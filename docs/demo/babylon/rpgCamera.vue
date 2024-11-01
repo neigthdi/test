@@ -11,8 +11,6 @@
 import { onMounted, ref, nextTick } from 'vue'
 import 'babylonjs-loaders'
 
-// import './index_oimo.js'
-
 import { pkg } from './index.js'
 const {
   Engine,
@@ -281,7 +279,7 @@ const initScene = async() => {
   const newDsm = createDeviceSourceManager()
   runAnimate()
 
- let upSpeed = 0
+  let upSpeed = 0
  
   scene.registerBeforeRender(() => {
     const firstCameraForwardRayPosition = camera.getForwardRay().direction
@@ -305,14 +303,12 @@ const initScene = async() => {
       } else if (keyboard.getInput(68) === 1) { // d
         const s = isRightHandedSystem ? speed * -1 : speed
         box.locallyTranslate(new Vector3(s, 0, 0))
-      } else if (keyboard.getInput(32) === 1) {
-        if (!isJump) {
-          isJump = true
-          box?.physicsImpostor?.applyImpulse(
-            new Vector3(0, 5, 0),
-            box.getAbsolutePosition()
-          )
-        }
+      } else if (keyboard.getInput(74) === 1 && !isJump) { // j
+        isJump = true
+        box?.physicsImpostor?.applyImpulse(
+          new Vector3(0, 5, 0),
+          box.getAbsolutePosition()
+        )
       } else if (keyboard.getInput(70) === 1) { // f
         // mesh.physicsImpostor.applyImpulse 方法用于向物理对象（在此例中为一个盒子，即 box）施加一个瞬时冲量（impulse）。
         // 这个冲量可以改变对象的速度，从而模拟现实世界中的力对物体的影响
@@ -325,8 +321,10 @@ const initScene = async() => {
         )
       
       } else {
-        upSpeed = 0
-        isJump = false
+        if(box.position.y < 1) { // 用来限制防止jump的时候多次触发
+          upSpeed = 0
+          isJump = false
+        }
       }
     }
   })

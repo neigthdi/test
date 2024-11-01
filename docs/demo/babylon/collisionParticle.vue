@@ -25,8 +25,6 @@ const {
 
 const fps = ref(0)
 
-let sceneResources
-
 
 const initScene = async() => {
   const ele = document.getElementById("collisionParticle") as HTMLCanvasElement
@@ -288,28 +286,20 @@ const initScene = async() => {
   return {
     scene,
     engine, 
-    camera, 
-    light,
-    ground,
-    sphere,
-    sps
   }
 }
+
+let sceneResources
 
 onMounted(async() => {
   await nextTick()
   sceneResources = await initScene()
 })
 
-
 onUnmounted(() => {
   if(sceneResources) {
     sceneResources.engine.stopRenderLoop() 
-    sceneResources.light.dispose()
-    sceneResources.ground.dispose()
-    sceneResources.sphere.dispose()
-    sceneResources.sps.dispose()
-    sceneResources.camera.dispose()
+    sceneResources.engine.dispose()
     sceneResources.scene.dispose()
     sceneResources = null
   }

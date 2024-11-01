@@ -5,7 +5,8 @@ import "@vitepress-demo-preview/component/dist/style.css";
 
 import "./custom.css";
 
-import './index_oimo.js'
+import "./index_oimo.js"
+import "./havok.js"
 
 export default {
   ...DefaultTheme,
