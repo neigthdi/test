@@ -34,14 +34,14 @@ const {
 
 const fps = ref(0)
 
-const initScene = async() => {
+const initScene = async () => {
   const ele = document.getElementById("lightStreetLamp") as HTMLCanvasElement
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动
     // 例如，可以修改相机的半径或角度
-    event.preventDefault(); // 阻止默认滚动行为
-  });
+    event.preventDefault() // 阻止默认滚动行为
+  })
 
   const engine: any = new Engine(ele, true, {
     preserveDrawingBuffer: true,
@@ -58,7 +58,7 @@ const initScene = async() => {
   camera.attachControl(ele, true)
   camera.setPosition(new Vector3(20, 20, 20))
 
-  const createLight = ()=>{
+  const createLight = () => {
     const light = new HemisphericLight('light', new Vector3(1, 1, 0))
     light.intensity = 1
     return light
@@ -118,15 +118,15 @@ const initScene = async() => {
       if(lampLight) {
         lampLight.intensity = 1 - value
 
-        const startColor = BABYLON.Color3.White();
-        const endColor = BABYLON.Color3.Blue();
+        const startColor = BABYLON.Color3.White()
+        const endColor = BABYLON.Color3.Blue()
         bulb.material.emissiveColor = Color3.Lerp(startColor, endColor, 1 - value)
       }
     })
     panel.addControl(slider)
   }
 
-  const createLamp = async() => {
+  const createLamp = async () => {
     const loaderResult =  await SceneLoader.ImportMeshAsync('', '/scenes/', 'lamp.babylon')
     const bulb: any = loaderResult.meshes.find(v => v.name === 'bulb')
     // const bulb = scene.getMeshByName('bulb')

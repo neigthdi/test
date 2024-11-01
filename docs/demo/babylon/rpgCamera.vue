@@ -39,14 +39,14 @@ let isJump = false
 
 const isRightHandedSystem = false
 
-const initScene = async() => {
+const initScene = async () => {
   const ele = document.getElementById("rpgCamera") as HTMLCanvasElement
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动
     // 例如，可以修改相机的半径或角度
-    event.preventDefault(); // 阻止默认滚动行为
-  });
+    event.preventDefault() // 阻止默认滚动行为
+  })
 
   const engine: any = new Engine(ele, true, {
     preserveDrawingBuffer: true,
@@ -239,17 +239,17 @@ const initScene = async() => {
     const boxX = MeshBuilder.CreateLines("axisX", {  
         points: [new Vector3(0, 0, 0), new Vector3(3, 0, 0)],  
         colors: [new Color4(1, 0, 0, 1), new Color4(1, 0, 0, 1)]  
-    }, scene);  
+    }, scene)
     boxX.parent = box
     const boxY = MeshBuilder.CreateLines("axisX", {  
         points: [new Vector3(0, 0, 0), new Vector3(0, 3, 0)],  
         colors: [new Color4(0, 1, 0, 1), new Color4(0, 1, 0, 1)]  
-    }, scene);  
+    }, scene)
     boxY.parent = box
     const boxZ = MeshBuilder.CreateLines("axisX", {  
         points: [new Vector3(0, 0, 0), new Vector3(0, 0, 3)],  
         colors: [new Color4(0, 0, 1, 1), new Color4(0, 0, 1, 1)]  
-    }, scene);  
+    }, scene)
     boxZ.parent = box
 
    

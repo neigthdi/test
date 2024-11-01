@@ -170,7 +170,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (sceneResources) {
-    sceneResources.gl && sceneResources.gl.getExtension("WEBGL_lose_context").loseContext();
+    sceneResources.gl && sceneResources.gl.getExtension("WEBGL_lose_context").loseContext()
   }
   destroy()
 })

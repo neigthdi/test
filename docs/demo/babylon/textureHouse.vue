@@ -28,14 +28,14 @@ const fps = ref(0)
 const semiHouseWidth = 2
 const cubeHouseWidth = 1
 
-const initScene = async() => {
+const initScene = async () => {
   const ele = document.getElementById("textureHouse") as HTMLCanvasElement
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动
     // 例如，可以修改相机的半径或角度
-    event.preventDefault(); // 阻止默认滚动行为
-  });
+    event.preventDefault() // 阻止默认滚动行为
+  })
 
   const engine: any = new Engine(ele, true, {
     preserveDrawingBuffer: true,

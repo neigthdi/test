@@ -26,14 +26,14 @@ const {
 const fps = ref(0)
 
 
-const initScene = async() => {
+const initScene = async () => {
   const ele = document.getElementById("collisionParticle") as HTMLCanvasElement
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动
     // 例如，可以修改相机的半径或角度
-    event.preventDefault(); // 阻止默认滚动行为
-  });
+    event.preventDefault() // 阻止默认滚动行为
+  })
 
   const engine: any = new Engine(ele, true, {
     preserveDrawingBuffer: true,
@@ -68,8 +68,8 @@ const initScene = async() => {
     return light
   }
 
-  const createGround = () =>{
-    const groundMaterial = new StandardMaterial("groundMaterial", scene);
+  const createGround = () => {
+    const groundMaterial = new StandardMaterial("groundMaterial", scene)
     groundMaterial.diffuseTexture = new Texture('/images/wood.jpg')
     const ground = MeshBuilder.CreateGround(
       'gd', {
@@ -82,7 +82,7 @@ const initScene = async() => {
     return ground
   }
 
-  const createSphere = ()=>{
+  const createSphere = () => {
     const matSphere = new StandardMaterial('ms', scene)
     matSphere.diffuseColor = Color3.Blue()
     const sphere = MeshBuilder.CreateSphere(

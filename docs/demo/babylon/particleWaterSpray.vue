@@ -29,7 +29,7 @@ const {
 const fps = ref(0)
 
 
-const initScene = async() => {
+const initScene = async () => {
   let switched = false
   let particle: any = null
 
@@ -38,8 +38,8 @@ const initScene = async() => {
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动
     // 例如，可以修改相机的半径或角度
-    event.preventDefault(); // 阻止默认滚动行为
-  });
+    event.preventDefault() // 阻止默认滚动行为
+  })
 
   const engine: any = new Engine(ele, true, {
     preserveDrawingBuffer: true,

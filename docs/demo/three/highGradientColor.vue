@@ -130,10 +130,10 @@ const initScene = () => {
 
   // 添加 OrbitControls
   const createOrbitControls = () => {
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.25;
-    controls.enableZoom = true;
+    const controls = new OrbitControls(camera, renderer.domElement)
+    controls.enableDamping = true
+    controls.dampingFactor = 0.25
+    controls.enableZoom = true
   }
 
   // 光
@@ -208,30 +208,30 @@ const initScene = () => {
 let sceneResources
 
 onMounted(async () => {
-await nextTick() // 等待DOM更新
-sceneResources = initScene()
+  await nextTick() // 等待DOM更新
+  sceneResources = initScene()
 })
 
 onUnmounted(() => {
-if (sceneResources) {
-  sceneResources.scene.clear()
-  sceneResources.scene.traverse((child) => {
-    if (child.geometry) child.geometry.dispose()
-    if (child.material) {
-      if (child.material.map) child.material.map.dispose()
-      child.material.dispose()
+  if (sceneResources) {
+    sceneResources.scene.clear()
+    sceneResources.scene.traverse((child) => {
+      if (child.geometry) child.geometry.dispose()
+      if (child.material) {
+        if (child.material.map) child.material.map.dispose()
+        child.material.dispose()
+      }
+    })
+    if (sceneResources.scene.background) {
+      if (sceneResources.scene.background instanceof Texture) {
+        sceneResources.scene.background.dispose()
+      }
     }
-  })
-  if (sceneResources.scene.background) {
-    if (sceneResources.scene.background instanceof Texture) {
-      sceneResources.scene.background.dispose();
-    }
+    sceneResources.renderer.dispose()
+    sceneResources.renderer.forceContextLoss()
+    sceneResources.controls.dispose()
+    sceneResources = null
   }
-  sceneResources.renderer.dispose()
-  sceneResources.renderer.forceContextLoss()
-  sceneResources.controls.dispose()
-  sceneResources = null
-}
 })
 </script>
 

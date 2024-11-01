@@ -27,15 +27,15 @@ const {
 
 const fps = ref(0)
 
-const initScene = async() => {
+const initScene = async () => {
 
   const ele = document.getElementById("collisionHavok") as HTMLCanvasElement
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动
     // 例如，可以修改相机的半径或角度
-    event.preventDefault(); // 阻止默认滚动行为
-  });
+    event.preventDefault() // 阻止默认滚动行为
+  })
 
   const engine: any = new Engine(ele, true, {
     preserveDrawingBuffer: true,
@@ -49,9 +49,9 @@ const initScene = async() => {
   camera.setTarget(Vector3.Zero())
   camera.attachControl(ele, true)
 
-  const havokInstance = await (window as any).HavokPhysics();
-  const havokPlugin = new HavokPlugin(true, havokInstance);
-  scene.enablePhysics(new Vector3(0, -9.8, 0), havokPlugin);
+  const havokInstance = await (window as any).HavokPhysics()
+  const havokPlugin = new HavokPlugin(true, havokInstance)
+  scene.enablePhysics(new Vector3(0, -9.8, 0), havokPlugin)
 
   const createLight = () => {
     const light = new HemisphericLight('light',new Vector3(0, 1, 0), scene)

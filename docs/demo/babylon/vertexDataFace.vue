@@ -31,20 +31,20 @@ const {
 const fps = ref(0)
 const isAllFace = ref(false)
 
-const useTexture = ()=>{
+const useTexture = () => {
   isAllFace.value = !isAllFace.value
 
   initScene()
 }
 
-const initScene = async() => {
+const initScene = async () => {
   const ele = document.getElementById("vertexDataFace") as HTMLCanvasElement
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动
     // 例如，可以修改相机的半径或角度
-    event.preventDefault(); // 阻止默认滚动行为
-  });
+    event.preventDefault() // 阻止默认滚动行为
+  })
 
   const engine: any = new Engine(ele, true, {
     preserveDrawingBuffer: true,
@@ -622,7 +622,7 @@ const initScene = async() => {
     skyBox.material = skyBoxMaterial
   }
 
-  const createFace = ()=>{
+  const createFace = () => {
     const customMesh = new Mesh('custom', scene)
 
     // 计算法线

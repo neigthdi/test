@@ -22,14 +22,14 @@ const { CustomMaterial } = pkgMat
 
 const fps = ref(0)
 
-const initScene = async() => {
+const initScene = async () => {
   const ele = document.getElementById("shaderWaterRipples") as HTMLCanvasElement
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动
     // 例如，可以修改相机的半径或角度
-    event.preventDefault(); // 阻止默认滚动行为
-  });
+    event.preventDefault() // 阻止默认滚动行为
+  })
 
   const engine: any = new Engine(ele, true, {
     preserveDrawingBuffer: true,
@@ -131,7 +131,7 @@ const initScene = async() => {
       color = vec4(clamp(mix(color, causticColor, 0.5), 0.0, 1.0).rgb, 1.0);
     `)
 
-    mat.AddUniform('time', 'float');
+    mat.AddUniform('time', 'float')
 
     const startTime: any = new Date()
 

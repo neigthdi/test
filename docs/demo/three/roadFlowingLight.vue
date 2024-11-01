@@ -128,7 +128,7 @@ const initScene = () => {
 
   // 添加 OrbitControls
   const createOrbitControls = () => {
-    const controls = new OrbitControls(camera, renderer.domElement);
+    const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = true;
     controls.dampingFactor = 0.25;
     controls.enableZoom = true;
@@ -295,7 +295,7 @@ onUnmounted(() => {
     })
     if (sceneResources.scene.background) {
       if (sceneResources.scene.background instanceof Texture) {
-        sceneResources.scene.background.dispose();
+        sceneResources.scene.background.dispose()
       }
     }
     sceneResources.renderer.dispose()

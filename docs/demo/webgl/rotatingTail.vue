@@ -149,7 +149,7 @@ const initScene = () => {
     // 显然需要告诉 WebGL 要运行六次顶点着色器来画两个三角形，所以将 count 改成 6。
     // 此时的各个顶点为var positions = [10, 20, 80, 20, 10, 30, 10, 30, 80, 20, 80, 30]
 
-    // gl.drawArrays(primitiveType, offset, count);
+    // gl.drawArrays(primitiveType, offset, count)
 
     gl.drawArrays(glType, 0, glAmount)
   }
@@ -257,14 +257,14 @@ const destroy = () => {
   animationFrame = null
 }
 
-onMounted(async ()=> {
+onMounted(async () => {
   await nextTick()
   sceneResources = initScene()
 })
 
-onUnmounted(()=>{
+onUnmounted(() => {
   if (sceneResources) {
-    sceneResources.gl && sceneResources.gl.getExtension("WEBGL_lose_context").loseContext();
+    sceneResources.gl && sceneResources.gl.getExtension("WEBGL_lose_context").loseContext()
   }
   destroy()
 })
