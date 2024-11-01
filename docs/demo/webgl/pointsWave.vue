@@ -76,7 +76,7 @@ const initScene = () => {
   function render() {
     animationFrame = requestAnimationFrame(render)
 
-    if(!animationFrame) return
+    if (!animationFrame) return
 
 
     num = num - 2
@@ -150,20 +150,28 @@ const initScene = () => {
   function webY(n) {
     return n / (h / 2)
   }
+
+  return {
+    gl
+  }
 }
 
-  
+let sceneResources
+
 const destroy = () => {
   cancelAnimationFrame(animationFrame)
   animationFrame = null
 }
 
-onMounted(async ()=> {
+onMounted(async () => {
   await nextTick()
-  initScene()
+  sceneResources = initScene()
 })
 
-onUnmounted(()=>{
+onUnmounted(() => {
+  if (sceneResources) {
+    sceneResources.gl && sceneResources.gl.getExtension("WEBGL_lose_context").loseContext();
+  }
   destroy()
 })
 </script>

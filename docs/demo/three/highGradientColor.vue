@@ -3,7 +3,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, nextTick } from 'vue'
+import { onMounted, ref, nextTick, onUnmounted } from 'vue'
 import {
   Scene,
   PerspectiveCamera,
@@ -15,7 +15,8 @@ import {
   Mesh,
   ShaderMaterial,
   DoubleSide,
-  Clock
+  Clock,
+  Texture
 } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
@@ -193,14 +194,44 @@ const initScene = () => {
   
  
   createLight()
-  createOrbitControls()
   createPlane()
   runAnimate()
+  const controls = createOrbitControls()
+
+  return {
+    renderer,
+    scene,
+    controls
+  }
 }
 
+let sceneResources
+
 onMounted(async () => {
-  await nextTick() // 等待DOM更新
-  initScene()
+await nextTick() // 等待DOM更新
+sceneResources = initScene()
+})
+
+onUnmounted(() => {
+if (sceneResources) {
+  sceneResources.scene.clear()
+  sceneResources.scene.traverse((child) => {
+    if (child.geometry) child.geometry.dispose()
+    if (child.material) {
+      if (child.material.map) child.material.map.dispose()
+      child.material.dispose()
+    }
+  })
+  if (sceneResources.scene.background) {
+    if (sceneResources.scene.background instanceof Texture) {
+      sceneResources.scene.background.dispose();
+    }
+  }
+  sceneResources.renderer.dispose()
+  sceneResources.renderer.forceContextLoss()
+  sceneResources.controls.dispose()
+  sceneResources = null
+}
 })
 </script>
 

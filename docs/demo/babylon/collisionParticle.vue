@@ -262,7 +262,7 @@ const initScene = async() => {
     })
   }
   
-  const light = createLight()
+  createLight()
   const ground = createGround()
   const sphere = createSphere()
   const sps = createSps(ground, sphere)

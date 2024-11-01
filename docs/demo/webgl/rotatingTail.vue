@@ -216,7 +216,7 @@ const initScene = () => {
   function anim() {
     animationFrame = requestAnimationFrame(anim)
 
-    if(!animationFrame) return
+    if (!animationFrame) return
 
     webgl.clear(0.1)
 
@@ -244,41 +244,13 @@ const initScene = () => {
   }
   anim()
 
-  // window.addEventListener('resize', function () {
-  //   w = c.width = window.innerWidth
-  //   h = c.height = window.innerHeight
-  //   gl.viewport(0, 0, w, h)
-  //   gl.uniform2f(webgl.uniformLocs.resolution, w, h)
-  // })
+  return {
+    gl
+  }
 
-  // function spawnParticle(e) {
-  //   const dx = e.clientX - w / 2,
-  //     dy = e.clientY - h / 2
-
-  //   particles.push(
-  //     new Particle(
-  //       Math.sqrt(dx * dx + dy * dy),
-  //       Math.atan(dy / dx) - (dx < 0 ? Math.PI : 0)
-  //     )
-  //   )
-  // }
-  // let md = false
-  // window.addEventListener('mousedown', function (e) {
-  //   md = true
-  //   spawnParticle(e)
-  // })
-  // window.addEventListener('mousemove', function (e) {
-  //   if (md) spawnParticle(e)
-  // })
-  // window.addEventListener('mouseup', function () {
-  //   md = false
-  // })
-
-  // window.addEventListener('contextmenu', function (e) {
-  //   e.preventDefault()
-  //   particles.length = 0
-  // })
 }
+
+let sceneResources
 
 const destroy = () => {
   cancelAnimationFrame(animationFrame)
@@ -287,10 +259,13 @@ const destroy = () => {
 
 onMounted(async ()=> {
   await nextTick()
-  initScene()
+  sceneResources = initScene()
 })
 
 onUnmounted(()=>{
+  if (sceneResources) {
+    sceneResources.gl && sceneResources.gl.getExtension("WEBGL_lose_context").loseContext();
+  }
   destroy()
 })
 </script>

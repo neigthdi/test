@@ -3,7 +3,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, nextTick } from 'vue'
+import { onMounted, ref, nextTick, onUnmounted } from 'vue'
 import {
   Scene,
   WebGLRenderer,
@@ -26,6 +26,7 @@ import {
   ShapeGeometry,
   MeshPhongMaterial,
   DoubleSide,
+  Texture,
 } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
@@ -56,7 +57,7 @@ const vertexShader = `
       float sizePct = (uRange - (currentEnd - current)) / uRange;
       // size *= sizePct;
       vOpacity = clamp(1.0 * sizePct, 0.2, 1.0);
-    } else if(current < currentEnd - uRange){
+    } else if (current < currentEnd - uRange){
       vOpacity = 0.05;
     } else {
       vOpacity = 0.05;
@@ -131,6 +132,7 @@ const initScene = () => {
     controls.enableDamping = true;
     controls.dampingFactor = 0.25;
     controls.enableZoom = true;
+    return controls
   }
 
   const createLight = () => {
@@ -264,13 +266,43 @@ const initScene = () => {
   createGround()
   createLightLine()
   createBetweenBackground()
-  createOrbitControls()
   runAnimate()
+  const controls = createOrbitControls()
+
+  return {
+    renderer,
+    scene,
+    controls
+  }
 }
+
+let sceneResources
 
 onMounted(async () => {
   await nextTick() // 等待DOM更新
-  initScene()
+  sceneResources = initScene()
+})
+
+onUnmounted(() => {
+  if (sceneResources) {
+    sceneResources.scene.clear()
+    sceneResources.scene.traverse((child) => {
+      if (child.geometry) child.geometry.dispose()
+      if (child.material) {
+        if (child.material.map) child.material.map.dispose()
+        child.material.dispose()
+      }
+    })
+    if (sceneResources.scene.background) {
+      if (sceneResources.scene.background instanceof Texture) {
+        sceneResources.scene.background.dispose();
+      }
+    }
+    sceneResources.renderer.dispose()
+    sceneResources.renderer.forceContextLoss()
+    sceneResources.controls.dispose()
+    sceneResources = null
+  }
 })
 </script>
 

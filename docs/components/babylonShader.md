@@ -6,6 +6,6 @@
 <font color=red>CustomMaterial</font>、
 <font color=green>Fragment_Definitions</font>、
 <font color=blue>Fragment_Before_Fog</font>、
-<font color=purple>AddUniform</font>、
+<font color=pink>AddUniform</font>、
 <font color=orange>Material.getEffect().setFloat('time', timeDiff)</font>
 <preview path="../demo/babylon/shaderWaterRipples.vue"></preview>
