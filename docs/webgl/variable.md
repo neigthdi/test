@@ -135,3 +135,26 @@ gl_Position：控制顶点的位置
 gl_FragColor：片元的 RGB 颜色值  
 gl_FragCoord：片元的坐标，同样是以像素为单位  
 gl_PointCoord：在点渲染模式中，对应方形像素坐标
+
+## 内置的Attributes
+position (类型: vec3 或 vec4)：顶点的位置。     
+normal (类型: vec3)：顶点的法线。     
+uv (类型: vec2 或 vec3 或 vec4)：顶点的纹理坐标。     
+color (类型: vec4)：顶点的颜色，如果启用了颜色。     
+tangent (类型: vec3)：顶点的切线，用于法线贴图等高级效果。     
+
+## 内置的Uniforms
+world (类型: mat4)：模型矩阵，表示网格的全局变换状态（移动、旋转、缩放）。      
+worldView (类型: mat4)：模型视图矩阵，是模型矩阵和视图矩阵的乘积。      
+worldViewProjection (类型: mat4)：模型视图投影矩阵，用于将顶点从模型空间转换到裁剪空间。      
+view (类型: mat4)：视图矩阵，表示相机的位置和朝向。      
+projection (类型: mat4)：投影矩阵，用于将裁剪空间的坐标转换为屏幕空间的坐标。      
+viewProjection (类型: mat4)：视图投影矩阵，是视图矩阵和投影矩阵的乘积。      
+worldInverse (类型: mat4)：世界矩阵的逆矩阵。      
+worldViewInverse (类型: mat4)：模型视图矩阵的逆矩阵。      
+worldViewProjectionInverse (类型: mat4)：模型视图投影矩阵的逆矩阵。      
+viewInverse (类型: mat4)：视图矩阵的逆矩阵。      
+projectionInverse (类型: mat4)：投影矩阵的逆矩阵。      
+viewProjectionInverse (类型: mat4)：视图投影矩阵的逆矩阵。      
+time (类型: float)：每帧的时间，用于动画和动态效果。      
+cameraPosition (类型: vec3)：相机在世界空间中的位置。       
