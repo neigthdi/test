@@ -65,36 +65,24 @@ const initScene = async () => {
   const createAxis = () => {
     const axisX = MeshBuilder.CreateLines(
       'axisX', {
-        colors: [ new Color4(1, 1, 1, 1), new Color4(1, 0, 0, 1) ],
-        points: [ new Vector3(0, 0, 0), new Vector3(200, 0, 0) ]
+        colors: [new Color4(1, 0, 0, 1), new Color4(1, 0, 0, 1)],
+        points: [new Vector3(0, 0, 0), new Vector3(80, 0, 0)]
       },
       scene
     )
 
     const axisY = MeshBuilder.CreateLines(
       'axisY', {
-        colors: [
-          new Color4(1, 1, 1, 1),
-          new Color4(0, 1, 0, 1)
-        ],
-        points: [
-          new Vector3(0, 0, 0),
-          new Vector3(0, 200, 0)
-        ]
+        colors: [new Color4(0, 1, 0, 1),  new Color4(0, 1, 0, 1)  ],
+        points: [new Vector3(0, 0, 0), new Vector3(0, 80, 0) ]
       },
       scene
     )
 
     const axisZ = MeshBuilder.CreateLines(
       'axisZ', {
-        colors: [
-          new Color4(1, 1, 1, 1),
-          new Color4(0, 0, 1, 1)
-        ],
-        points: [
-          new Vector3(0, 0, 0),
-          new Vector3(0, 0, 200)
-        ]
+        colors: [new Color4(0, 0, 1, 1), new Color4(0, 0, 1, 1)],
+        points: [new Vector3(0, 0, 0), new Vector3(0, 0, 80)]
       },
       scene
     )

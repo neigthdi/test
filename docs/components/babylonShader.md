@@ -9,3 +9,6 @@
 <font color=pink>AddUniform</font>、
 <font color=orange>Material.getEffect().setFloat('time', timeDiff)</font>
 <preview path="../demo/babylon/shaderWaterRipples.vue"></preview>
+
+## BOX的显示与消失（未完成）
+<preview path="../demo/babylon/shaderSphereDisplay.vue"></preview>

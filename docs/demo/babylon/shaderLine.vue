@@ -24,44 +24,44 @@ const {
 
 const fps = ref(0)
 
-const vertexShader = `
-  attribute vec3 position;
-  attribute vec2 uv;
+// const vertexShader = `
+//   attribute vec3 position;
+//   attribute vec2 uv;
 
-  uniform mat4 worldViewProjection;
+//   uniform mat4 worldViewProjection;
 
-  varying vec3 vPosition;
-  varying vec2 vUv;
+//   varying vec3 vPosition;
+//   varying vec2 vUv;
 
-  void main() { 
-    vUv = uv; 
-    gl_Position = worldViewProjection * vec4(position, 1.0);
-  }
-  `
-const fragmentShader = `
-  uniform float iTime;
-  uniform vec2 iResolution; 
-  varying vec2 vUv;
+//   void main() { 
+//     vUv = uv; 
+//     gl_Position = worldViewProjection * vec4(position, 1.0);
+//   }
+//   `
+// const fragmentShader = `
+//   uniform float iTime;
+//   uniform vec2 iResolution; 
+//   varying vec2 vUv;
 
-  vec3 hsb2rgb(in vec3 c) {
-    vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0), 6.0)-3.0)-1.0, 0.0,1.0 );
-    rgb = rgb*rgb*(3.0-2.0*rgb);
-    return c.z * mix( vec3(1.0), rgb, c.y);
-  }
-  void main(void) {
-    vec2 p = (2.0*vUv.xy-iResolution.xy)/iResolution.y;
-    float r = length(p) * 0.9;
-    vec3 color = hsb2rgb(vec3(0.24, 0.7, 0.4));
+//   vec3 hsb2rgb(in vec3 c) {
+//     vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0), 6.0)-3.0)-1.0, 0.0,1.0 );
+//     rgb = rgb*rgb*(3.0-2.0*rgb);
+//     return c.z * mix( vec3(1.0), rgb, c.y);
+//   }
+//   void main(void) {
+//     vec2 p = (2.0*vUv.xy-iResolution.xy)/iResolution.y;
+//     float r = length(p) * 0.9;
+//     vec3 color = hsb2rgb(vec3(0.24, 0.7, 0.4));
 
-    float a = pow(r, 2.0);
-    float b = sin(r * 0.8 - 1.6);
-    float c = sin(r - 0.010);
-    float s = sin(a - iTime * 3.0 + b) * c;
+//     float a = pow(r, 2.0);
+//     float b = sin(r * 0.8 - 1.6);
+//     float c = sin(r - 0.010);
+//     float s = sin(a - iTime * 3.0 + b) * c;
 
-    color *= abs(1.0 / (s * 10.8)) - 0.01;
-    gl_FragColor = vec4(color, 1.);
-    }
-  `
+//     color *= abs(1.0 / (s * 10.8)) - 0.01;
+//     gl_FragColor = vec4(color, 1.);
+//     }
+//   `
 
 const sinCosPosition = (i, dense) => {
   let r = 20
@@ -106,36 +106,24 @@ const initScene = async () => {
   const createAxis = () => {
     const axisX = MeshBuilder.CreateLines(
       'axisX', {
-        colors: [ new Color4(1, 1, 1, 1), new Color4(1, 0, 0, 1) ],
-        points: [ new Vector3(0, 0, 0), new Vector3(80, 0, 0) ]
+        colors: [new Color4(1, 0, 0, 1), new Color4(1, 0, 0, 1)],
+        points: [new Vector3(0, 0, 0), new Vector3(80, 0, 0)]
       },
       scene
     )
 
     const axisY = MeshBuilder.CreateLines(
       'axisY', {
-        colors: [
-          new Color4(1, 1, 1, 1),
-          new Color4(0, 1, 0, 1)
-        ],
-        points: [
-          new Vector3(0, 0, 0),
-          new Vector3(0, 80, 0)
-        ]
+        colors: [new Color4(0, 1, 0, 1),  new Color4(0, 1, 0, 1)  ],
+        points: [new Vector3(0, 0, 0), new Vector3(0, 80, 0) ]
       },
       scene
     )
 
     const axisZ = MeshBuilder.CreateLines(
       'axisZ', {
-        colors: [
-          new Color4(1, 1, 1, 1),
-          new Color4(0, 0, 1, 1)
-        ],
-        points: [
-          new Vector3(0, 0, 0),
-          new Vector3(0, 0, 80)
-        ]
+        colors: [new Color4(0, 0, 1, 1), new Color4(0, 0, 1, 1)],
+        points: [new Vector3(0, 0, 0), new Vector3(0, 0, 80)]
       },
       scene
     )
