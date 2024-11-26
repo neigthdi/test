@@ -29,7 +29,7 @@ const {
 const fps = ref(0)
 
 const initScene = async () => {
-  const ele = document.getElementById("spriteTree") as HTMLCanvasElement
+  const ele = document.getElementById("spriteTree") as any
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动

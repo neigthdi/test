@@ -40,7 +40,7 @@ let isJump = false
 const isRightHandedSystem = false
 
 const initScene = async () => {
-  const ele = document.getElementById("rpgCamera") as HTMLCanvasElement
+  const ele = document.getElementById("rpgCamera") as any
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动

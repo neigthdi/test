@@ -56,3 +56,15 @@ img {
   width: 100%;
   margin: 10px;
 }
+
+.pointer {
+  cursor: pointer;
+}
+
+.pointer:hover {
+  opacity: 0.8;
+}
+
+.m-l-20 {
+  margin-left: 20px;
+}

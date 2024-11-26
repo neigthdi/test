@@ -10,5 +10,8 @@
 <font color=orange>Material.getEffect().setFloat('time', timeDiff)</font>
 <preview path="../demo/babylon/shaderWaterRipples.vue"></preview>
 
-## BOX的显示与消失（未完成）
-<preview path="../demo/babylon/shaderSphereDisplay.vue"></preview>
+## sphere的下沉（未完成---类似冰融化成水后，液体向外扩散的效果）
+<preview path="../demo/babylon/shaderSphereSink.vue"></preview>
+
+## sphere的溶解
+<preview path="../demo/babylon/shaderSphereDissolve.vue"></preview>

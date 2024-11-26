@@ -75,7 +75,7 @@ const sinCosPosition = (i, dense) => {
 }
 
 const initScene = async () => {
-  const ele = document.getElementById("shaderLine") as HTMLCanvasElement
+  const ele = document.getElementById("shaderLine") as any
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动
@@ -191,7 +191,7 @@ const initScene = async () => {
         }
       }`
 
-    var lineShader = new ShaderMaterial(
+    const lineShader = new ShaderMaterial(
       'lineShader',
       scene, {
         vertex: 'lineShader',

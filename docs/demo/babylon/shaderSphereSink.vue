@@ -1,7 +1,7 @@
 <template>
   <div>
     <div>fps: {{ fps }}</div>
-    <canvas id="shaderSphereDisplay" class="stage"></canvas>
+    <canvas id="shaderSphereSink" class="stage"></canvas>
   </div>
 </template>
 
@@ -33,7 +33,7 @@ const speed = 0.02
 const limit = 10.0
 
 const initScene = async () => {
-  const ele = document.getElementById("shaderSphereDisplay") as HTMLCanvasElement
+  const ele = document.getElementById("shaderSphereSink") as any
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动
@@ -132,6 +132,7 @@ const initScene = async () => {
 
         // 方案一：修改y值
         // 模拟--停止下降，继续水平移动
+        // 缺少扩散时候，h由低变高，并停止升高
         if(uDown >= uStopMin) {
           y = position.y - uStopMin;
         } else {
@@ -140,6 +141,9 @@ const initScene = async () => {
         // 模拟--隐藏，通过对比y值，把比地面还低的部分隐藏
         if(y <= groundY) {
           y = groundY;
+          // 粗略模拟向外扩散
+          x = x * 1.1;
+          z = z * 1.1;
         }
 
         // 方案二：修改透明度

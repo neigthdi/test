@@ -30,7 +30,7 @@ const max = 10
 const y = 20
 
 const initScene = async () => {
-  const ele = document.getElementById("collisionBall") as HTMLCanvasElement
+  const ele = document.getElementById("collisionBall") as any
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动

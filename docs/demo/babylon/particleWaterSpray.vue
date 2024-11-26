@@ -33,7 +33,7 @@ const initScene = async () => {
   let switched = false
   let particle: any = null
 
-  const ele = document.getElementById("particleWaterSpray") as HTMLCanvasElement
+  const ele = document.getElementById("particleWaterSpray") as any
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动

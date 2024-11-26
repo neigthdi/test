@@ -38,7 +38,7 @@ const useTexture = () => {
 }
 
 const initScene = async () => {
-  const ele = document.getElementById("vertexDataFace") as HTMLCanvasElement
+  const ele = document.getElementById("vertexDataFace") as any
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动
