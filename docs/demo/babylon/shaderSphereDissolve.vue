@@ -4,6 +4,7 @@
     <div>
       <span class="pointer" @click="changeSituation(1)">效果1</span>
       <span class="pointer m-l-20" @click="changeSituation(2)">效果2</span>
+      <span class="pointer m-l-20" @click="changeSituation(3)">效果3</span>
     </div>
     <canvas id="shaderSphereDissolve" class="stage"></canvas>
   </div>
@@ -30,6 +31,8 @@ const fps = ref(0)
 
 const situation1Text = () => {
   return `
+    float noiseValue = noise(p + uTime * 1.0); // 随时间变化的噪声
+
     float dissolve = smoothstep(baseColor.g, baseColor.b, noiseValue); // 循环
     gl_FragColor = mix(vec4(0.0), baseColor, dissolve);
   `
@@ -37,6 +40,8 @@ const situation1Text = () => {
 
 const situation2Text = () => {
   return `
+    float noiseValue = noise(p + uTime * 1.0); // 随时间变化的噪声
+
     // 大于某个值则消失
     // baseColor.b * noiseValue应该是其他合适的值，现结果的溶解边缘不够圆润
     if(uTime > baseColor.g * noiseValue) {
@@ -47,9 +52,24 @@ const situation2Text = () => {
   `
 }
 
+const situation3Text = () => {
+  return `
+    float noiseValue = noise(p + uRandom); // 随时间变化的噪声
+
+    // 大于某个值则消失
+    // baseColor.b * noiseValue应该是其他合适的值，现结果的溶解边缘不够圆润
+    if(uTime > noiseValue) {
+    	discard;
+    } else {
+    	gl_FragColor = baseColor;
+    }
+  `
+}
+
 const situationObj = {
  '1': situation1Text(),
- '2': situation2Text()
+ '2': situation2Text(),
+ '3': situation3Text()
 }
 
 
@@ -144,6 +164,7 @@ const initScene = async () => {
       uniform sampler2D uSampler;
       
       uniform float uTime;
+      uniform float uRandom;
       
       varying vec2 vUv;
       
@@ -183,7 +204,6 @@ const initScene = async () => {
         vec4 baseColor = texture(uSampler, vUv);
                   
         vec2 p = vUv * 10.0; // 缩放噪声
-        float noiseValue = noise(p + uTime * 1.0); // 随时间变化的噪声
         
         ${situationObj[curSituation.value]}
       }
@@ -204,6 +224,7 @@ const initScene = async () => {
     const texture = new Texture('/images/ground.jpg', scene)
     sphereMat.setTexture('uSampler', texture)
     sphereMat.setFloat('uTime', time)
+    sphereMat.setFloat('uRandom', Number((Math.random() * 123).toFixed(8)))
 
     const sphere = MeshBuilder.CreateSphere('sphere', {
       diameter: 10
