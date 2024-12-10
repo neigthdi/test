@@ -1,7 +1,3 @@
-### \*\*\*可以看 3d_demo（shader 根据高度渐变染色.html）
-
-### 平面的 x、y 相关，查看图片爆炸、红旗飘扬
-
 #### ModelMatrix（模型矩阵）、ModelViewMatrix（模型视图矩阵）、ProjectionMatrix（投影矩阵）、NormalMatrix（正规矩阵）
 
 position 是顶点在物体坐标系（而不是世界坐标系）中的位置  
