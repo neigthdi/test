@@ -116,14 +116,13 @@ const initScene = () => {
   camera.position.set(0, 0, 1000)
   scene.add(camera)
 
-  const renderer = new WebGLRenderer({
+  const renderer: any = new WebGLRenderer({
     antialias: true,
     alpha: true
   })
   renderer.setSize(width, height)
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.setClearColor(new Color('#32373E'), 1)
-  renderer.setSize(width, height)
   ele.appendChild(renderer.domElement)
 
   // 添加 OrbitControls

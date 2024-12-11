@@ -128,7 +128,8 @@ function sidebarBase() {
       text: '案例-three',
       collapsible: true,
       items: [
-        { text: 'shader', link: '/components/threeShader.md' },
+        { text: 'part1', link: '/components/threePart1.md' },
+        { text: 'part2', link: '/components/threePart2.md' },
       ]
     },
     {
