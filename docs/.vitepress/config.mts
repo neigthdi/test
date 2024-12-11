@@ -138,5 +138,12 @@ function sidebarBase() {
         { text: 'webgl', link: '/components/webgl.md' },
       ]
     },
+    {
+      text: '案例-canvas',
+      collapsible: true,
+      items: [
+        { text: 'part1', link: '/components/canvasPart1.md' },
+      ]
+    },
   ]
 }
