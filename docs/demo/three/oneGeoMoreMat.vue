@@ -32,6 +32,7 @@ const createMultiMaterialObject = (geometry, materials)=> {
 }
 
 const curve = ref<any>()
+const requestID = ref<any>()
 
 const initScene = () => {
   const ele = document.getElementById('oneGeoMoreMat') as HTMLElement
@@ -107,7 +108,7 @@ const initScene = () => {
   }
 
   const createLine = () => {
-    const lineGeometry = new BufferGeometry().setFromPoints(curve?.value.getPoints(5000))
+    const lineGeometry = new BufferGeometry().setFromPoints(curve?.value?.getPoints(5000))
     const lineMaterial = new LineBasicMaterial({
       color: 'orange'
     })
@@ -117,8 +118,8 @@ const initScene = () => {
 
   const moveCamera = () => {
     if (progress < 1 - step) {
-      const point = curve?.value.getPoint(progress)
-      const pointBox = curve?.value.getPoint(progress + step)
+      const point = curve?.value?.getPoint(progress)
+      const pointBox = curve?.value?.getPoint(progress + step)
       camera.position.set(point.x, point.y + 5, point.z)
       camera.lookAt(pointBox.x, pointBox.y + 5, pointBox.z)
       progress += step
@@ -126,11 +127,10 @@ const initScene = () => {
       progress = 0
     }
   }
-
   
   const runAnimate = () => {
     moveCamera()
-    requestAnimationFrame(runAnimate)
+    requestID.value = requestAnimationFrame(runAnimate)
     renderer.render(scene, camera)
   }
 
@@ -146,10 +146,9 @@ const initScene = () => {
   return {
     renderer,
     scene,
-    controls
+    controls,
   }
 }
-
 
 let sceneResources
 
@@ -162,20 +161,23 @@ onUnmounted(() => {
   if (sceneResources) {
     sceneResources.scene.clear()
     sceneResources.scene.traverse((child) => {
-      if (child.geometry) child.geometry.dispose()
+      if (child.geometry) child.geometry?.dispose()
       if (child.material) {
-        if (child.material.map) child.material.map.dispose()
-        child.material.dispose()
+        if (child.material.map) child.material.map?.dispose()
+        child.material?.dispose()
       }
     })
     if (sceneResources.scene.background) {
       if (sceneResources.scene.background instanceof Texture) {
-        sceneResources.scene.background.dispose()
+        sceneResources.scene.background?.dispose()
       }
     }
-    sceneResources.renderer.dispose()
+    sceneResources.renderer?.dispose()
     sceneResources.renderer.forceContextLoss()
-    sceneResources.controls.dispose()
+    sceneResources.controls?.dispose()
+
+    cancelAnimationFrame(requestID.value)
+
     sceneResources = null
   }
   curve.value = null

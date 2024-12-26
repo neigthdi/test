@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div>fps: {{ fps }}</div>
+    <div>fps: {{ fps }}----扩散积分查看public</div>
     <canvas id="shaderSphereSink" class="stage"></canvas>
   </div>
 </template>
@@ -54,7 +54,7 @@ const initScene = async () => {
   camera.upperBetaLimit = Math.PI / 2.2
   camera.wheelPrecision = 30
   camera.attachControl(ele, true)
-  camera.setPosition(new Vector3(0, 0, 120))
+  camera.setPosition(new Vector3(0, 0, 30))
 
   const createLight = () => {
     const light = new HemisphericLight('light',new Vector3(0, 1, 0), scene)
@@ -142,8 +142,8 @@ const initScene = async () => {
         if(y <= groundY) {
           y = groundY;
           // 粗略模拟向外扩散
-          x = x * 1.1;
-          z = z * 1.1;
+          x = x * 1.05;
+          z = z * 1.05;
         }
 
         // 方案二：修改透明度

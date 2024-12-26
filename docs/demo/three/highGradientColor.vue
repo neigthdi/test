@@ -22,6 +22,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const addTime = ref<any>({ value: 0 })
 const clock = new Clock()
+const requestID = ref<any>()
 
 const vertexShaderReplacements = `
   precision highp float;
@@ -186,7 +187,7 @@ const initScene = () => {
   const runAnimate = () => {
     addTime.value.value = clock.getElapsedTime()
     
-    requestAnimationFrame(runAnimate)
+    requestID.value = requestAnimationFrame(runAnimate)
     renderer.render(scene, camera)
   }
 
@@ -215,20 +216,23 @@ onUnmounted(() => {
   if (sceneResources) {
     sceneResources.scene.clear()
     sceneResources.scene.traverse((child) => {
-      if (child.geometry) child.geometry.dispose()
+      if (child.geometry) child.geometry?.dispose()
       if (child.material) {
-        if (child.material.map) child.material.map.dispose()
-        child.material.dispose()
+        if (child.material.map) child.material.map?.dispose()
+        child.material?.dispose()
       }
     })
     if (sceneResources.scene.background) {
       if (sceneResources.scene.background instanceof Texture) {
-        sceneResources.scene.background.dispose()
+        sceneResources.scene.background?.dispose()
       }
     }
-    sceneResources.renderer.dispose()
+    sceneResources.renderer?.dispose()
     sceneResources.renderer.forceContextLoss()
-    sceneResources.controls.dispose()
+    sceneResources.controls?.dispose()
+
+    cancelAnimationFrame(requestID.value)
+
     sceneResources = null
   }
 })

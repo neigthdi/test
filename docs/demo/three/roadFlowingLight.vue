@@ -31,6 +31,7 @@ import {
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const ratio = ref<any>({ value: 0 })
+const requestID = ref<any>()
 let next = 0
 
 const vertexShader = `
@@ -180,7 +181,7 @@ const initScene = () => {
       const curve = new LineCurve3(start, end)
       const number = start.distanceTo(end)
 
-      const points = curve.getPoints(number)
+      const points = curve?.getPoints(number)
       const positions: any = []
       const current: any = []
       points.forEach((item: any, index) => {
@@ -255,7 +256,7 @@ const initScene = () => {
     next += 0.12
     ratio.value.value = next
 
-    requestAnimationFrame(runAnimate)
+    requestID.value = requestAnimationFrame(runAnimate)
     renderer.render(scene, camera)
   }
 
@@ -286,20 +287,23 @@ onUnmounted(() => {
   if (sceneResources) {
     sceneResources.scene.clear()
     sceneResources.scene.traverse((child) => {
-      if (child.geometry) child.geometry.dispose()
+      if (child.geometry) child.geometry?.dispose()
       if (child.material) {
-        if (child.material.map) child.material.map.dispose()
-        child.material.dispose()
+        if (child.material.map) child.material.map?.dispose()
+        child.material?.dispose()
       }
     })
     if (sceneResources.scene.background) {
       if (sceneResources.scene.background instanceof Texture) {
-        sceneResources.scene.background.dispose()
+        sceneResources.scene.background?.dispose()
       }
     }
-    sceneResources.renderer.dispose()
+    sceneResources.renderer?.dispose()
     sceneResources.renderer.forceContextLoss()
-    sceneResources.controls.dispose()
+    sceneResources.controls?.dispose()
+
+    cancelAnimationFrame(requestID.value)
+
     sceneResources = null
   }
 })

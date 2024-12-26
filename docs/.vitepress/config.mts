@@ -33,10 +33,6 @@ export default {
         link: 'https://www.babylonjs-playground.com/'
       },
       {
-        text: 'babylon其他案例',
-        link: 'https://example.cnbabylon.com/'
-      },
-      {
         text: 'three案例及文档',
         link: 'https://threejs.org/docs/index.html#manual/en/introduction/Creating-a-scene'
       },
@@ -118,10 +114,11 @@ function sidebarBase() {
         { text: '动画', link: '/components/babylonAnimation.md' },
         { text: '精灵', link: '/components/babylonSprite.md' },
         { text: '粒子', link: '/components/babylonParticle.md' },
-        { text: 'shader', link: '/components/babylonShader.md' },
         { text: '碰撞', link: '/components/babylonCollision.md' },
         { text: '纹理', link: '/components/babylonTexture.md' },
         { text: 'RGP相关', link: '/components/babylonRpg.md' },
+        { text: 'shader1', link: '/components/babylonShader1.md' },
+        { text: 'shader2', link: '/components/babylonShader2.md' },
       ]
     },
     {
@@ -130,6 +127,7 @@ function sidebarBase() {
       items: [
         { text: 'part1', link: '/components/threePart1.md' },
         { text: 'part2', link: '/components/threePart2.md' },
+        { text: 'part3', link: '/components/threePart3.md' },
       ]
     },
     {

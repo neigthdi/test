@@ -453,6 +453,14 @@ void main() {
 }
 ```
 
+## saturate
+saturate函数的作用是将输入值限制在0到1的范围内，即如果输入值小于0，则输出0；如果输入值大于1，则输出1；如果输入值在0到1之间，则输出该值本身
+```javascript
+vec3 saturate(vec3 v) {
+    return clamp(v, 0.0, 1.0);
+}
+```
+
 ## sign
 
 genType sign(genType x);    
