@@ -21,7 +21,7 @@ import {
   Line,
   Texture
 } from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 const createMultiMaterialObject = (geometry, materials)=> {
   const group = new Group()

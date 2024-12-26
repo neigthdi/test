@@ -18,11 +18,11 @@ import {
   Clock,
   Texture
 } from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 const addTime = ref<any>({ value: 0 })
-const clock = new Clock()
 const requestID = ref<any>()
+let clock: any = new Clock()
 
 const vertexShaderReplacements = `
   precision highp float;
@@ -182,8 +182,6 @@ const initScene = () => {
     scene.add(plane)
   }
  
-  
-
   const runAnimate = () => {
     addTime.value.value = clock.getElapsedTime()
     
@@ -232,7 +230,9 @@ onUnmounted(() => {
     sceneResources.controls?.dispose()
 
     cancelAnimationFrame(requestID.value)
-
+    
+    addTime.value = null
+    clock = null
     sceneResources = null
   }
 })

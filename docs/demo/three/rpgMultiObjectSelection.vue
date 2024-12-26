@@ -19,7 +19,7 @@ import {
   Texture,
   Frustum
 } from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 const requestID = ref<any>()
 let allBox: any = []
@@ -269,7 +269,7 @@ const initScene = () => {
 
     const planes = frustum.planes
     /**
-     * 六个面，可以看isPerspectiveCamera.webp这个图
+     * 六个面，可以看public/tips/isPerspectiveCamera.webp这个图
      */
     planes[0].setFromCoplanarPoints(vecNear, vecTopLeft, vecTopRight)
     planes[1].setFromCoplanarPoints(vecNear, vecTopRight, vecBottomRight)

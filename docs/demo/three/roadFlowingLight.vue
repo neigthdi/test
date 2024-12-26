@@ -28,7 +28,7 @@ import {
   DoubleSide,
   Texture,
 } from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 const ratio = ref<any>({ value: 0 })
 const requestID = ref<any>()
@@ -129,9 +129,9 @@ const initScene = () => {
   // 添加 OrbitControls
   const createOrbitControls = () => {
     const controls = new OrbitControls(camera, renderer.domElement)
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.25;
-    controls.enableZoom = true;
+    controls.enableDamping = true
+    controls.dampingFactor = 0.25
+    controls.enableZoom = true
     return controls
   }
 
@@ -303,6 +303,8 @@ onUnmounted(() => {
     sceneResources.controls?.dispose()
 
     cancelAnimationFrame(requestID.value)
+
+    ratio.value = null
 
     sceneResources = null
   }
