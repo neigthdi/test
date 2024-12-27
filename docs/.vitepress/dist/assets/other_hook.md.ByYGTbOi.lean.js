@@ -1,1 +1,0 @@
-import{_ as s,c as i,o as a,a4 as n}from"./chunks/framework.BU6oPMi8.js";const c=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"other/hook.md","filePath":"other/hook.md"}'),l={name:"other/hook.md"},p=n("",25),t=[p];function h(e,k,r,E,d,F){return a(),i("div",null,t)}const o=s(l,[["render",h]]);export{c as __pageData,o as default};

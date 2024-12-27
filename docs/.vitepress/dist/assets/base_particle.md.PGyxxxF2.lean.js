@@ -1,1 +1,0 @@
-import{_ as s,c as i,o as a,a4 as h}from"./chunks/framework.BU6oPMi8.js";const F=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"base/particle.md","filePath":"base/particle.md"}'),t={name:"base/particle.md"},k=h("",167),p=[k];function n(l,e,E,r,d,g){return a(),i("div",null,p)}const c=s(t,[["render",n]]);export{F as __pageData,c as default};

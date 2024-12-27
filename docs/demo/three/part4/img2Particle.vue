@@ -11,7 +11,6 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
-import gsap from 'gsap'
 import {
   Scene,
   PerspectiveCamera,
@@ -28,6 +27,11 @@ import {
   DirectionalLight,
 } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+
+import { pkgGsap } from '../index.js'
+const {
+  to
+} = pkgGsap
 
 const requestID = ref<any>()
 let clock: any = new Clock()
@@ -254,13 +258,13 @@ const initScene = () => {
       const material = this.imageDOMMeshObj.mesh.material
       this.imageDOMMeshObj.el.addEventListener('click', () => {
         if (!this.isOpen) {
-          gsap.to(material.uniforms.uProgress, {
+          to(material.uniforms.uProgress, {
             value: 3,
             duration: 1
           })
           this.isOpen = true
         } else {
-          gsap.to(material.uniforms.uProgress, {
+          to(material.uniforms.uProgress, {
             value: 0,
             duration: 1
           })

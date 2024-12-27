@@ -1,5 +1,5 @@
 import { fileURLToPath, URL } from 'node:url'
-
+import nodeExternals from 'rollup-plugin-node-externals'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
@@ -11,6 +11,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
+    }
+  },
+  build: {
+    rollupOptions: {
+      plugins: [nodeExternals()]
     }
   }
 })

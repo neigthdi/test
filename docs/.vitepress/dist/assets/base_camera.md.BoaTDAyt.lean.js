@@ -1,1 +1,0 @@
-import{_ as s,c as i,o as a,a4 as n}from"./chunks/framework.BU6oPMi8.js";const c=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"base/camera.md","filePath":"base/camera.md"}'),h={name:"base/camera.md"},k=n("",37),l=[k];function p(t,e,E,r,d,g){return a(),i("div",null,l)}const F=s(h,[["render",p]]);export{c as __pageData,F as default};

@@ -1,0 +1,1 @@
+import{_ as s,c as i,o as a,a4 as n}from"./chunks/framework.De32BR7G.js";const F=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"other/shader.md","filePath":"other/shader.md"}'),h={name:"other/shader.md"},l=n("",17),t=[l];function p(k,e,E,r,d,g){return a(),i("div",null,t)}const c=s(h,[["render",p]]);export{F as __pageData,c as default};
