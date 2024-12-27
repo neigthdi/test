@@ -95,7 +95,7 @@ const initScene = async () => {
     adt.addControl(panel)
 
     const header = new TextBlock()
-    header.text = '白天黑夜'
+    header.text = '←黑夜白天→'
     header.height = '30px'
     header.color = 'red'
     panel.addControl(header)
