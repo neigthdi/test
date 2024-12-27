@@ -1,1 +1,0 @@
-import{_ as s,c as i,o as a,a4 as t}from"./chunks/framework.BXFFLb3j.js";const o=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"base/spirit.md","filePath":"base/spirit.md"}'),e={name:"base/spirit.md"},n=t("",15),p=[n];function h(l,k,r,d,c,g){return a(),i("div",null,p)}const y=s(e,[["render",h]]);export{o as __pageData,y as default};

@@ -163,7 +163,7 @@ const initScene = () => {
 
   // 创建平面
   const createPlane = () => {
-    const geometry = new PlaneGeometry(30, 200)
+    const geometry = new PlaneGeometry(30, 200) // width = 1, height = 1, widthSegments(宽度分段) = 1, heightSegments(高度分段) = 1
     const material = new ShaderMaterial({
       // wireframe: true,
       side: DoubleSide,

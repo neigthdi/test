@@ -128,6 +128,7 @@ function sidebarBase() {
         { text: 'part1', link: '/components/threePart1.md' },
         { text: 'part2', link: '/components/threePart2.md' },
         { text: 'part3', link: '/components/threePart3.md' },
+        { text: 'part4', link: '/components/threePart4.md' },
       ]
     },
     {

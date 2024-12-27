@@ -42,7 +42,7 @@ const fragmentShader = `
   uniform float uTime;
   varying vec3 v_position;
 
-  float sdCircle(vec2 p, float r)  {
+  float sdCircle(vec2 p, float r) {
     return length(p) - r;
   }
 
@@ -56,7 +56,7 @@ const fragmentShader = `
   }
 
   // 旋转函数
-  vec2 rotate(vec2 uv, float rotation, vec2 mid){
+  vec2 rotate(vec2 uv, float rotation, vec2 mid) {
     return vec2(
       cos(rotation) * (uv.x - mid.x) + sin(rotation) * (uv.y - mid.y) + mid.x , 
       cos(rotation) * (uv.y - mid.y) - sin(rotation) * (uv.x - mid.x) + mid.y
@@ -188,7 +188,7 @@ const initScene = () => {
   }
 
   const createPlane = () => {
-    const geometry = new PlaneGeometry(200, 200)
+    const geometry = new PlaneGeometry(200, 200) // width = 1, height = 1, widthSegments(宽度分段) = 1, heightSegments(高度分段) = 1
     const material = new ShaderMaterial({
       uniforms: {
         uTime: addTime.value,

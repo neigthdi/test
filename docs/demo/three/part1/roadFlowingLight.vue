@@ -148,7 +148,7 @@ const initScene = () => {
   
   // 创建地板
   const createGround = () => {
-    const planeGeo = new PlaneGeometry(800, 800)
+    const planeGeo = new PlaneGeometry(800, 800) // width = 1, height = 1, widthSegments(宽度分段) = 1, heightSegments(高度分段) = 1
     const planeMaterial: any = new MeshLambertMaterial({
       color: new Color('#efe')
     })
