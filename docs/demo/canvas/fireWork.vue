@@ -6,9 +6,9 @@
 </template>
 
 <script lang="ts" setup>
+import { onMounted, ref, onUnmounted } from 'vue';
 
-import { onMounted } from 'vue';
-
+const requestID = ref<any>()
 const PI2 = Math.PI * 2
 const random = (min, max) => Math.random() * (max - min + 1) + min | 0
 const timestamp = () => new Date().getTime()
@@ -28,11 +28,13 @@ class Scene {
   constructor(el) {
     const canvas = document.getElementById(el) as any
     this.ctx = canvas.getContext('2d')
-   
-    canvas.width = 648
-    canvas.height = 360
-    this.width = canvas.width
-    this.height = canvas.height
+    const width = Number(window.getComputedStyle(canvas).width.split('px')[0])
+    const height = Number(window.getComputedStyle(canvas).height.split('px')[0])
+    canvas.width = width
+    canvas.height = height
+
+    this.width = width
+    this.height = height
     this.center = this.width / 2
     this.spawnA = this.center - this.center / 4 | 0
     this.spawnB = this.center + this.center / 4 | 0
@@ -182,8 +184,13 @@ onMounted(() => {
       scene.update(delta / 1000)
     }
 
-    window.requestAnimationFrame(loop)
+    requestID.value = window.requestAnimationFrame(loop)
   }
   loop()
+})
+
+
+onUnmounted(() => {
+  cancelAnimationFrame(requestID.value)
 })
 </script>

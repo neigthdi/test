@@ -8,7 +8,7 @@ import { onMounted, nextTick, onUnmounted } from 'vue'
 let animationFrame 
 
 const initScene = () => {
-  const c = document.getElementById('rotatingTail') as HTMLCanvasElement
+  const c = document.getElementById('rotatingTail') as any
   const gl: any = c.getContext('webgl', {
       preserveDrawingBuffer: true
     })

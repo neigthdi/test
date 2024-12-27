@@ -8,7 +8,7 @@ import { onMounted, nextTick, onUnmounted } from 'vue'
 let animationFrame 
 
 const initScene = () => {
-  let canvas = document.getElementById('pointsWave') as HTMLCanvasElement
+  let canvas = document.getElementById('pointsWave') as any
   let gl: any = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
   let w = canvas.width
   let h = canvas.height
