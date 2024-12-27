@@ -1,2 +1,2 @@
 ## 树
-<preview path="../demo/babylon/spriteTree.vue"></preview>
+<preview path="../demo/babylon/sprite/spriteTree.vue"></preview>

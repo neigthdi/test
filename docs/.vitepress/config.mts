@@ -116,7 +116,7 @@ function sidebarBase() {
         { text: '粒子', link: '/components/babylonParticle.md' },
         { text: '碰撞', link: '/components/babylonCollision.md' },
         { text: '纹理', link: '/components/babylonTexture.md' },
-        { text: 'RGP相关', link: '/components/babylonRpg.md' },
+        { text: 'RPG相关', link: '/components/babylonRpg.md' },
         { text: 'shader1', link: '/components/babylonShader1.md' },
         { text: 'shader2', link: '/components/babylonShader2.md' },
       ]

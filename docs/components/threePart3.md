@@ -1,2 +1,2 @@
 ## 多物体选择
-<preview path="../demo/three/rpgMultiObjectSelection.vue"></preview>
+<preview path="../demo/three/part3/rpgMultiObjectSelection.vue"></preview>

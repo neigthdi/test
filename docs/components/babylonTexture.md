@@ -1,2 +1,2 @@
 ## 房子
-<preview path="../demo/babylon/textureHouse.vue"></preview>
+<preview path="../demo/babylon/texture/textureHouse.vue"></preview>
