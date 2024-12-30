@@ -2,8 +2,9 @@
   <div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
-      <div class="pointer" @click="useTexture">点击切换整面/线条（当前：{{ isAllFace ? '整面' : '线条' }}）</div>
+      <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
     </div>
+    <div v-if="isRunning" class="pointer" @click="useTexture">点击切换整面/线条（当前：{{ isAllFace ? '整面' : '线条' }}）</div>
     <canvas id="vertexDataFace" class="stage"></canvas>
   </div>
 </template>
@@ -28,13 +29,30 @@ const {
   CubeTexture,
 } = pkg
 
+let sceneResources
+
 const fps = ref(0)
+const isRunning = ref(false)
 const isAllFace = ref(false)
 
 const useTexture = () => {
-  isAllFace.value = !isAllFace.value
+  if(isRunning.value) {
+    destroy()
+    isAllFace.value = !isAllFace.value
+    setTimeout(() => {
+      initScene()
+    }, 300)
+  }
+}
 
-  initScene()
+const onTrigger = async () => {
+  if(!isRunning.value) {
+    isRunning.value = true
+    sceneResources = await initScene()
+  } else {
+    isRunning.value = false
+    destroy()
+  }
 }
 
 const initScene = async () => {
@@ -674,36 +692,23 @@ const initScene = async () => {
   }
 }
 
-
-let sceneResources
-
-onMounted(async() => {
-  await nextTick()
-  sceneResources = await initScene()
-})
-
-onUnmounted(() => {
+const destroy = () => {
   if(sceneResources) {
     sceneResources.engine.stopRenderLoop() 
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()
     sceneResources = null
   }
+}
+
+onMounted(async() => {
+  await nextTick()
+})
+
+onUnmounted(() => {
+  destroy()
 })
 </script>
 
 <style scoped>
-.flex {
-  display: flex;
-}
-.space-between {
-  justify-content: space-between;
-}
-.pointer {
-  cursor: pointer;
-  color: coral;
-}
-.pointer:hover {
-  opacity: 0.7;
-}
 </style>

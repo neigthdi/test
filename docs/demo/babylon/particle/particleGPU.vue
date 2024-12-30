@@ -1,9 +1,14 @@
 <template>
   <div>
-    <div class="flex space-between">
-      <div>fps: {{ fps }}</div>
-      <div>
-        粒子数量{{ numbers }}
+    <div>
+      <div class="flex space-between">
+        <div>fps: {{ fps }}</div>
+        <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+      </div>
+      <div v-if="isRunning" class="flex space-between">
+        <div>
+          粒子数量{{ numbers }}
+        </div>
         <div class="flex">
           <div class="pointer" @click="onMove">是否move（{{ moveEmitter ? '是' : '否' }}）</div>
           <div class="pointer" @click="onRotate">是否rotate（{{ rotateEmitter ? '是' : '否' }}）</div>
@@ -35,7 +40,10 @@ const {
 } = pkg
 const { GridMaterial } = pkgMat
 
+let sceneResources
+
 const fps = ref(0)
+const isRunning = ref(false)
 const useGPUVersion = ref(true) // 是否启用gpu
 const particleSystem = ref<any>(null)
 const alpha = ref(0)
@@ -54,10 +62,21 @@ const onRotate = () => {
 }
 
 const onUseGpu = () => {
-  useGPUVersion.value = !useGPUVersion.value
-  initScene()
+  if(isRunning.value) {
+    useGPUVersion.value = !useGPUVersion.value
+    initScene()
+  }
 }
 
+const onTrigger = async () => {
+  if(!isRunning.value) {
+    isRunning.value = true
+    sceneResources = await initScene()
+  } else {
+    isRunning.value = false
+    destroy()
+  }
+}
 
 const initScene = async () => {
   const ele = document.getElementById("particleGPU") as any
@@ -225,36 +244,23 @@ const initScene = async () => {
   }
 }
 
-
-let sceneResources
-
-onMounted(async() => {
-  await nextTick()
-  sceneResources = await initScene()
-})
-
-onUnmounted(() => {
+const destroy = () => {
   if(sceneResources) {
     sceneResources.engine.stopRenderLoop() 
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()
     sceneResources = null
   }
+}
+
+onMounted(async() => {
+  await nextTick()
+})
+
+onUnmounted(() => {
+  destroy()
 })
 </script>
 
 <style scoped>
-.flex {
-  display: flex;
-}
-.space-between {
-  justify-content: space-between;
-}
-.pointer {
-  cursor: pointer;
-  color: coral;
-}
-.pointer:hover {
-  opacity: 0.7;
-}
 </style>

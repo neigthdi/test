@@ -1,5 +1,8 @@
 <template>
-  <div id="diffusionRipple" class="stage"></div>
+  <div>
+    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+    <div v-if="isRunning" id="diffusionRipple" class="stage"></div>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -19,6 +22,19 @@ import {
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 const requestID = ref<any>()
+const isRunning = ref(false)
+let sceneResources
+
+const onTrigger = async () => {
+  if(!isRunning.value) {
+    isRunning.value = true
+    await nextTick()
+    sceneResources = await initScene()
+  } else {
+    isRunning.value = false
+    destroy()
+  }
+}
 
 const vertexShader = `
   varying vec3 vp;
@@ -86,7 +102,7 @@ const initScene = () => {
   }
 
   const createLight = () => {
-    const light = new AmbientLight(0xadadad) // soft white light
+    const light = new AmbientLight(0xadadad)
     scene.add(light)
   }
   
@@ -133,15 +149,7 @@ const initScene = () => {
   }
 }
 
-
-let sceneResources
-
-onMounted(async () => {
-  await nextTick() // 等待DOM更新
-  sceneResources = initScene()
-})
-
-onUnmounted(() => {
+const destroy = () => {
   if (sceneResources) {
     sceneResources.scene.clear()
     sceneResources.scene.traverse((child) => {
@@ -164,5 +172,13 @@ onUnmounted(() => {
 
     sceneResources = null
   }
+}
+
+onMounted(async() => {
+  await nextTick()
+})
+
+onUnmounted(() => {
+  destroy()
 })
 </script>

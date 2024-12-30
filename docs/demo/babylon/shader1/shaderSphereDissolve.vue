@@ -1,7 +1,10 @@
 <template>
   <div>
-    <div>fps: {{ fps }}</div>
-    <div>
+    <div class="flex space-between">
+      <div>fps: {{ fps }}</div>
+      <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+    </div>
+    <div v-if="isRunning">
       <span class="pointer" @click="changeSituation(1)">效果1</span>
       <span class="pointer m-l-20" @click="changeSituation(2)">效果2</span>
       <span class="pointer m-l-20" @click="changeSituation(3)">效果3</span>
@@ -27,7 +30,20 @@ const {
   Texture
 } = pkg
 
+let sceneResources
+
 const fps = ref(0)
+const isRunning = ref(false)
+
+const onTrigger = async () => {
+  if(!isRunning.value) {
+    isRunning.value = true
+    sceneResources = await initScene()
+  } else {
+    isRunning.value = false
+    destroy()
+  }
+}
 
 const situation1Text = () => {
   return `
@@ -76,12 +92,14 @@ const situationObj = {
 const curSituation = ref(1)
 
 const changeSituation = async (cur) => {
-  clearScene()
-  curSituation.value = cur
-  await nextTick()
-  setTimeout(async() => {
-    sceneResources = await initScene()
-  }, 500)
+  if(isRunning.value) {
+    destroy()
+    curSituation.value = cur
+    await nextTick()
+    setTimeout(async() => {
+      sceneResources = await initScene()
+    }, 500)
+  }
 }
 
 const initScene = async () => {
@@ -263,8 +281,7 @@ const initScene = async () => {
   }
 }
 
-
-const clearScene = () => {
+const destroy = () => {
   if(sceneResources) {
     sceneResources.engine.stopRenderLoop() 
     sceneResources.engine.dispose()
@@ -273,14 +290,11 @@ const clearScene = () => {
   }
 }
 
-let sceneResources
-
 onMounted(async() => {
   await nextTick()
-  sceneResources = await initScene()
 })
 
 onUnmounted(() => {
-  clearScene()
+  destroy()
 })
 </script>

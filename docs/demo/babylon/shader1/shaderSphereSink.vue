@@ -1,6 +1,9 @@
 <template>
   <div>
-    <div>fps: {{ fps }}----扩散积分查看public</div>
+    <div class="flex space-between">
+      <div>fps: {{ fps }}----扩散积分查看public</div>
+      <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+    </div>
     <canvas id="shaderSphereSink" class="stage"></canvas>
   </div>
 </template>
@@ -23,7 +26,10 @@ const {
 } = pkg
 const { CustomMaterial } = pkgMat
 
+let sceneResources
+
 const fps = ref(0)
+const isRunning = ref(false)
 
 let uDown = 0.0
 const uSphereHeight = 10.0
@@ -31,6 +37,16 @@ const uStopMin = 7.0
 
 const speed = 0.02
 const limit = 10.0
+
+const onTrigger = async () => {
+  if(!isRunning.value) {
+    isRunning.value = true
+    sceneResources = await initScene()
+  } else {
+    isRunning.value = false
+    destroy()
+  }
+}
 
 const initScene = async () => {
   const ele = document.getElementById("shaderSphereSink") as any
@@ -233,20 +249,20 @@ const initScene = async () => {
   }
 }
 
-
-let sceneResources
-
-onMounted(async() => {
-  await nextTick()
-  sceneResources = await initScene()
-})
-
-onUnmounted(() => {
+const destroy = () => {
   if(sceneResources) {
     sceneResources.engine.stopRenderLoop() 
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()
     sceneResources = null
   }
+}
+
+onMounted(async() => {
+  await nextTick()
+})
+
+onUnmounted(() => {
+  destroy()
 })
 </script>

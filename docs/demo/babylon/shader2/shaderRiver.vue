@@ -1,7 +1,10 @@
 <template>
   <div>
     <div>未完成，平面+噪音形成高低，法线+灯光模拟阳光照射，蓝色深浅，镜面倒影未想好</div>
-    <div>fps: {{ fps }}</div>
+    <div class="flex space-between">
+      <div>fps: {{ fps }}</div>
+      <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+    </div>
     <canvas id="shaderRiver" class="stage"></canvas>
   </div>
 </template>
@@ -24,11 +27,20 @@ const {
 } = pkg
 const { CustomMaterial } = pkgMat
 
-const fps = ref(0)
+let sceneResources
 
-let uDown = 0.0
-const uSphereHeight = 10.0
-const uStopMin = 7.0
+const fps = ref(0)
+const isRunning = ref(false)
+
+const onTrigger = async () => {
+  if(!isRunning.value) {
+    isRunning.value = true
+    sceneResources = await initScene()
+  } else {
+    isRunning.value = false
+    destroy()
+  }
+}
 
 const initScene = async () => {
   const ele = document.getElementById("shaderRiver") as any
@@ -126,20 +138,20 @@ const initScene = async () => {
   }
 }
 
-
-let sceneResources
-
-onMounted(async() => {
-  await nextTick()
-  sceneResources = await initScene()
-})
-
-onUnmounted(() => {
+const destroy = () => {
   if(sceneResources) {
     sceneResources.engine.stopRenderLoop() 
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()
     sceneResources = null
   }
+}
+
+onMounted(async() => {
+  await nextTick()
+})
+
+onUnmounted(() => {
+  destroy()
 })
 </script>

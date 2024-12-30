@@ -1,17 +1,22 @@
 <template>
   <div id="fireWork-box">
-    鼠标点击生成烟花
+    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+    <div>鼠标点击生成烟花</div>
     <canvas id="fireWork" class="stage"></canvas>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, onUnmounted } from 'vue';
+import { onMounted, ref, onUnmounted, nextTick } from 'vue';
 
 const requestID = ref<any>()
 const PI2 = Math.PI * 2
 const random = (min, max) => Math.random() * (max - min + 1) + min | 0
 const timestamp = () => new Date().getTime()
+const isRunning = ref(false)
+let box
+
+let scene
 
 class Scene {
   fireworks: any[] = []
@@ -165,14 +170,14 @@ class FireWork {
   }
 }
 
+const onAddEvent = (evt) => {
+  scene.onClick(evt)
+}
 
-onMounted(() => {
+const onRunning = () => {
   let then = timestamp()
-  const scene = new Scene('fireWork')
-  const box =  document.getElementById('fireWork-box') as any
-  box.addEventListener('click', evt => {
-    scene.onClick(evt)
-  })
+  scene = new Scene('fireWork')
+  box.addEventListener('click', onAddEvent)
 
   function loop() {
     const now = timestamp()
@@ -187,10 +192,31 @@ onMounted(() => {
     requestID.value = window.requestAnimationFrame(loop)
   }
   loop()
+}
+
+const onTrigger = async () => {
+  if(!isRunning.value) {
+    isRunning.value = true
+    onRunning()
+  } else {
+    isRunning.value = false
+    destroy()
+  }
+}
+
+const destroy = () => {
+  box.removeEventListener('click', onAddEvent)
+  cancelAnimationFrame(requestID.value)
+}
+
+
+onMounted(async() => {
+  await nextTick()
+  box =  document.getElementById('fireWork-box') as any
 })
 
 
 onUnmounted(() => {
-  cancelAnimationFrame(requestID.value)
+  destroy()
 })
 </script>

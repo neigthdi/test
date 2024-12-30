@@ -12,6 +12,23 @@
 body {
   color: var(--vp-c-text-1);
 }
+
+/*手机*/
+@media screen and (max-width: 600px){
+  .stage {
+    width: calc(100vw - 88px);
+    height: 360px;
+  }
+}
+
+/*PC*/
+@media screen and (min-width: 960px){
+  .stage {
+    width: 648px;
+    height: 360px;
+  }
+}
+
 h1,
 h2,
 h3,
@@ -46,20 +63,8 @@ p {
   display: flex;
 }
 
-/*手机*/
-@media screen and (max-width: 600px){
-  .stage {
-    width: calc(100vw - 88px);
-    height: 360px;
-  }
-}
-
-/*PC*/
-@media screen and (min-width: 960px){
-  .stage {
-    width: 648px;
-    height: 360px;
-  }
+.space-between {
+  justify-content: space-between;
 }
 
 img {

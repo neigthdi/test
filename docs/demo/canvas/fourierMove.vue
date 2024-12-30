@@ -1,14 +1,22 @@
 <template>
-  <canvas id="fourier" class="stage"></canvas>
+  <div>
+    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+    <canvas id="fourier" class="stage"></canvas>
+  </div>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref, nextTick } from 'vue';
 
 const controls = ref(4)
 const requestID = ref<any>()
+const isRunning = ref(false)
+let canvas
+let ctx
+let running
+let draw
 
-onMounted(() => {
+const onRunning = () => {
   const canvas: any = document.getElementById('fourier')
   const ctx = canvas.getContext('2d')
 
@@ -37,7 +45,7 @@ onMounted(() => {
     ctx.stroke()
   }
 
-  const draw = () => {
+  draw = () => {
     time -= Math.PI / 180
     // 设置canvas大小
     ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -102,14 +110,39 @@ onMounted(() => {
   }
 
   draw()
+}
 
-  canvas.addEventListener('click', function() {
+const onTrigger = async () => {
+  if(!isRunning.value) {
+    isRunning.value = true
+    onRunning()
+  } else {
+    isRunning.value = false
+    destroy()
+  }
+}
+
+const onAddEvent = () => {
+  if(isRunning.value) {
     running = !running
     running ? window.cancelAnimationFrame(requestID.value) : requestID.value = window.requestAnimationFrame(draw)
-  })
+  }
+}
+
+const destroy = () => {
+  cancelAnimationFrame(requestID.value)
+  canvas.removeEventListener('click', onAddEvent)
+  if(draw) draw = null
+}
+
+onMounted(async() => {
+  await nextTick()
+  canvas = document.getElementById('fourier')
+  ctx = canvas.getContext('2d')
+  canvas.addEventListener('click', onAddEvent)
 })
 
 onUnmounted(() => {
-  cancelAnimationFrame(requestID.value)
+  destroy()
 })
 </script>

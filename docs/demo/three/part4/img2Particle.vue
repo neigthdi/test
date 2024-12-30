@@ -2,7 +2,8 @@
   <div>
     <div>点击左上角图片(需要优化，noise太卡顿了)</div>
     <div>1、获取图片；2、ShaderMaterial；3、把图片映射到shader中；4、noise函数；5、创建（点击爆炸效果），并运行动画</div>
-    <div style="position: relative">
+    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+    <div v-if="isRunning" style="position: relative">
       <img style="position: absolute;z-index: 10;opacity: 1;width: 150px;" id="image" src="/images/star.jpg" alt="">
       <div id="img2Particle" class="stage"></div>
     </div>
@@ -35,6 +36,19 @@ const {
 
 const requestID = ref<any>()
 let clock: any = new Clock()
+const isRunning = ref(false)
+let sceneResources
+
+const onTrigger = async () => {
+  if(!isRunning.value) {
+    isRunning.value = true
+    await nextTick()
+    sceneResources = await initScene()
+  } else {
+    isRunning.value = false
+    destroy()
+  }
+}
 
 const noiseFunc = `
   vec4 permute(vec4 x) {
@@ -344,15 +358,7 @@ const initScene = () => {
   }
 }
 
-
-let sceneResources
-
-onMounted(async () => {
-  await nextTick() // 等待DOM更新
-  sceneResources = initScene()
-})
-
-onUnmounted(() => {
+const destroy = () => {
   if (sceneResources) {
     sceneResources.scene.clear()
     sceneResources.scene.traverse((child) => {
@@ -373,8 +379,16 @@ onUnmounted(() => {
 
     cancelAnimationFrame(requestID.value)
 
-    clock = null
     sceneResources = null
   }
+}
+
+onMounted(async() => {
+  await nextTick()
+})
+
+onUnmounted(() => {
+  destroy()
+  clock = null
 })
 </script>

@@ -1,7 +1,10 @@
 <template>
   <div>
     <div>
-      <div>fps: {{ fps }}</div>
+      <div class="flex space-between">
+        <div>fps: {{ fps }}</div>
+        <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+      </div>
       <div>按“Z"来锁住/解锁视角</div>
     </div>
     <div style="position: relative;">
@@ -33,6 +36,7 @@ const {
 
 const fps = ref(0)
 const isLockScreen = ref(false)
+const isRunning = ref(false)
 
 const isRightHandedSystem = false
 const boxList = ref<any>([])
@@ -42,7 +46,18 @@ const startPoint = ref<any>({})
 const endPoint = ref<any>({})
 const collectionMesh = ref<any>([])
 const saveMaterial = ref<any>([])
-  
+
+let sceneResources
+
+const onTrigger = async () => {
+  if(!isRunning.value) {
+    isRunning.value = true
+    sceneResources = await initScene()
+  } else {
+    isRunning.value = false
+    destroy()
+  }
+}
 
 const initScene = async () => {
   const ele = document.getElementById("rpgMultiObjectSelection") as any
@@ -303,33 +318,34 @@ const initScene = async () => {
   }
 }
 
-
-let sceneResources
 const lockScreen = (e) => {
-  if(e.key.toLocaleLowerCase() === 'z' && !isLockScreen.value) {
-    isLockScreen.value = true
-    sceneResources.camera.detachControl()
-  } else if (e.key.toLocaleLowerCase() === 'z' && isLockScreen) {
-    isLockScreen.value = false
-    sceneResources.camera.attachControl()
+  if(isRunning.value) {
+    if(e.key.toLocaleLowerCase() === 'z' && !isLockScreen.value) {
+      isLockScreen.value = true
+      sceneResources.camera.detachControl()
+    } else if (e.key.toLocaleLowerCase() === 'z' && isLockScreen) {
+      isLockScreen.value = false
+      sceneResources.camera.attachControl()
+    }
   }
 }
 
-onMounted(async() => {
-  await nextTick()
-  sceneResources = await initScene()
-
-  window.addEventListener('keydown', lockScreen)
-})
-
-onUnmounted(() => {
+const destroy = () => {
   if(sceneResources) {
     sceneResources.engine.stopRenderLoop() 
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()
     sceneResources = null
   }
+}
+
+onMounted(async() => {
+  await nextTick()
+  window.addEventListener('keydown', lockScreen)
+})
+
+onUnmounted(() => {
+  destroy()
   window.removeEventListener('keydown', lockScreen)
-  createDiv.value = null
 })
 </script>

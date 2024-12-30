@@ -1,5 +1,8 @@
 <template>
-  <div id="roadFlowingLight" class="stage"></div>
+  <div>
+    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+    <div v-if="isRunning" id="roadFlowingLight" class="stage"></div>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -33,6 +36,19 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 const ratio = ref<any>({ value: 0 })
 const requestID = ref<any>()
 let next = 0
+const isRunning = ref(false)
+let sceneResources
+
+const onTrigger = async () => {
+  if(!isRunning.value) {
+    isRunning.value = true
+    await nextTick()
+    sceneResources = await initScene()
+  } else {
+    isRunning.value = false
+    destroy()
+  }
+}
 
 const vertexShader = `
   // 接收js传入的attribute值，会经过线性插值
@@ -276,14 +292,7 @@ const initScene = () => {
   }
 }
 
-let sceneResources
-
-onMounted(async () => {
-  await nextTick() // 等待DOM更新
-  sceneResources = initScene()
-})
-
-onUnmounted(() => {
+const destroy = () => {
   if (sceneResources) {
     sceneResources.scene.clear()
     sceneResources.scene.traverse((child) => {
@@ -304,10 +313,19 @@ onUnmounted(() => {
 
     cancelAnimationFrame(requestID.value)
 
-    ratio.value = null
+    ratio.value.value = 0
+    next = 0
 
     sceneResources = null
   }
+}
+
+onMounted(async() => {
+  await nextTick()
+})
+
+onUnmounted(() => {
+  destroy()
 })
 </script>
 

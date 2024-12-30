@@ -1,6 +1,9 @@
 <template>
   <div>
-    <div>fps: {{ fps }}</div>
+    <div class="flex space-between">
+      <div>fps: {{ fps }}</div>
+      <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+    </div>
     <canvas id="collisionParticle" class="stage"></canvas>
   </div>
 </template>
@@ -23,8 +26,20 @@ const {
   SolidParticleSystem
 } = pkg
 
-const fps = ref(0)
+let sceneResources
 
+const fps = ref(0)
+const isRunning = ref(false)
+
+const onTrigger = async () => {
+  if(!isRunning.value) {
+    isRunning.value = true
+    sceneResources = await initScene()
+  } else {
+    isRunning.value = false
+    destroy()
+  }
+}
 
 const initScene = async () => {
   const ele = document.getElementById("collisionParticle") as any
@@ -289,19 +304,20 @@ const initScene = async () => {
   }
 }
 
-let sceneResources
-
-onMounted(async() => {
-  await nextTick()
-  sceneResources = await initScene()
-})
-
-onUnmounted(() => {
+const destroy = () => {
   if(sceneResources) {
     sceneResources.engine.stopRenderLoop() 
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()
     sceneResources = null
   }
+}
+
+onMounted(async() => {
+  await nextTick()
+})
+
+onUnmounted(() => {
+  destroy()
 })
 </script>

@@ -1,5 +1,8 @@
 <template>
-  <div id="oneGeoMoreMat" class="stage"></div>
+  <div>
+    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+    <div v-if="isRunning" id="oneGeoMoreMat" class="stage"></div>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -33,6 +36,19 @@ const createMultiMaterialObject = (geometry, materials)=> {
 
 const curve = ref<any>()
 const requestID = ref<any>()
+const isRunning = ref(false)
+let sceneResources
+
+const onTrigger = async () => {
+  if(!isRunning.value) {
+    isRunning.value = true
+    await nextTick()
+    sceneResources = await initScene()
+  } else {
+    isRunning.value = false
+    destroy()
+  }
+}
 
 const initScene = () => {
   const ele = document.getElementById('oneGeoMoreMat') as HTMLElement
@@ -150,14 +166,7 @@ const initScene = () => {
   }
 }
 
-let sceneResources
-
-onMounted(async () => {
-  await nextTick() // 等待DOM更新
-  sceneResources = initScene()
-})
-
-onUnmounted(() => {
+const destroy = () => {
   if (sceneResources) {
     sceneResources.scene.clear()
     sceneResources.scene.traverse((child) => {
@@ -181,5 +190,13 @@ onUnmounted(() => {
     sceneResources = null
   }
   curve.value = null
+}
+
+onMounted(async() => {
+  await nextTick()
+})
+
+onUnmounted(() => {
+  destroy()
 })
 </script>

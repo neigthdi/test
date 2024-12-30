@@ -1,7 +1,8 @@
 <template>
   <div>
     按“Z"来锁住/解锁视角
-    <div style="position: relative;">
+    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+    <div v-if="isRunning" style="position: relative;">
       <div id="rpgMultiObjectSelection" class="stage"></div>
     </div>
   </div>
@@ -25,6 +26,9 @@ import {
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 const requestID = ref<any>()
+const isRunning = ref(false)
+let sceneResources
+
 let allBox: any = []
 let collectionSelect: any = []
 
@@ -60,6 +64,17 @@ const vecFar1 = new Vector3()
 const vecFar2 = new Vector3()
 const vecFar3 = new Vector3()
 const deep = 2000
+
+const onTrigger = async () => {
+  if(!isRunning.value) {
+    isRunning.value = true
+    await nextTick()
+    sceneResources = await initScene()
+  } else {
+    isRunning.value = false
+    destroy()
+  }
+}
 
 
 const initScene = () => {
@@ -138,16 +153,6 @@ const initScene = () => {
     requestID.value = requestAnimationFrame(runAnimate)
     renderer.render(scene, camera)
   }
-
-  window.addEventListener('keydown', e => {
-    if (e.key.toLocaleLowerCase() === 'z' && !isLockScreen) {
-      isLockScreen = true
-      controls.enabled = false
-    } else if (e.key === 'z' && isLockScreen) {
-      isLockScreen = false
-      controls.enabled = true
-    }
-  })
 
   renderer.domElement.addEventListener('pointerdown', e => {
     if (isLockScreen) {
@@ -331,7 +336,6 @@ const initScene = () => {
     console.log(collectionSelect)
   }
 
-
   createLight()
   createBox()
   createEle()
@@ -341,18 +345,20 @@ const initScene = () => {
   return {
     renderer,
     scene,
-    controls,
   }
 }
 
-let sceneResources
+const lockScreen = (e) => {
+  if (e.key.toLocaleLowerCase() === 'z' && !isLockScreen) {
+    isLockScreen = true
+    controls.enabled = false
+  } else if (e.key === 'z' && isLockScreen) {
+    isLockScreen = false
+    controls.enabled = true
+  }
+}
 
-onMounted(async () => {
-  await nextTick() // 等待DOM更新
-  sceneResources = initScene()
-})
-
-onUnmounted(() => {
+const destroy = () => {
   if (sceneResources) {
     sceneResources.scene.clear()
     sceneResources.scene.traverse((child) => {
@@ -380,5 +386,15 @@ onUnmounted(() => {
     allBox = []
     collectionSelect = []
   }
+}
+
+onMounted(async() => {
+  await nextTick()
+  window.addEventListener('keydown', lockScreen)
+})
+
+onUnmounted(() => {
+  destroy()
+  window.removeEventListener('keydown', lockScreen)
 })
 </script>

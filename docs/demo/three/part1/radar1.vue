@@ -1,5 +1,8 @@
 <template>
-    <div id="radar1" class="stage"></div>
+  <div>
+    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+    <div v-if="isRunning" id="radar1" class="stage"></div>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -21,7 +24,20 @@ import {
 
 const requestID = ref<any>()
 const addTime = ref<any>({ value: 0 })
+const isRunning = ref(false)
 let clock: any = new Clock()
+let sceneResources
+
+const onTrigger = async () => {
+  if(!isRunning.value) {
+    isRunning.value = true
+    await nextTick()
+    sceneResources = await initScene()
+  } else {
+    isRunning.value = false
+    destroy()
+  }
+}
 
 const vertexShader = `
   varying vec2 vUv;
@@ -228,14 +244,7 @@ const initScene = () => {
   }
 }
 
-let sceneResources
-
-onMounted(async () => {
-  await nextTick() // 等待DOM更新
-  sceneResources = initScene()
-})
-
-onUnmounted(() => {
+const destroy = () => {
   if (sceneResources) {
     sceneResources.scene.clear()
     sceneResources.scene.traverse((child) => {
@@ -256,9 +265,17 @@ onUnmounted(() => {
 
     cancelAnimationFrame(requestID.value)
 
-    addTime.value = null
-    clock = null
+    addTime.value.value = 0
     sceneResources = null
   }
+}
+
+onMounted(async() => {
+  await nextTick()
+})
+
+onUnmounted(() => {
+  destroy()
+  clock = null
 })
 </script>
