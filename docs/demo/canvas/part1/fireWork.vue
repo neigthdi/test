@@ -7,13 +7,15 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, onUnmounted, nextTick } from 'vue';
+import { onMounted, ref, onUnmounted, nextTick } from 'vue'
 
 const requestID = ref<any>()
+const isRunning = ref(false)
+
 const PI2 = Math.PI * 2
 const random = (min, max) => Math.random() * (max - min + 1) + min | 0
 const timestamp = () => new Date().getTime()
-const isRunning = ref(false)
+
 let box
 let scene
 
@@ -198,6 +200,7 @@ const onRunning = async () => {
 const onTrigger = async () => {
   if(!isRunning.value) {
     isRunning.value = true
+    await nextTick()
     onRunning()
   } else {
     isRunning.value = false

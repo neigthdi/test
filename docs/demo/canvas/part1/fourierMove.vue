@@ -6,7 +6,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, onUnmounted, ref, nextTick } from 'vue';
+import { onMounted, onUnmounted, ref, nextTick } from 'vue'
 
 const controls = ref(4)
 const requestID = ref<any>()
@@ -117,6 +117,7 @@ const onRunning = async () => {
 const onTrigger = async () => {
   if(!isRunning.value) {
     isRunning.value = true
+    await nextTick()
     onRunning()
   } else {
     isRunning.value = false
