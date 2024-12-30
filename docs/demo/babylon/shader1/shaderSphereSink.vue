@@ -2,9 +2,9 @@
   <div>
     <div class="flex space-between">
       <div>fps: {{ fps }}----扩散积分查看public</div>
-      <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+      <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     </div>
-    <canvas id="shaderSphereSink" class="stage"></canvas>
+    <canvas v-if="isRunning" id="shaderSphereSink" class="stage"></canvas>
   </div>
 </template>
 
@@ -41,6 +41,7 @@ const limit = 10.0
 const onTrigger = async () => {
   if(!isRunning.value) {
     isRunning.value = true
+    await nextTick()
     sceneResources = await initScene()
   } else {
     isRunning.value = false

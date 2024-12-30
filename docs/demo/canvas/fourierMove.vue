@@ -1,7 +1,7 @@
 <template>
   <div>
-    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
-    <canvas id="fourier" class="stage"></canvas>
+    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
+    <canvas v-if="isRunning" id="fourier" class="stage"></canvas>
   </div>
 </template>
 
@@ -16,9 +16,12 @@ let ctx
 let running
 let draw
 
-const onRunning = () => {
-  const canvas: any = document.getElementById('fourier')
-  const ctx = canvas.getContext('2d')
+const onRunning = async () => {
+  await nextTick()
+  canvas = document.getElementById('fourier')
+  ctx = canvas.getContext('2d')
+
+  canvas?.addEventListener('click', onAddEvent)
 
   const width = Number(window.getComputedStyle(canvas).width.split('px')[0])
   const height = Number(window.getComputedStyle(canvas).height.split('px')[0])
@@ -28,7 +31,6 @@ const onRunning = () => {
   const arr: any = []
   const colorArr = ['#00bcd4', '#dd5866', '#335678', '#28a745']
 
-  let running = false
   let time = 0
 
   const createDisc = (r, color, x?, y?) => {
@@ -125,21 +127,18 @@ const onTrigger = async () => {
 const onAddEvent = () => {
   if(isRunning.value) {
     running = !running
-    running ? window.cancelAnimationFrame(requestID.value) : requestID.value = window.requestAnimationFrame(draw)
+    running ? cancelAnimationFrame(requestID.value) : requestID.value = requestAnimationFrame(draw)
   }
 }
 
 const destroy = () => {
   cancelAnimationFrame(requestID.value)
-  canvas.removeEventListener('click', onAddEvent)
+  canvas?.removeEventListener('click', onAddEvent)
   if(draw) draw = null
 }
 
 onMounted(async() => {
   await nextTick()
-  canvas = document.getElementById('fourier')
-  ctx = canvas.getContext('2d')
-  canvas.addEventListener('click', onAddEvent)
 })
 
 onUnmounted(() => {

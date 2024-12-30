@@ -2,10 +2,10 @@
   <div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
-      <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+      <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     </div>
     <div v-if="isRunning" class="pointer" @click="useTexture">点击切换整面/线条（当前：{{ isAllFace ? '整面' : '线条' }}）</div>
-    <canvas id="vertexDataFace" class="stage"></canvas>
+    <canvas v-if="isRunning" id="vertexDataFace" class="stage"></canvas>
   </div>
 </template>
 
@@ -48,6 +48,7 @@ const useTexture = () => {
 const onTrigger = async () => {
   if(!isRunning.value) {
     isRunning.value = true
+    await nextTick()
     sceneResources = await initScene()
   } else {
     isRunning.value = false

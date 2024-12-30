@@ -3,9 +3,9 @@
     <div>未完成，平面+噪音形成高低，法线+灯光模拟阳光照射，蓝色深浅，镜面倒影未想好</div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
-      <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+      <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     </div>
-    <canvas id="shaderRiver" class="stage"></canvas>
+    <canvas v-if="isRunning" id="shaderRiver" class="stage"></canvas>
   </div>
 </template>
 
@@ -21,11 +21,7 @@ const {
   Color4,
   HemisphericLight,
   MeshBuilder,
-  Texture,
-  Effect,
-  ShaderMaterial,
 } = pkg
-const { CustomMaterial } = pkgMat
 
 let sceneResources
 
@@ -35,6 +31,7 @@ const isRunning = ref(false)
 const onTrigger = async () => {
   if(!isRunning.value) {
     isRunning.value = true
+    await nextTick()
     sceneResources = await initScene()
   } else {
     isRunning.value = false

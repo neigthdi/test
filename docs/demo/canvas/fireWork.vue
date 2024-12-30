@@ -1,8 +1,8 @@
 <template>
   <div id="fireWork-box">
-    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     <div>鼠标点击生成烟花</div>
-    <canvas id="fireWork" class="stage"></canvas>
+    <canvas v-if="isRunning" id="fireWork" class="stage"></canvas>
   </div>
 </template>
 
@@ -15,7 +15,6 @@ const random = (min, max) => Math.random() * (max - min + 1) + min | 0
 const timestamp = () => new Date().getTime()
 const isRunning = ref(false)
 let box
-
 let scene
 
 class Scene {
@@ -174,7 +173,9 @@ const onAddEvent = (evt) => {
   scene.onClick(evt)
 }
 
-const onRunning = () => {
+const onRunning = async () => {
+  await nextTick()
+  box =  document.getElementById('fireWork-box') as any
   let then = timestamp()
   scene = new Scene('fireWork')
   box.addEventListener('click', onAddEvent)
@@ -205,14 +206,14 @@ const onTrigger = async () => {
 }
 
 const destroy = () => {
-  box.removeEventListener('click', onAddEvent)
+  box?.removeEventListener('click', onAddEvent)
   cancelAnimationFrame(requestID.value)
+  scene = null
 }
 
 
 onMounted(async() => {
   await nextTick()
-  box =  document.getElementById('fireWork-box') as any
 })
 
 

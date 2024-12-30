@@ -74,7 +74,24 @@ img {
 }
 
 .pointer {
+  color: red;
   cursor: pointer;
+  animation: star 5s infinite ease;
+}
+
+@keyframes star {
+  0% {
+    color: rgb(255, 49, 49);
+  }
+  33% {
+    color: rgb(63, 255, 73);
+  }
+  66% {
+    color: rgb(29, 210, 255);
+  }
+  100% {
+    color: rgb(255, 49, 49);
+  }
 }
 
 .pointer:hover {

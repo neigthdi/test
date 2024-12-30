@@ -3,13 +3,13 @@
     <div>
       <div class="flex space-between">
         <div>fps: {{ fps }}</div>
-        <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+        <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
       </div>
       <div>按“Z"来锁住/解锁视角</div>
     </div>
     <div style="position: relative;">
       <div id="customBox">
-        <canvas id="rpgMultiObjectSelection" class="stage"></canvas>
+        <canvas v-if="isRunning" id="rpgMultiObjectSelection" class="stage"></canvas>
       </div>
     </div>
   </div>
@@ -52,6 +52,7 @@ let sceneResources
 const onTrigger = async () => {
   if(!isRunning.value) {
     isRunning.value = true
+    await nextTick()
     sceneResources = await initScene()
   } else {
     isRunning.value = false

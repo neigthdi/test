@@ -3,7 +3,7 @@
     <div>
       <div class="flex space-between">
         <div>fps: {{ fps }}</div>
-        <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+        <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
       </div>
       <div v-if="isRunning" class="flex space-between">
         <div>
@@ -16,7 +16,7 @@
         </div>
       </div>
     </div>
-    <canvas id="particleGPU" class="stage"></canvas>
+    <canvas v-if="isRunning" id="particleGPU" class="stage"></canvas>
   </div>
 </template>
 
@@ -71,6 +71,7 @@ const onUseGpu = () => {
 const onTrigger = async () => {
   if(!isRunning.value) {
     isRunning.value = true
+    await nextTick()
     sceneResources = await initScene()
   } else {
     isRunning.value = false

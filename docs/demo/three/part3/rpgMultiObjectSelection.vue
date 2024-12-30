@@ -1,7 +1,7 @@
 <template>
   <div>
     按“Z"来锁住/解锁视角
-    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     <div v-if="isRunning" style="position: relative;">
       <div id="rpgMultiObjectSelection" class="stage"></div>
     </div>

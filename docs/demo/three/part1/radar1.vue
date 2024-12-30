@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     <div v-if="isRunning" id="radar1" class="stage"></div>
   </div>
 </template>

@@ -2,14 +2,14 @@
   <div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
-      <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+      <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     </div>
     <div v-if="isRunning">
       <span class="pointer" @click="changeSituation(1)">效果1</span>
       <span class="pointer m-l-20" @click="changeSituation(2)">效果2</span>
       <span class="pointer m-l-20" @click="changeSituation(3)">效果3</span>
     </div>
-    <canvas id="shaderSphereDissolve" class="stage"></canvas>
+    <canvas v-if="isRunning" id="shaderSphereDissolve" class="stage"></canvas>
   </div>
 </template>
 
@@ -38,6 +38,7 @@ const isRunning = ref(false)
 const onTrigger = async () => {
   if(!isRunning.value) {
     isRunning.value = true
+    await nextTick()
     sceneResources = await initScene()
   } else {
     isRunning.value = false

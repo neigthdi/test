@@ -2,12 +2,14 @@
   <div id="cameraMore">
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
-      <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '暂停' }}</div>
+      <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     </div>
-    <canvas id="cameraMore0"></canvas>
-		<canvas id="cameraMore1"></canvas>
-		<canvas id="cameraMore2"></canvas>
-		<canvas id="cameraMore3"></canvas>
+    <div v-if="isRunning">
+      <canvas id="cameraMore0"></canvas>
+      <canvas id="cameraMore1"></canvas>
+      <canvas id="cameraMore2"></canvas>
+      <canvas id="cameraMore3"></canvas>
+    </div>
   </div>
 </template>
 
@@ -33,6 +35,7 @@ const isRunning = ref(false)
 const onTrigger = async () => {
   if(!isRunning.value) {
     isRunning.value = true
+    await nextTick()
     sceneResources = await initScene()
   } else {
     isRunning.value = false
