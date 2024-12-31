@@ -232,13 +232,15 @@ const initScene = () => {
   }
 
   class DomMesh {
+    w
+    h
     el
     rect
     mesh
 
     constructor(el, scene, material, isPoints = false) {
       this.el = el
-      const geometry = new PlaneGeometry(width, height, width, height) // width = 1, height = 1, widthSegments(宽度分段) = 1, heightSegments(高度分段) = 1
+      const geometry = new PlaneGeometry(600, 400, 600, 400) // width = 1, height = 1, widthSegments(宽度分段) = 1, heightSegments(高度分段) = 1
       const mesh = isPoints ? new Points(geometry, material) : new Mesh(geometry, material)
       this.mesh = mesh
       scene.add(mesh)
@@ -300,7 +302,10 @@ const initScene = () => {
   const image: any = document.getElementById('image')
 
   const createPlane = () => {
-   
+    // const {
+    //   width,
+    //   height
+    // } = image.getBoundingClientRect()
     const texture = new Texture(image)
     image.onload = () => {
       texture.needsUpdate = true

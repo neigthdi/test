@@ -265,9 +265,7 @@ const destroy = () => {
 }
 
 onMounted(async() => {
-  isRunning.value = true
   await nextTick()
-  onRunning()
 })
 
 onUnmounted(() => {

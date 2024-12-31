@@ -1,4 +1,4 @@
-import{S as O,P as G,W as Y,C as f,T as z,O as j,A as q,B as D2,a as U,D as N,M as P,b as l2,c as X,d as h2,e as r2,V as E2,f as n2,L as B2,g as d2,F as C2,h as g2,i as y2,j as c2,k as o2,l as u2}from"./chunks/OrbitControls.CrC-dYuH.js";import{d as V,s as o,y as W,R,z as Z,o as x,c as w,j as c,t as $,e as H,D as m2,I as S,w as I,a as J}from"./chunks/framework.De32BR7G.js";const v2={key:0,id:"diffusionRipple",class:"stage"},f2=`
+import{S as O,P as G,W as Y,C as f,T as z,O as j,A as q,B as D2,a as U,D as N,M as P,b as l2,c as X,d as h2,e as r2,V as E2,f as n2,L as B2,g as d2,F as C2,h as g2,i as y2,j as c2,k as o2,l as u2}from"./chunks/OrbitControls.kc68ICEV.js";import{d as V,s as o,y as W,R,z as Z,o as x,c as w,j as c,t as $,e as H,D as m2,I as S,w as I,a as J}from"./chunks/framework.De32BR7G.js";const v2={key:0,id:"diffusionRipple",class:"stage"},f2=`
   varying vec3 vp;
   void main() {
     vp = position;
