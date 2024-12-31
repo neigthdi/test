@@ -31,6 +31,7 @@ class Chart {
   targetY
   bindScroll
   bindDrag
+  activeShape
 
   constructor(params) {
     const wrapDomStyle = getComputedStyle(params.el)
@@ -90,6 +91,8 @@ class Chart {
 
     this.mousedownOriginX = this.offsetX
     this.mousedownOriginY = this.offsetY
+
+    this.activeShape = null
 
     this.wrapDom.style.cursor = 'grabbing'
     this.El.addEventListener('mousemove', this.bindDrag, false)
@@ -167,6 +170,7 @@ class Chart {
     this.ctx.beginPath()
     this.ctx.moveTo(arr.shift(), arr.shift())
     this.ctx.lineWidth = data.lineWidth || 1
+    this.ctx.strokeStyle = data.strokeStyle || 'black'
     do {
       this.ctx.lineTo(arr.shift(), arr.shift())
     } while (arr.length)
@@ -194,7 +198,6 @@ class Chart {
       default:
         break
     }
-    this.ctx.setTransform(this.scale, 0, 0, this.scale, this.offsetX, this.offsetY)
   }
 
   push(data) {
@@ -202,7 +205,12 @@ class Chart {
   }
 
   render() {
+    // 先重置为单位矩阵
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0)
+    // 再清除画布
     this.ctx.clearRect(0, 0, this.width, this.height)
+    // 最后再设置矩阵
+    this.ctx.setTransform(this.scale, 0, 0, this.scale, this.offsetX, this.offsetY)
 
     this.shapes.forEach(item => {
       this.draw(item)
@@ -221,20 +229,21 @@ const onRunning = async() => {
   	type: 'circle',
     fillStyle: 'pink',
     x: 400,
-    y: 300,
+    y: 400,
     r: 50
   })
 
   chartObj.push({
     type: 'line',
-    lineWidth: 4,
-    data: [100, 90, 200, 90, 250, 200, 400, 200]
+    lineWidth: 2,
+    strokeStyle: 'orange',
+    data: [100, 300, 200, 90, 250, 200, 400, 200]
   })
 
   chartObj.push({
     type: 'rect',
     fillStyle: '#0f00ff',
-    data: [200, 300, 100, 200]
+    data: [200, 300, 100, 100]
   })
 
   chartObj.render()
@@ -256,7 +265,9 @@ const destroy = () => {
 }
 
 onMounted(async() => {
+  isRunning.value = true
   await nextTick()
+  onRunning()
 })
 
 onUnmounted(() => {

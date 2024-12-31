@@ -18,6 +18,7 @@ body {
   .stage {
     width: calc(100vw - 88px);
     height: 360px;
+    border: 1px solid orange;
   }
 }
 
@@ -26,6 +27,7 @@ body {
   .stage {
     width: 648px;
     height: 360px;
+    border: 1px solid orange;
   }
 }
 
