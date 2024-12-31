@@ -198,7 +198,7 @@ const initScene = () => {
   }
 
    // 光
-   const createLight = () => {
+  const createLight = () => {
     const ambient = new AmbientLight(0x444444)
     scene.add(ambient)
   }
