@@ -29,7 +29,7 @@ const fps = ref(0)
 const isRunning = ref(false)
 
 const onTrigger = async () => {
-  if(!isRunning.value) {
+  if (!isRunning.value) {
     isRunning.value = true
     await nextTick()
     sceneResources = await initScene()
@@ -136,7 +136,7 @@ const initScene = async () => {
 }
 
 const destroy = () => {
-  if(sceneResources) {
+  if (sceneResources) {
     sceneResources.engine.stopRenderLoop() 
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()

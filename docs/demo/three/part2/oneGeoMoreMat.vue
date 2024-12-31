@@ -1,6 +1,7 @@
 <template>
   <div>
     <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
+    <div>通过group.add把一个geo融合多个MeshBasicMaterial、相机跟随</div>
     <div v-if="isRunning" id="oneGeoMoreMat" class="stage"></div>
   </div>
 </template>
@@ -40,7 +41,7 @@ const isRunning = ref(false)
 let sceneResources
 
 const onTrigger = async () => {
-  if(!isRunning.value) {
+  if (!isRunning.value) {
     isRunning.value = true
     await nextTick()
     sceneResources = await initScene()
@@ -86,7 +87,6 @@ const initScene = () => {
     controls.enableZoom = true
   }
 
-  
   // 光
   const createLight = () => {
     const ambient = new AmbientLight(0x444444)

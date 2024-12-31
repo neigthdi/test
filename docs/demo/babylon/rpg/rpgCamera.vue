@@ -44,7 +44,7 @@ let isJump = false
 const isRightHandedSystem = false
 
 const onTrigger = async () => {
-  if(!isRunning.value) {
+  if (!isRunning.value) {
     isRunning.value = true
     await nextTick()
     sceneResources = await initScene()
@@ -324,7 +324,7 @@ const initScene = async () => {
         )
       
       } else {
-        if(box.position.y < 1) { // 用来限制防止jump的时候多次触发
+        if (box.position.y < 1) { // 用来限制防止jump的时候多次触发
           upSpeed = 0
           isJump = false
         }
@@ -340,7 +340,7 @@ const initScene = async () => {
 }
 
 const destroy = () => {
-  if(sceneResources) {
+  if (sceneResources) {
     sceneResources.engine.stopRenderLoop() 
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()

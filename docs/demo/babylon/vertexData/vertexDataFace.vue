@@ -36,7 +36,7 @@ const isRunning = ref(false)
 const isAllFace = ref(false)
 
 const useTexture = () => {
-  if(isRunning.value) {
+  if (isRunning.value) {
     destroy()
     isAllFace.value = !isAllFace.value
     setTimeout(() => {
@@ -46,7 +46,7 @@ const useTexture = () => {
 }
 
 const onTrigger = async () => {
-  if(!isRunning.value) {
+  if (!isRunning.value) {
     isRunning.value = true
     await nextTick()
     sceneResources = await initScene()
@@ -694,7 +694,7 @@ const initScene = async () => {
 }
 
 const destroy = () => {
-  if(sceneResources) {
+  if (sceneResources) {
     sceneResources.engine.stopRenderLoop() 
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()

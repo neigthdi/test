@@ -29,7 +29,7 @@ const isRunning = ref(false)
 let sceneResources
 
 const onTrigger = async () => {
-  if(!isRunning.value) {
+  if (!isRunning.value) {
     isRunning.value = true
     await nextTick()
     sceneResources = await initScene()

@@ -62,14 +62,14 @@ const onRotate = () => {
 }
 
 const onUseGpu = () => {
-  if(isRunning.value) {
+  if (isRunning.value) {
     useGPUVersion.value = !useGPUVersion.value
     initScene()
   }
 }
 
 const onTrigger = async () => {
-  if(!isRunning.value) {
+  if (!isRunning.value) {
     isRunning.value = true
     await nextTick()
     sceneResources = await initScene()
@@ -133,11 +133,11 @@ const initScene = async () => {
   }
 
   const createParticle = (fountain) => {
-    if(particleSystem.value) {
+    if (particleSystem.value) {
       particleSystem.value.dispose()
     }
 
-    if(useGPUVersion.value && GPUParticleSystem.IsSupported) {
+    if (useGPUVersion.value && GPUParticleSystem.IsSupported) {
       particleSystem.value = new GPUParticleSystem(
         'gpu-particles',
         { capacity: numbers },
@@ -246,7 +246,7 @@ const initScene = async () => {
 }
 
 const destroy = () => {
-  if(sceneResources) {
+  if (sceneResources) {
     sceneResources.engine.stopRenderLoop() 
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()

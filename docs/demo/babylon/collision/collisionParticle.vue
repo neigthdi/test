@@ -32,7 +32,7 @@ const fps = ref(0)
 const isRunning = ref(false)
 
 const onTrigger = async () => {
-  if(!isRunning.value) {
+  if (!isRunning.value) {
     isRunning.value = true
     await nextTick()
     sceneResources = await initScene()
@@ -169,7 +169,7 @@ const initScene = async () => {
     }
 
     sps.updateParticle = (particle: any) => {
-      if(particle.position.y + mesh.position.y < ground.position.y) {
+      if (particle.position.y + mesh.position.y < ground.position.y) {
         particle.color.r = 0.0
         particle.color.g = 1.0
         particle.color.b = 0.0
@@ -187,7 +187,7 @@ const initScene = async () => {
       particle.rotation.y += 0.008 * sign
 
       // 判断发生碰撞
-      if(particle.intersectsMesh(sphere)) {
+      if (particle.intersectsMesh(sphere)) {
         // 将粒子的位置向量与网格（mesh）的位置向量相加，结果存储在 tempPos 变量中，这样 tempPos 就包含了粒子的世界位置
         particle.position.addToRef(mesh.position, tempPos)
         // 从 tempPos 中减去球体的位置向量，结果存储在 tempNormal 变量中，这样 tempNormal 就包含了从球体中心指向粒子的向量，即球体的法线
@@ -306,7 +306,7 @@ const initScene = async () => {
 }
 
 const destroy = () => {
-  if(sceneResources) {
+  if (sceneResources) {
     sceneResources.engine.stopRenderLoop() 
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()

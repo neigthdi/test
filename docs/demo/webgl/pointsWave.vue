@@ -38,7 +38,7 @@ const initScene = () => {
     uniform vec4 color;
       void main() {
         float d = distance(gl_PointCoord, vec2(0.5, 0.5));
-        if(d<0.5){
+        if (d<0.5){
           gl_FragColor = vec4(0.2, 0.3, 0.5, 1.0);
         }else{
           discard;

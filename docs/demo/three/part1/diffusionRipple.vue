@@ -26,7 +26,7 @@ const isRunning = ref(false)
 let sceneResources
 
 const onTrigger = async () => {
-  if(!isRunning.value) {
+  if (!isRunning.value) {
     isRunning.value = true
     await nextTick()
     sceneResources = await initScene()
@@ -59,10 +59,10 @@ const fragmentShader = `
     float uOpacity = 0.3;
     vec3 vColor = u_color;
     float uLength = getLength(vp.x, vp.z);
-    if(uLength <= u_r && uLength > u_r - u_length) {
+    if (uLength <= u_r && uLength > u_r - u_length) {
       float opacity = sin((u_r - uLength) / uLength);
       uOpacity = opacity;
-      if(vp.y < 0.0) {
+      if (vp.y < 0.0) {
         vColor = u_color * opacity;
       } else {
         vColor = u_tcolor;

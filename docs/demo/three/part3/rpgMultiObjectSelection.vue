@@ -66,7 +66,7 @@ const vecFar3 = new Vector3()
 const deep = 2000
 
 const onTrigger = async () => {
-  if(!isRunning.value) {
+  if (!isRunning.value) {
     isRunning.value = true
     await nextTick()
     sceneResources = await initScene()
@@ -309,7 +309,7 @@ const initScene = () => {
   const getSelectThings = () => {
     collectionSelect = []
     
-    if(startPoint.x === endPoint.x || startPoint.y === endPoint.y) {
+    if (startPoint.x === endPoint.x || startPoint.y === endPoint.y) {
       return 
     }
 

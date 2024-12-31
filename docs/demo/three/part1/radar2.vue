@@ -19,17 +19,14 @@ import {
   Texture,
   PlaneGeometry,
   ShaderMaterial,
-  Clock
 } from 'three'
 
 const requestID = ref<any>()
-const addTime = ref<any>({ value: 0 })
 const isRunning = ref(false)
-let clock: any = new Clock()
 let sceneResources
 
 const onTrigger = async () => {
-  if(!isRunning.value) {
+  if (!isRunning.value) {
     isRunning.value = true
     await nextTick()
     sceneResources = await initScene()
@@ -80,13 +77,13 @@ const fragmentShader = `
     // float opacity = 1.0;
     
     // 隐藏某些部分
-    if(abs(radians) > 1.0) {
+    if (abs(radians) > 1.0) {
       opacity = 0.0;
     }
     
     // 距离
     float uLength = getLength(point.x, point.y);
-    if(uLength > u_radius) {
+    if (uLength > u_radius) {
       opacity = 0.0;
     }
     
@@ -130,24 +127,16 @@ const initScene = () => {
   }
 
   const createPlane = () => {
-    const radarGeom = new PlaneGeometry(100, 100, 1, 1) // width = 1, height = 1, widthSegments(宽度分段) = 1, heightSegments(高度分段) = 1
+    const radarGeom = new PlaneGeometry(100, 100, 100, 100) // width = 1, height = 1, widthSegments(宽度分段) = 1, heightSegments(高度分段) = 1
     const radarMat = new ShaderMaterial({
       vertexShader: vertexShader,
       fragmentShader: fragmentShader,
       side: DoubleSide,
       uniforms: {
-        u_color: {
-          value: new Color('#0f0')
-        },
-        u_radius: {
-          value: 50.0
-        },
-        u_rotation_step: {
-          value: 0.0
-        },
-        u_pi: {
-          value: 3.14
-        }
+        u_color: { value: new Color('#f00') },
+        u_radius: { value: 50.0 },
+        u_rotation_step: { value: 0.0 },
+        u_pi: {  value: 3.14  }
       },
       transparent: true,
       depthWrite: false,
@@ -211,6 +200,5 @@ onMounted(async() => {
 
 onUnmounted(() => {
   destroy()
-  clock = null
 })
 </script>

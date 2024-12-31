@@ -36,7 +36,7 @@ const semiHouseWidth = 2
 const cubeHouseWidth = 1
 
 const onTrigger = async () => {
-  if(!isRunning.value) {
+  if (!isRunning.value) {
     isRunning.value = true
     await nextTick()
     sceneResources = await initScene()
@@ -87,7 +87,7 @@ const initScene = async () => {
 
   const createBox = (width) => {
     const boxMat = new StandardMaterial('box')
-    if(width === semiHouseWidth) {
+    if (width === semiHouseWidth) {
       boxMat.diffuseTexture = new Texture('/images/semiHouse.png')
     } else {
       boxMat.diffuseTexture = new Texture('/images/cubeHouse.png')
@@ -208,7 +208,7 @@ const initScene = async () => {
 }
 
 const destroy = () => {
-  if(sceneResources) {
+  if (sceneResources) {
     sceneResources.engine.stopRenderLoop() 
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()

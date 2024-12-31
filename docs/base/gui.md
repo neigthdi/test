@@ -108,9 +108,9 @@ advancedTexture.registerClipboardEvents();
 //将事件监听器添加到粘贴板的observabel
 advancedTexture.onClipboardObservable.add((ev) => {
     //复制事件
-    if(ev.type === BABYLON.ClipboardEventTypes.COPY){
+    if (ev.type === BABYLON.ClipboardEventTypes.COPY){
         let pick = scene.pick(scene.pointerX, scene.pointerY);
-        if(pick.hit){
+        if (pick.hit){
             //SceneSerializer：场景序列化，SerializeMesh：序列化网格
             let selializedData =   BABYLON.SceneSerializer.SerializeMesh(pick.pickedMesh);
             let blob = new Blob([JSON.stringify(selializedData)], {type: "application/json;charset=utf-8"});
@@ -122,9 +122,9 @@ advancedTexture.onClipboardObservable.add((ev) => {
         
     }
     //粘贴事件
-    if(ev.type === BABYLON.ClipboardEventTypes.PASTE){
+    if (ev.type === BABYLON.ClipboardEventTypes.PASTE){
         //粘贴板数据中存在text/uri-list
-        if(ev.event.clipboardData.types.indexOf("text/uri-list") > -1){
+        if (ev.event.clipboardData.types.indexOf("text/uri-list") > -1){
             let blobURL = ev.event.clipboardData.getData("text/uri-list");
             //SceneLoader：场景阅读器
             BABYLON.SceneLoader.ImportMesh("", "", blobURL, scene,

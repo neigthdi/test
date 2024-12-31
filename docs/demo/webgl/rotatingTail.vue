@@ -28,7 +28,7 @@ const initScene = () => {
           gl_Position = vec4( vec2( 1, -1 ) * ( a_position / u_resolution ) * 2., 0, 1 );
 
           v_color = a_color;
-          if( a_color.x > 0. )
+          if ( a_color.x > 0. )
             v_color = vec2( a_color.x + u_tick / 100., a_color.y );
         }
         `
@@ -41,7 +41,7 @@ const initScene = () => {
         }
         void main(){
           vec4 color = vec4( 0, 0, 0, v_color.y );
-          if( v_color.x > 0. )
+          if ( v_color.x > 0. )
             color.rgb = h2rgb( v_color.x / 5.0 );
 
           gl_FragColor = color;

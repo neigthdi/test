@@ -31,7 +31,7 @@ const fps = ref(0)
 const isRunning = ref(false)
 
 const onTrigger = async () => {
-  if(!isRunning.value) {
+  if (!isRunning.value) {
     isRunning.value = true
     await nextTick()
     sceneResources = await initScene()
@@ -96,7 +96,7 @@ const initScene = async () => {
       for(const key in cur.position) {
         wall.position[key] = cur.position[key]
       }
-      if(cur.rotation) {
+      if (cur.rotation) {
         for(const key in cur.rotation) {
           wall.rotation[key] = cur.rotation[key]
         }
@@ -328,7 +328,7 @@ const initScene = async () => {
 }
 
 const destroy = () => {
-  if(sceneResources) {
+  if (sceneResources) {
     sceneResources.engine.stopRenderLoop() 
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()

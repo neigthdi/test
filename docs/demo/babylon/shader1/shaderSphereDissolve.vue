@@ -36,7 +36,7 @@ const fps = ref(0)
 const isRunning = ref(false)
 
 const onTrigger = async () => {
-  if(!isRunning.value) {
+  if (!isRunning.value) {
     isRunning.value = true
     await nextTick()
     sceneResources = await initScene()
@@ -61,7 +61,7 @@ const situation2Text = () => {
 
     // 大于某个值则消失
     // baseColor.b * noiseValue应该是其他合适的值，现结果的溶解边缘不够圆润
-    if(uTime > baseColor.g * noiseValue) {
+    if (uTime > baseColor.g * noiseValue) {
     	discard;
     } else {
     	gl_FragColor = baseColor;
@@ -75,7 +75,7 @@ const situation3Text = () => {
 
     // 大于某个值则消失
     // baseColor.b * noiseValue应该是其他合适的值，现结果的溶解边缘不够圆润
-    if(uTime > noiseValue) {
+    if (uTime > noiseValue) {
     	discard;
     } else {
     	gl_FragColor = baseColor;
@@ -93,7 +93,7 @@ const situationObj = {
 const curSituation = ref(1)
 
 const changeSituation = async (cur) => {
-  if(isRunning.value) {
+  if (isRunning.value) {
     destroy()
     curSituation.value = cur
     await nextTick()
@@ -283,7 +283,7 @@ const initScene = async () => {
 }
 
 const destroy = () => {
-  if(sceneResources) {
+  if (sceneResources) {
     sceneResources.engine.stopRenderLoop() 
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()

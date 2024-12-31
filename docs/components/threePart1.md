@@ -7,6 +7,9 @@
 ## 雷达-2
 <preview path="../demo/three/part1/radar2.vue"></preview>
 
+## 雷达-3
+<preview path="../demo/three/part1/radar3.vue"></preview>
+
 ## 高度渐变色
 <preview path="../demo/three/part1/highGradientColor.vue"></preview>
 

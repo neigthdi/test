@@ -32,7 +32,7 @@ let clock: any = new Clock()
 let loader: any = new TextureLoader();
 
 const onTrigger = async () => {
-  if(!isRunning.value) {
+  if (!isRunning.value) {
     isRunning.value = true
     await nextTick()
     sceneResources = await initScene()

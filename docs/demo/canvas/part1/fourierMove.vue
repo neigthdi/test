@@ -115,7 +115,7 @@ const onRunning = async () => {
 }
 
 const onTrigger = async () => {
-  if(!isRunning.value) {
+  if (!isRunning.value) {
     isRunning.value = true
     await nextTick()
     onRunning()
@@ -126,7 +126,7 @@ const onTrigger = async () => {
 }
 
 const onAddEvent = () => {
-  if(isRunning.value) {
+  if (isRunning.value) {
     running = !running
     running ? cancelAnimationFrame(requestID.value) : requestID.value = requestAnimationFrame(draw)
   }
@@ -135,7 +135,7 @@ const onAddEvent = () => {
 const destroy = () => {
   cancelAnimationFrame(requestID.value)
   canvas?.removeEventListener('click', onAddEvent)
-  if(draw) draw = null
+  if (draw) draw = null
 }
 
 onMounted(async() => {

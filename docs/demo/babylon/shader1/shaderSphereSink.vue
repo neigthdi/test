@@ -39,7 +39,7 @@ const speed = 0.02
 const limit = 10.0
 
 const onTrigger = async () => {
-  if(!isRunning.value) {
+  if (!isRunning.value) {
     isRunning.value = true
     await nextTick()
     sceneResources = await initScene()
@@ -150,13 +150,13 @@ const initScene = async () => {
         // 方案一：修改y值
         // 模拟--停止下降，继续水平移动
         // 缺少扩散时候，h由低变高，并停止升高
-        if(uDown >= uStopMin) {
+        if (uDown >= uStopMin) {
           y = position.y - uStopMin;
         } else {
           y = position.y - uDown;
         }
         // 模拟--隐藏，通过对比y值，把比地面还低的部分隐藏
-        if(y <= groundY) {
+        if (y <= groundY) {
           y = groundY;
           // 粗略模拟向外扩散
           x = x * 1.05;
@@ -251,7 +251,7 @@ const initScene = async () => {
 }
 
 const destroy = () => {
-  if(sceneResources) {
+  if (sceneResources) {
     sceneResources.engine.stopRenderLoop() 
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()

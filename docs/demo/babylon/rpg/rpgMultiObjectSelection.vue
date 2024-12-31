@@ -50,7 +50,7 @@ const saveMaterial = ref<any>([])
 let sceneResources
 
 const onTrigger = async () => {
-  if(!isRunning.value) {
+  if (!isRunning.value) {
     isRunning.value = true
     await nextTick()
     sceneResources = await initScene()
@@ -320,8 +320,8 @@ const initScene = async () => {
 }
 
 const lockScreen = (e) => {
-  if(isRunning.value) {
-    if(e.key.toLocaleLowerCase() === 'z' && !isLockScreen.value) {
+  if (isRunning.value) {
+    if (e.key.toLocaleLowerCase() === 'z' && !isLockScreen.value) {
       isLockScreen.value = true
       sceneResources.camera.detachControl()
     } else if (e.key.toLocaleLowerCase() === 'z' && isLockScreen) {
@@ -332,7 +332,7 @@ const lockScreen = (e) => {
 }
 
 const destroy = () => {
-  if(sceneResources) {
+  if (sceneResources) {
     sceneResources.engine.stopRenderLoop() 
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()

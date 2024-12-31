@@ -250,7 +250,7 @@ const onRunning = async() => {
 }
 
 const onTrigger = async () => {
-  if(!isRunning.value) {
+  if (!isRunning.value) {
     isRunning.value = true
     await nextTick()
     onRunning()
