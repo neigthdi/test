@@ -1,7 +1,7 @@
 <template>
   <div>
-    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     <div>通过group.add把一个geo融合多个MeshBasicMaterial、相机跟随</div>
+    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     <div v-if="isRunning" id="oneGeoMoreMat" class="stage"></div>
   </div>
 </template>

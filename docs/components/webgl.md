@@ -3,3 +3,6 @@
 
 ## 粒子波浪
 <preview path="../demo/webgl/pointsWave.vue"></preview>
+
+## 图片合并
+<preview path="../demo/webgl/mergeImage.vue"></preview>

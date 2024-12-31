@@ -5,7 +5,8 @@
 <script lang="ts" setup>
 import { onMounted, nextTick, onUnmounted } from 'vue'
 
-let animationFrame 
+let animationFrame
+let sceneResources
 
 const initScene = () => {
   const c = document.getElementById('rotatingTail') as any
@@ -17,36 +18,36 @@ const initScene = () => {
   const webgl: any = {}
 
   webgl.vertexShaderSource = `
-        attribute vec2 a_position;
-        attribute vec2 a_color;
-        uniform float u_tick;
-        uniform vec2 u_resolution;
-        varying vec2 v_color;
+    attribute vec2 a_position;
+    attribute vec2 a_color;
+    uniform float u_tick;
+    uniform vec2 u_resolution;
+    varying vec2 v_color;
 
-        void main(){
+    void main() {
 
-          gl_Position = vec4( vec2( 1, -1 ) * ( a_position / u_resolution ) * 2., 0, 1 );
+      gl_Position = vec4(vec2(1, -1) * (a_position / u_resolution) * 2.0, 0, 1);
 
-          v_color = a_color;
-          if ( a_color.x > 0. )
-            v_color = vec2( a_color.x + u_tick / 100., a_color.y );
-        }
-        `
+      v_color = a_color;
+      if (a_color.x > 0.0)
+        v_color = vec2(a_color.x + u_tick / 100.0, a_color.y);
+      }
+    `
   webgl.fragmentShaderSource = `
-        precision mediump float;
-        varying vec2 v_color;
+    precision mediump float;
+    varying vec2 v_color;
 
-        vec3 h2rgb( float h ){
-          return clamp( abs( mod( h * 6. + vec3( 0, 4, 2 ), 6. ) - 3. ) -1., 0., 1. );
-        }
-        void main(){
-          vec4 color = vec4( 0, 0, 0, v_color.y );
-          if ( v_color.x > 0. )
-            color.rgb = h2rgb( v_color.x / 5.0 );
-
-          gl_FragColor = color;
-        }
-        `
+    vec3 h2rgb(float h) {
+      return clamp(abs(mod(h * 6.0 + vec3(0, 4, 2), 6.0) - 3.0) -1.0, 0.0, 1.0);
+    }
+    void main() {
+      vec4 color = vec4(0, 0, 0, v_color.y);
+      if (v_color.x > 0.0) {
+        color.rgb = h2rgb(v_color.x / 5.0);
+      }
+      gl_FragColor = color;
+    }
+  `
 
   webgl.vertexShader = gl.createShader(gl.VERTEX_SHADER)
   gl.shaderSource(webgl.vertexShader, webgl.vertexShaderSource)
@@ -249,8 +250,6 @@ const initScene = () => {
   }
 
 }
-
-let sceneResources
 
 const destroy = () => {
   cancelAnimationFrame(animationFrame)

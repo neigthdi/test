@@ -1,7 +1,7 @@
 <template>
   <div id="fireWork-box">
-    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     <div>鼠标点击生成烟花</div>
+    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     <canvas v-if="isRunning" id="fireWork" class="stage"></canvas>
   </div>
 </template>

@@ -1,7 +1,7 @@
 <template>
   <div>
-    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     <div>把多个geo合并成一个并添加shader</div>
+    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     <div v-if="isRunning" id="radar3" class="stage"></div>
   </div>
 </template>

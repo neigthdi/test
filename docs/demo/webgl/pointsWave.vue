@@ -6,6 +6,7 @@
 import { onMounted, nextTick, onUnmounted } from 'vue'
 
 let animationFrame 
+let sceneResources
 
 const initScene = () => {
   let canvas = document.getElementById('pointsWave') as any
@@ -22,8 +23,8 @@ const initScene = () => {
   // precision mediump float; 表示片元着色器中所有浮点型精度为中精度
   // uniform vec4类型的color变量,并设置为片元着色器的输出
   function initWebGl() {
-    let vs_source = `
-    attribute vec4 a_Position;
+    const vs_source = `
+      attribute vec4 a_Position;
       void main() {
         gl_Position = a_Position;
         gl_PointSize = 3.0;
@@ -31,16 +32,16 @@ const initScene = () => {
     `
     // 绘制圆
     // 距离大于0.5都舍去
-    let fs_source = `
-    #ifdef GL_ES
-    precision mediump float;
-    #endif
-    uniform vec4 color;
+    const fs_source = `
+      #ifdef GL_ES
+      precision mediump float;
+      #endif
+      uniform vec4 color;
       void main() {
         float d = distance(gl_PointCoord, vec2(0.5, 0.5));
-        if (d<0.5){
+        if (d < 0.5) {
           gl_FragColor = vec4(0.2, 0.3, 0.5, 1.0);
-        }else{
+        } else {
           discard;
         }
       }
@@ -155,8 +156,6 @@ const initScene = () => {
     gl
   }
 }
-
-let sceneResources
 
 const destroy = () => {
   cancelAnimationFrame(animationFrame)
