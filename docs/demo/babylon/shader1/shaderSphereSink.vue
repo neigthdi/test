@@ -10,8 +10,9 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
+import * as babylon from 'babylonjs'
+import * as babylonMat from 'babylonjs-materials'
 
-import { pkg, pkgMat } from '../index.js'
 const {
   Engine,
   Scene,
@@ -22,9 +23,10 @@ const {
   MeshBuilder,
   Texture,
   Effect,
-  ShaderMaterial,
-} = pkg
-const { CustomMaterial } = pkgMat
+  ShaderMaterial
+} = babylon
+
+const { CustomMaterial } = babylonMat
 
 let sceneResources
 

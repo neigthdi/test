@@ -22,8 +22,9 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
+import * as babylon from 'babylonjs'
+import * as babylonMat from 'babylonjs-materials'
 
-import { pkg, pkgMat } from '../index.js'
 const {
   Engine,
   Scene,
@@ -37,8 +38,9 @@ const {
   GPUParticleSystem,
   ParticleSystem,
   CustomParticleEmitter
-} = pkg
-const { GridMaterial } = pkgMat
+} = babylon
+
+const { GridMaterial } = babylonMat
 
 let sceneResources
 

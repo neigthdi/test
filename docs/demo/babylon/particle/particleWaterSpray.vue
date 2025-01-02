@@ -11,8 +11,8 @@
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
 import 'babylonjs-loaders'
+import * as babylon from 'babylonjs'
 
-import { pkg } from '../index.js'
 const {
   Engine,
   Scene,
@@ -27,7 +27,7 @@ const {
   Mesh,
   SceneLoader,
   ParticleSystem
-} = pkg
+} = babylon
 
 let sceneResources
 

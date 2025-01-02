@@ -10,8 +10,8 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
+import * as babylon from 'babylonjs'
 
-import { pkg } from '../index.js'
 const {
   Engine,
   Scene,
@@ -25,7 +25,7 @@ const {
   Texture,
   OimoJSPlugin,
   PhysicsImpostor
-} = pkg
+} = babylon
 
 let sceneResources
 const max = 10

@@ -10,8 +10,7 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
-
-import { pkg } from '../index.js'
+import * as babylon from 'babylonjs'
 
 const {
   Engine,
@@ -25,8 +24,7 @@ const {
   Texture,
   HavokPlugin,
   PhysicsAggregate
-} = pkg
-
+} = babylon
 
 let sceneResources
 

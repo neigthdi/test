@@ -15,8 +15,8 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
+import * as babylon from 'babylonjs'
 
-import { pkg } from '../index.js'
 const {
   Engine,
   Scene,
@@ -24,8 +24,8 @@ const {
   Vector3,
   HemisphericLight,
   MeshBuilder,
-  PBRMetallicRoughnessMaterial,
-} = pkg
+  PBRMetallicRoughnessMaterial
+} = babylon
 
 let sceneResources
 
