@@ -18,9 +18,7 @@
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
 import 'babylonjs-loaders'
-import * as babylon from 'babylonjs'
-
-const {
+import {
   Engine,
   Scene,
   ArcRotateCamera,
@@ -32,7 +30,7 @@ const {
   MeshBuilder,
   Matrix,
   PointerEventTypes
-} = babylon
+} from 'babylonjs'
 
 const fps = ref(0)
 const isLockScreen = ref(false)

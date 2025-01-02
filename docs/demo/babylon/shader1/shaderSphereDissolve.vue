@@ -15,9 +15,7 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
-import * as babylon from 'babylonjs'
-
-const {
+import {
   Engine,
   Scene,
   ArcRotateCamera,
@@ -28,7 +26,7 @@ const {
   Effect,
   ShaderMaterial,
   Texture
-} = babylon
+} from 'babylonjs'
 
 let sceneResources
 

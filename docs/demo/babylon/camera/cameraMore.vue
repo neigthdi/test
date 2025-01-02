@@ -25,18 +25,6 @@ import {
   PBRMetallicRoughnessMaterial
 } from 'babylonjs'
 
-// import * as babylon from 'babylonjs'
-
-// const {
-//   Engine,
-//   Scene,
-//   ArcRotateCamera,
-//   Vector3,
-//   HemisphericLight,
-//   MeshBuilder,
-//   PBRMetallicRoughnessMaterial
-// } = babylon
-
 let sceneResources
 
 const fps = ref(0)

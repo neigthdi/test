@@ -11,10 +11,7 @@
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
 import 'babylonjs-loaders'
-import * as babylon from 'babylonjs'
-import * as babylonGui from 'babylonjs-gui'
-
-const {
+import {
   Engine,
   Scene,
   ArcRotateCamera,
@@ -27,15 +24,14 @@ const {
   SceneLoader,
   HemisphericLight,
   SpotLight
-} = babylon
-
-const {
+} from 'babylonjs'
+import {
   AdvancedDynamicTexture,
   StackPanel,
   Control,
   TextBlock,
   Slider,
-} = babylonGui
+} from 'babylonjs-gui'
 
 let sceneResources
 

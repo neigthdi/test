@@ -10,9 +10,7 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
-import * as babylon from 'babylonjs'
-
-const {
+import {
   Engine,
   Scene,
   FreeCamera,
@@ -24,7 +22,7 @@ const {
   Texture,
   HavokPlugin,
   PhysicsAggregate
-} = babylon
+} from 'babylonjs'
 
 let sceneResources
 

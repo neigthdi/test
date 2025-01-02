@@ -22,10 +22,7 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
-import * as babylon from 'babylonjs'
-import * as babylonMat from 'babylonjs-materials'
-
-const {
+import {
   Engine,
   Scene,
   ArcRotateCamera,
@@ -38,9 +35,10 @@ const {
   GPUParticleSystem,
   ParticleSystem,
   CustomParticleEmitter
-} = babylon
-
-const { GridMaterial } = babylonMat
+} from 'babylonjs'
+import {
+  GridMaterial
+} from 'babylonjs-materials'
 
 let sceneResources
 

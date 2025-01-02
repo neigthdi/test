@@ -10,9 +10,7 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
-import * as babylon from 'babylonjs'
-
-const {
+import {
   Engine,
   Scene,
   UniversalCamera,
@@ -23,7 +21,7 @@ const {
   Color3,
   SpotLight,
   Animation
-} = babylon
+} from 'babylonjs'
 
 let sceneResources
 

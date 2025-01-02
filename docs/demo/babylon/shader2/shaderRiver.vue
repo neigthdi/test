@@ -11,10 +11,7 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
-import * as babylon from 'babylonjs'
-import * as babylonMat from 'babylonjs-materials'
-
-const {
+import {
   Engine,
   Scene,
   ArcRotateCamera,
@@ -22,9 +19,10 @@ const {
   Color4,
   HemisphericLight,
   MeshBuilder
-} = babylon
-
-const { CustomMaterial } = babylonMat
+} from 'babylonjs'
+import { 
+  CustomMaterial 
+} from 'babylonjs-materials'
 
 let sceneResources
 
