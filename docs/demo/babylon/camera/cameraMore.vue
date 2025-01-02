@@ -15,9 +15,7 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
-import * as babylon from 'babylonjs'
-
-const {
+import {
   Engine,
   Scene,
   ArcRotateCamera,
@@ -25,7 +23,19 @@ const {
   HemisphericLight,
   MeshBuilder,
   PBRMetallicRoughnessMaterial
-} = babylon
+} from 'babylonjs'
+
+// import * as babylon from 'babylonjs'
+
+// const {
+//   Engine,
+//   Scene,
+//   ArcRotateCamera,
+//   Vector3,
+//   HemisphericLight,
+//   MeshBuilder,
+//   PBRMetallicRoughnessMaterial
+// } = babylon
 
 let sceneResources
 

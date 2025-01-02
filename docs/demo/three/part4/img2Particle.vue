@@ -28,11 +28,11 @@ import {
   DirectionalLight,
 } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import gsap from 'gsap'
 
-import { pkgGsap } from '../index.js'
 const {
   to
-} = pkgGsap
+} = gsap
 
 const requestID = ref<any>()
 let clock: any = new Clock()
