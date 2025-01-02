@@ -3,3 +3,6 @@
 
 ## 傅里叶轨迹
 <preview path="../demo/canvas/part1/fourierMove.vue"></preview>
+
+## 太阳系
+<preview path="../demo/canvas/part1/solarSystem.vue"></preview>
