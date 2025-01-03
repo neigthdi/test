@@ -10,9 +10,9 @@
           粒子数量{{ numbers }}
         </div>
         <div class="flex">
-          <div class="pointer" @click="onMove">是否move（{{ moveEmitter ? '是' : '否' }}）</div>
-          <div class="pointer" @click="onRotate">是否rotate（{{ rotateEmitter ? '是' : '否' }}）</div>
-          <div class="pointer" @click="onUseGpu">是否启用GPU（{{ useGPUVersion ? '是' : '否' }}）</div>
+          <div class="pointer" @click="onMove">当前是否move中（{{ moveEmitter ? '是' : '否' }}）</div>
+          <div class="pointer" @click="onRotate">当前是否rotate中（{{ rotateEmitter ? '是' : '否' }}）</div>
+          <div class="pointer" @click="onUseGpu">当前是否启用GPU中（{{ useGPUVersion ? '是' : '否' }}）</div>
         </div>
       </div>
     </div>

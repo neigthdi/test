@@ -3,7 +3,7 @@
 
 ## 水面波纹
 学习  
-<font color=red>CustomMaterial</font>、
+<font color=red>CustomMaterial和Texture结合</font>、
 <font color=green>Fragment_Definitions</font>、
 <font color=blue>Fragment_Before_Fog</font>、
 <font color=pink>AddUniform</font>、

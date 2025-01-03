@@ -125,10 +125,8 @@ const initScene = async() => {
 
   const createPlane = async() => {
     const texture = await loader.loadAsync('/images/star.jpg')
-    const { width, height } = texture.image
     const w = texture.image.width
     const h = texture.image.height
-    console.log(width, height)
     const geometry = new PlaneGeometry(w, h, w, h)
     const material = new ShaderMaterial({
       side: DoubleSide,

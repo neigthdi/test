@@ -23,7 +23,7 @@ import {
   ShaderMaterial
 } from 'babylonjs'
 
- import { CustomMaterial } from 'babylonjs-materials'
+import { CustomMaterial } from 'babylonjs-materials'
 
 let sceneResources
 

@@ -97,7 +97,6 @@ const initScene = async () => {
 
         // 开始一个循环，从 0 到 MAX_ITER-1
         for(int n = 0; n < MAX_ITER; n++) {
-
           // 每次迭代调整 t 的值，使分形的迭代逐渐减弱
           float nt = t * (1.0 - (3.5 / float(n + 1)));
           // 根据 t 更新 i 的值，创建分形的迭代
