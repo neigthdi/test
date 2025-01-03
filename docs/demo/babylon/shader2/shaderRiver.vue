@@ -13,6 +13,9 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
+import { 
+  CustomMaterial 
+} from 'babylonjs-materials'
 import {
   Engine,
   Scene,
@@ -25,9 +28,7 @@ import {
   Effect,
   ShaderMaterial
 } from 'babylonjs'
-import { 
-  CustomMaterial 
-} from 'babylonjs-materials'
+
 
 let sceneResources
 let uTime = 0.0
@@ -182,7 +183,7 @@ const initScene = async () => {
         vec3 yColor = mix(vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0), clamp((fbm_value * fbm_value) * 4.0, 0.0, 1.0));
         y += clamp(yColor.r * yColor.g * yColor.b, 0.0, 1.5); // 增加的高度限制在0.0~1.5之间
 
-        vColor = mix(vec3(1.0, 1.0, 1.0), vec3(0.1, 0.56, 1.0), clamp(y, 0.0, 1.0));
+        vColor = mix(vec3(0.1, 0.56, 1.0), vec3(0.48, 0.75, 1.0), clamp(y, 0.0, 1.0)); // vec3(0.1, 0.56, 1.0)蓝色  vec3(0.48, 0.75, 1.0)蓝白色  由低到高 
         // }
 
         gl_Position = worldViewProjection * vec4(vec3(x, y, z), 1.0);
@@ -225,7 +226,7 @@ const initScene = async () => {
       { 
         width: 110, 
         height: 110, 
-        subdivisions: 800 
+        subdivisions: 550 
       },
       scene
     )
@@ -275,9 +276,6 @@ const destroy = () => {
 
 onMounted(async() => {
   await nextTick()
-  isRunning.value = true
-    await nextTick()
-    sceneResources = await initScene()
 })
 
 onUnmounted(() => {
