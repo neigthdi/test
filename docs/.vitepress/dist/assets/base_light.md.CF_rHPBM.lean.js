@@ -1,1 +1,0 @@
-import{_ as s,c as i,o as a,a4 as h}from"./chunks/framework.De32BR7G.js";const c=JSON.parse('{"title":"光线","description":"","frontmatter":{},"headers":[],"relativePath":"base/light.md","filePath":"base/light.md"}'),n={name:"base/light.md"},t=h("",30),l=[t];function k(p,e,r,E,d,g){return a(),i("div",null,l)}const o=s(n,[["render",k]]);export{c as __pageData,o as default};

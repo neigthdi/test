@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div>平面+噪音形成高低(效果不好)</div>
+    <div>平面+噪音形成高低(效果不好，需要优化)</div>
     <div>法线+灯光模拟阳光照射，蓝色深浅(未完成)</div>
     <div>镜面倒影(未完成)</div>
     <div class="flex space-between">
@@ -23,8 +23,11 @@ import {
   HemisphericLight,
   MeshBuilder,
   Effect,
-  ShaderMaterial,
+  ShaderMaterial
 } from 'babylonjs'
+import { 
+  CustomMaterial 
+} from 'babylonjs-materials'
 
 let sceneResources
 let uTime = 0.0
@@ -68,7 +71,7 @@ const initScene = async () => {
   camera.setPosition(new Vector3(50, 50, 50))
 
   const createLight = () => {
-    const light = new HemisphericLight('light',new Vector3(0, 1, 0), scene)
+    const light = new HemisphericLight('light',new Vector3(0, 50, 0), scene)
     return light
   }
 
@@ -106,6 +109,9 @@ const initScene = async () => {
       "/images/heightMap.png", 
       { width: 100, height: 100, subdivisions: 500, maxHeight: 30 }
     )
+    const mat = new CustomMaterial('grass', scene)
+    mat.diffuseTexture = new Texture('/images/ground.jpg', scene)
+    ground.material = mat
     return ground
   }
 
@@ -115,6 +121,7 @@ const initScene = async () => {
 
       attribute vec3 position;
       attribute vec2 uv;
+
       uniform mat4 worldViewProjection;
       uniform sampler2D textureSampler;
       uniform float uTime;
@@ -142,7 +149,7 @@ const initScene = async () => {
 
       float fbm(vec2 uv) {
         float value = 0.0;
-        float amplitude = 0.8; // 振幅
+        float amplitude = 0.75; // 振幅
         float frequency = 0.4; // 频率
 
         for(int i = 0; i < 6; i++) {
@@ -164,21 +171,18 @@ const initScene = async () => {
         // if (allBlackColor == 0.0) { // 只有黑色的区域是河流
         vec2 move1 = vec2(0.0);
         move1.x = fbm(uv);
-        move1.y = fbm(uv + vec2(2.0));
+        move1.y = fbm(uv * 2.0);
 
         vec2 move2 = vec2(0.0);
-        move2.x = fbm(uv + 0.2 * uTime + move1 + vec2(0.12, 0.32));
-        move2.y = fbm(uv + 0.6 * uTime + move1 + vec2(0.42, 0.732));
+        move2.x = fbm(uv + 0.2 * uTime + move1 + vec2(0.82, 0.32));
+        move2.y = fbm(uv + 0.5 * uTime + move1 + vec2(0.42, 0.732));
 
         float fbm_value = fbm(uv + move2);
 
-        vec3 yColor = mix(vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0), clamp((fbm_value * fbm_value) * 5.0, 0.0, 1.0));
+        vec3 yColor = mix(vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0), clamp((fbm_value * fbm_value) * 4.0, 0.0, 1.0));
         y += clamp(yColor.r * yColor.g * yColor.b, 0.0, 1.5); // 增加的高度限制在0.0~1.5之间
 
-        vColor = mix(vec3(0.101961,0.619608,0.666667), vec3(0.1, 0.56, 1.0), clamp((fbm_value * fbm_value) * 5.0, 0.0, 1.0));
-        vColor = mix(vColor, vec3(0.3, 0.3, 0.164706), clamp(length(move1), 0.0, 1.0));
-        vColor = mix(vColor, vec3(0.666667, 1.0, 1.0), clamp(length(move2.y), 0.0, 1.0));
-       
+        vColor = mix(vec3(1.0, 1.0, 1.0), vec3(0.1, 0.56, 1.0), clamp(y, 0.0, 1.0));
         // }
 
         gl_Position = worldViewProjection * vec4(vec3(x, y, z), 1.0);
@@ -201,7 +205,7 @@ const initScene = async () => {
         vertex: 'customShader',
         fragment: 'customShader',
       }, {
-        attributes: ['position', 'uv', 'color'],
+        attributes: ['position', 'uv'],
         uniforms: ['worldViewProjection', 'textureSampler', 'uTime'],
         samplers: ['textureSampler'],
         needAlphaBlending: true,
@@ -228,7 +232,6 @@ const initScene = async () => {
     const material = createSphereShader()
    
     plane.material = material
-    plane.position = new Vector3(0, 0.01, 0)
     return material
   }
 
@@ -272,6 +275,9 @@ const destroy = () => {
 
 onMounted(async() => {
   await nextTick()
+  isRunning.value = true
+    await nextTick()
+    sceneResources = await initScene()
 })
 
 onUnmounted(() => {
