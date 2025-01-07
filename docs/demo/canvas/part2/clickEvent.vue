@@ -27,7 +27,7 @@ const EventNames = {
   mousemove: 'mousemove',
   mouseup: 'mouseup',
   mouseenter: 'mouseenter',
-  mouseleave: 'mouseleave',
+  mouseleave: 'mouseleave'
 }
 
 const onTrigger = async () => {
