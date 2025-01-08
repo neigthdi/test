@@ -182,11 +182,11 @@ const initScene = async () => {
     // meshes第0是root
     const people = module.meshes[0]
 
+    // 将相机锁定在角色上
+    camera.setTarget(people)
+
     // 缩小模型
     people.scaling.scaleInPlace(0.5)
-
-    // 将相机锁定在角色上
-    camera.target = people.position
 
     walkAnim = scene.getAnimationGroupByName('Walking')
     walkBackAnim = scene.getAnimationGroupByName('WalkingBack')
@@ -247,6 +247,7 @@ const initScene = async () => {
         animating = false
       }
     }
+    
   }
   
   const runAnimate = () => {
@@ -267,6 +268,7 @@ const initScene = async () => {
   createGuiTip()
   createActionManager()
   const people = await loaderPeople()
+
   
   runAnimate()
 
