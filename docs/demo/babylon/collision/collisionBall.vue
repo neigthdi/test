@@ -101,6 +101,8 @@ const initScene = async () => {
       },
       scene
     )
+
+    return [axisX, axisY, axisZ]
   }
 
   const createGround = () => {

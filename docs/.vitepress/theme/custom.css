@@ -103,3 +103,11 @@ img {
 .m-l-20 {
   margin-left: 20px;
 }
+
+.color-red {
+  color: rgb(243, 17, 17);
+}
+
+.color-blue {
+  color: rgb(15, 183, 189);
+}

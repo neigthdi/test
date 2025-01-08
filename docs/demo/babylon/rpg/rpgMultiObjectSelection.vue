@@ -111,10 +111,12 @@ const initScene = async () => {
       },
       scene
     )
+
+    return [axisX, axisY, axisZ]
   }
 
   const createLight = () => {
-    var light = new DirectionalLight('dir01', new Vector3(0, -1, -0.3), scene)
+    const light = new DirectionalLight('dir01', new Vector3(0, -1, -0.3), scene)
     light.position = new Vector3(20, 60, 30)
     return light
   }

@@ -1,8 +1,8 @@
 <template>
   <div>
-    <div>平面+噪音形成高低(效果不好，需要优化)</div>
-    <div>法线+灯光模拟阳光照射，蓝色深浅(未完成，现阶段是y的高低判断蓝色还是白色)</div>
-    <div>镜面倒影(未完成)</div>
+    <div class="color-blue">平面+噪音形成高低(效果不好，需要优化)</div>
+    <div class="color-red">法线+灯光模拟阳光照射，蓝色深浅(未完成，现阶段是y的高低判断蓝色还是白色)</div>
+    <div class="color-red">镜面倒影(未完成)</div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
