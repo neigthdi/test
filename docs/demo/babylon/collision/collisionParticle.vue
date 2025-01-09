@@ -61,7 +61,7 @@ const initScene = async () => {
   const camera = new ArcRotateCamera('camera', Math.PI / 4, 0, 150, new Vector3(0, 0, 0), scene)
   camera.upperBetaLimit = Math.PI / 2.2
   camera.wheelPrecision = 30
-  camera.panningSensibility = 80
+  camera.panningSensibility = 200
   camera.attachControl(ele, true)
   camera.setPosition(new Vector3(50, 300, 20))
 

@@ -3,6 +3,7 @@
     <div class="color-blue">平面+噪音形成高低(效果不好，需要优化)</div>
     <div class="color-red">法线+灯光模拟阳光照射，蓝色深浅(未完成，现阶段是y的高低判断蓝色还是白色)</div>
     <div class="color-red">镜面倒影(未完成)</div>
+    <div class="color-red">在shadertoy中搜索ice，学习水面如何渲染</div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
@@ -67,7 +68,7 @@ const initScene = async () => {
   const camera = new ArcRotateCamera('camera', -Math.PI / 1.5, Math.PI / 2.2, 15, new Vector3(0, 0, 0), scene)
   camera.upperBetaLimit = Math.PI / 2.2
   camera.wheelPrecision = 30
-  camera.panningSensibility = 80
+  camera.panningSensibility = 200
   camera.attachControl(ele, true)
   camera.setPosition(new Vector3(50, 50, 50))
 
