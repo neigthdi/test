@@ -85,7 +85,8 @@ function sidebarBase() {
         { text: '着色器', link: '/other/shader' },
         { text: '钩子', link: '/other/hook' },
         { text: '存储', link: '/other/storage' },
-        { text: 'clone和createInstance', link: '/other/cloneAndCreateInstance' }
+        { text: 'clone和createInstance', link: '/other/cloneAndCreateInstance' },
+        { text: '光相关', link: '/other/light' }
       ]
     },
     {
