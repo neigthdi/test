@@ -97,13 +97,8 @@ function sidebarBase() {
         { text: 'UVMap', link: '/webgl/uvMap' },
         { text: '数据类型', link: '/webgl/dataType' },
         { text: '内置函数', link: '/webgl/funcs' },
-        { text: '矩阵变换', link: '/webgl/matrixTransformation' }
+        { text: '矩阵变换', link: '/webgl/matrixTransformation' },
       ]
-    },
-    {
-      text: '杂录',
-      collapsible: true,
-      items: [{ text: 'shader相关', link: '/three/other' }]
     },
     {
       text: '案例-babylon',
