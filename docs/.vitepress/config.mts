@@ -128,18 +128,25 @@ function sidebarBase() {
       ]
     },
     {
-      text: '案例-webgl',
-      collapsible: true,
-      items: [
-        { text: 'webgl', link: '/components/webgl.md' },
-      ]
-    },
-    {
       text: '案例-canvas',
       collapsible: true,
       items: [
         { text: 'part1', link: '/components/canvasPart1.md' },
         { text: 'part2', link: '/components/canvasPart2.md' },
+      ]
+    },
+    {
+      text: '案例-shaderToy',
+      collapsible: true,
+      items: [
+        { text: 'shaderToy1', link: '/components/shaderToy1.md' },
+      ]
+    },
+    {
+      text: '案例-webgl',
+      collapsible: true,
+      items: [
+        { text: 'webgl', link: '/components/webgl.md' },
       ]
     },
   ]
