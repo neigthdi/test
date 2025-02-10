@@ -140,6 +140,7 @@ function sidebarBase() {
       collapsible: true,
       items: [
         { text: 'shaderToy1', link: '/components/shaderToy1.md' },
+        { text: 'shaderToy2', link: '/components/shaderToy2.md' },
       ]
     },
     {
