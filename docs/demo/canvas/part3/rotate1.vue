@@ -42,21 +42,9 @@ function parseColor (color, toNumber) {
 function captureMouse (element) {
   let mouse = { x: 0, y: 0 }
   
-  element.addEventListener('mousemove',function(event){
-    let x,y
-    if (event.pageX || event.pageY) {
-      x = event.pageX
-      y = event.pageY
-    } else {
-      x = event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft
-      y = event.clientY + document.body.scrollTop + document.documentElement.scrollTop
-    }
-    
-    x -= element.offsetLeft
-    y -= element.offsetTop
-    
-    mouse.x = x
-    mouse.y = y          
+  element.addEventListener('mousemove',function (event) {
+    mouse.x = event.offsetX < 0 ? 0 : event.offsetX
+    mouse.y = event.offsetY < 0 ? 0 : event.offsetY      
   }, false)
 
   return mouse  
@@ -172,7 +160,7 @@ const onRunning = async() => {
 
     requestID.value = requestAnimationFrame(runAnimate)
 
-    angleY = (mouse.x - vpX) * 0.00001
+    angleY = (mouse.x - vpX) * 0.0001
     balls.forEach(move)
     balls.sort(zSort)
     balls.forEach(draw)
