@@ -86,7 +86,7 @@ const onRunning = async () => {
   const mars = new Star(ctx, 0, -80, 5, 686.98, '#CEC9B6', '#76422D')
   const jupiter = new Star(ctx, 0, -100, 5, 4332.589, '#C0A48E', '#322222')
   const saturn = new Star(ctx, 0, -120, 5, 10759.5, '#F7F9E3', '#5C4533')
-  const uranus = new Star(ctx, 0, -140, 5,30799.095, '#A7E1E5', '#19243A')
+  const uranus = new Star(ctx, 0, -140, 5, 30799.095, '#A7E1E5', '#19243A')
   const neptune = new Star(ctx, 0, -160, 5, 60152, '#0661B2', '#1E3B73')
 
   const runAnimate = () => {
