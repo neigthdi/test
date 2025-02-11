@@ -1,12 +1,28 @@
 <template>
-  <canvas id="rotatingTail" class="stage"></canvas>
+  <div>
+    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
+    <canvas v-if="isRunning" id="rotatingTail" class="stage"></canvas>
+  </div>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, nextTick, onUnmounted } from 'vue'
+import { ref, nextTick, onUnmounted } from 'vue'
 
 let animationFrame
 let sceneResources
+
+const isRunning = ref(false)
+
+const onTrigger = async () => {
+  if (!isRunning.value) {
+    isRunning.value = true
+    await nextTick()
+    sceneResources = initScene()
+  } else {
+    isRunning.value = false
+    destroy()
+  }
+}
 
 const initScene = () => {
   const c = document.getElementById('rotatingTail') as any
@@ -255,11 +271,6 @@ const destroy = () => {
   cancelAnimationFrame(animationFrame)
   animationFrame = null
 }
-
-onMounted(async () => {
-  await nextTick()
-  sceneResources = initScene()
-})
 
 onUnmounted(() => {
   if (sceneResources) {

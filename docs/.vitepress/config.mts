@@ -133,6 +133,7 @@ function sidebarBase() {
       items: [
         { text: 'part1', link: '/components/canvasPart1.md' },
         { text: 'part2', link: '/components/canvasPart2.md' },
+        { text: 'part3', link: '/components/canvasPart3.md' },
       ]
     },
     {

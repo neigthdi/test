@@ -232,10 +232,23 @@ const onStart = () => {
       vec3 getNormal(vec3 p, float eps) {
         vec3 n;
         n.y = computedSeaPlaneHeight(p, ITERATION_FRAGMENT); // 计算位置 p 处的地形高度或密度，并将其存储在 n.y 中
-        n.x = computedSeaPlaneHeight(vec3(p.x + eps, p.y, p.z), ITERATION_FRAGMENT) - n.y; // 计算位置 p 在 x 方向偏移 eps 后的地形高度或密度，并将其与 n.y（即原始位置 p 的高度或密度）相减，以估算 x 方向的斜率
-        n.z = computedSeaPlaneHeight(vec3(p.x, p.y, p.z + eps), ITERATION_FRAGMENT) - n.y; // 计算位置 p 在 z 方向偏移 eps 后的地形高度或密度，并将其与 n.y（即原始位置 p 的高度或密度）相减，以估算 z 方向的斜率
-      
+        
+        // 为什么减去n.y，因为通过计算偏移点的高度与原始点高度（n.y）的差值，可以得到该方向上的高度变化率，即斜率，查看（自定义效果-海浪-1.png）
+        // computedSeaPlaneHeight(vec3(p.x + eps, p.y, p.z), ITERATION_FRAGMENT) 计算点 p+ϵi 处的高度
+        // 计算位置 p 在 x 方向偏移 eps 后的地形高度或密度，并将其与 n.y（即原始位置 p 的高度或密度）相减，以估算 x 方向的斜率
+        // n.x ≈ h(p+ϵi)−h(p) / ϵ
+        n.x = computedSeaPlaneHeight(vec3(p.x + eps, p.y, p.z), ITERATION_FRAGMENT) - n.y; 
+        
+        // 为什么减去n.y，因为通过计算偏移点的高度与原始点高度（n.y）的差值，可以得到该方向上的高度变化率，即斜率，查看（自定义效果-海浪-1.png）
+        // computedSeaPlaneHeight(vec3(p.x, p.y, p.z + eps), ITERATION_FRAGMENT) 计算点 p+ϵk 处的高度
+        // 计算位置 p 在 z 方向偏移 eps 后的地形高度或密度，并将其与 n.y（即原始位置 p 的高度或密度）相减，以估算 z 方向的斜率
+        // n.z ≈ h(p+ϵk)−h(p) / ϵ
+        n.z = computedSeaPlaneHeight(vec3(p.x, p.y, p.z + eps), ITERATION_FRAGMENT) - n.y; 
+
         // eps是dot(distanceVector, distanceVector) * EPSILON_NRM
+        // 简化处理：在某些情况下，开发者可能会为了简化计算而进行一些近似处理
+        // 特殊需求：可能在你的应用场景中，法线的 y 分量需要根据 ϵ 进行调整
+        // 通常应该将法线的 y 分量设置为 1，而不是 ϵ，即 n.y = 1.0;
         n.y = eps;
         return normalize(n);
       }
@@ -393,7 +406,7 @@ const onStart = () => {
 
 
       void main() {
-         vec2 fragCoord = gl_FragCoord.xy;
+        vec2 fragCoord = gl_FragCoord.xy;
         vec2 uv = (fragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.y, u_resolution.x);
         uv *= 3.0;
 
