@@ -1,1 +1,0 @@
-import{_ as s,c as i,o as a,a4 as n}from"./chunks/framework.C9yAFGvZ.js";const y=JSON.parse('{"title":"三大属性 场景 相机 渲染引擎","description":"","frontmatter":{},"headers":[],"relativePath":"base/base.md","filePath":"base/base.md"}'),h={name:"base/base.md"},l=n("",7),k=[l];function p(t,e,r,E,d,g){return a(),i("div",null,k)}const F=s(h,[["render",p]]);export{y as __pageData,F as default};

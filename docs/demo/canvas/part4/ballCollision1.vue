@@ -3,11 +3,11 @@
     <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     <div @click="isShowImg = !isShowImg" class="pointer">{{ !isShowImg ? '点击展开' : '点击收起' }}</div>
     <div v-if="isShowImg">
-      <img src="/public/markdown/ballCollision1-1.png" alt="">
-      <img src="/public/markdown/ballCollision1-2.png" alt="">
-      <img src="/public/markdown/ballCollision1-3.png" alt="">
-      <img src="/public/markdown/ballCollision1-4.png" alt="">
-      <img src="/public/markdown/ballCollision1-5.png" alt="">
+      <img src="/public/markdown/canvas/part4/ballCollision1-1.png" alt="">
+      <img src="/public/markdown/canvas/part4/ballCollision1-2.png" alt="">
+      <img src="/public/markdown/canvas/part4/ballCollision1-3.png" alt="">
+      <img src="/public/markdown/canvas/part4/ballCollision1-4.png" alt="">
+      <img src="/public/markdown/canvas/part4/ballCollision1-5.png" alt="">
     </div>
     <canvas v-if="isRunning" id="ballCollision1" class="stage"></canvas>
   </div>
