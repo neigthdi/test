@@ -56,7 +56,7 @@ function Ball(radius, color){
   this.lineWidth = 1
 }
 
-Ball.prototype.draw = function(context){
+Ball.prototype.draw = function (context) {
   context.save()
   context.translate(this.x, this.y)
   context.rotate(this.rotation)
@@ -70,6 +70,16 @@ Ball.prototype.draw = function(context){
   context.fill()
   context.stroke()
   context.restore()
+}
+
+// 得到球体的左上角坐标
+Ball.prototype.getBounds = function () {
+  return {
+    x: this.x - this.radius,
+    y: this.y - this.radius,
+    width: this.radius * 2,
+    height: this.radius * 2
+  }
 }
 
 const onRunning = async() => {

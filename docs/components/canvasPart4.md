@@ -1,2 +1,2 @@
-## 小球碰撞-1
-<preview path="../demo/canvas/part4/ballCollision1.vue"></preview>
+## 飞船---摩擦力和碰撞（w、s、d）
+<preview path="../demo/canvas/part4/collisionAndFriction.vue"></preview>

@@ -72,7 +72,7 @@ function Ball3d (radius, color) {
   this.visible = true
 }
 
-Ball3d.prototype.draw = function(context){
+Ball3d.prototype.draw = function (context) {
   context.save()
   context.translate(this.x, this.y)
   context.rotate(this.rotation)
