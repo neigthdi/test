@@ -54,7 +54,7 @@ class Scene {
     
     const count = random(3, 5) // 生成多个烟花
 
-    for(let i = 0; i< count; i++) {
+    for (let i = 0; i< count; i++) {
       const obj = new FireWork(this.fireworks, this.ctx, random(this.spawnA, this.spawnB), this.height, x, y, random(0, 260), random(30, 110))
       this.fireworks.push(obj)
       this.counter = -1

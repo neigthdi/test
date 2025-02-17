@@ -142,7 +142,7 @@ const onStart = () => {
         float SURFACE_DIST = 0.0001;
         float MAX_DIST = 1000.0;
         
-        for(float i = 0.0; i < MAX_STEPS; i += 1.0) {
+        for (float i = 0.0; i < MAX_STEPS; i += 1.0) {
           // 光线的当前位置 pos
           // rd * d0 计算光线在方向 rd 上行进距离 d0 后的向量，然后将这个向量加到源点 ro 上，得到新的位置 pos。
           vec3 pos = ro + d0 * rd;

@@ -86,16 +86,16 @@ const initScene = async () => {
       { width: 7, height: 6, depth: 0.1, position: { x: 3, y: 3, z: 3.5 }, rotation: { y: Math.PI / 2 } },
       { width: 7, height: 6, depth: 0.1, position: { x: 4, y: -3, z: 3.5 }, rotation: { y: Math.PI / 2 } },
     ]
-    for(let i = 0; i < wallList.length; i++) {
+    for (let i = 0; i < wallList.length; i++) {
       const cur = wallList[i]
       const wall = MeshBuilder.CreateBox('wall' + i, {
         width: cur.width, height: cur.height, depth: cur.depth,
       }, scene)
-      for(const key in cur.position) {
+      for (const key in cur.position) {
         wall.position[key] = cur.position[key]
       }
       if (cur.rotation) {
-        for(const key in cur.rotation) {
+        for (const key in cur.rotation) {
           wall.rotation[key] = cur.rotation[key]
         }
       }
@@ -163,7 +163,7 @@ const initScene = async () => {
 
   /** 球体上的的灯 */
   const createSpotLight = (sphereList) => {
-    for(let i = 0; i < sphereList.length; i++) {
+    for (let i = 0; i < sphereList.length; i++) {
       spotLights[i] = new SpotLight(
         'spotLight' + i, 
         sphereList[i].position, 

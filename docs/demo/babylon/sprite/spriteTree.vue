@@ -82,14 +82,14 @@ const initScene = async () => {
       scene
     )
 
-    for(let i = 0; i < 500; i++) {
+    for (let i = 0; i < 500; i++) {
       const tree = new Sprite('tree' + i, spriteManagerTree)
       tree.position.x = Math.random() * -30
       tree.position.z = Math.random() * 20 + 8
       tree.position.y = 0.5
     }
 
-    for(let i = 500; i < 1000; i++) {
+    for (let i = 500; i < 1000; i++) {
       const tree = new Sprite('tree' + i, spriteManagerTree)
       tree.position.x = Math.random() * 25 + 7
       tree.position.z = Math.random() * -35 + 8

@@ -193,7 +193,7 @@ const onStart = () => {
         // 由于 WebGL 1.0 的限制，最简单且通常最可行的解决方案是使用固定的迭代次数
         // WebGL 2.0则不用这样，可以用动态传入的iteration
         if(iteration == ITERATION_GEOMETRY) {
-          for(int j = 0; j < ITERATION_GEOMETRY; j += 1) {
+          for (int j = 0; j < ITERATION_GEOMETRY; j += 1) {
             d = seaOctave((tempUv + SEA_TIME) * freq, choppy); // 计算海浪分量的高度差
             d += seaOctave((tempUv - SEA_TIME) * freq, choppy); // 计算海浪分量的高度差
             h += d * amplitude; // 将当前海浪分量的高度差 d 乘以振幅 amp，然后累加到总高度 h 上
@@ -207,7 +207,7 @@ const onStart = () => {
         // 由于 WebGL 1.0 的限制，最简单且通常最可行的解决方案是使用固定的迭代次数
         // WebGL 2.0则不用这样，可以用动态传入的iteration
         if(iteration == ITERATION_FRAGMENT) {
-          for(int j = 0; j < ITERATION_FRAGMENT; j += 1) {
+          for (int j = 0; j < ITERATION_FRAGMENT; j += 1) {
             d = seaOctave((tempUv + SEA_TIME) * freq, choppy); // 计算海浪分量的高度差
             d += seaOctave((tempUv - SEA_TIME) * freq, choppy); // 计算海浪分量的高度差
             h += d * amplitude; // 将当前海浪分量的高度差 d 乘以振幅 amp，然后累加到总高度 h 上
@@ -324,7 +324,7 @@ const onStart = () => {
 
         // for循环用于迭代计算光线投射方向上的海面交点位置，光线步进算法
         float nearHeight = computedSeaPlaneHeight(rayOrigin + direction * nearPlane, ITERATION_GEOMETRY); // 计算近平面位置的高度
-        for(int i = 0; i < NUM_STEPS; i++) { // 开始一个循环，循环次数由NUM_STEPS定义，这是光线投射过程中的步进次数
+        for (int i = 0; i < NUM_STEPS; i++) { // 开始一个循环，循环次数由NUM_STEPS定义，这是光线投射过程中的步进次数
           // 计算当前步的中点距离middle distance这是通过线性插值（mix）nearPlane和farPlane得到的，插值因子基于当前步的高度差与总高度差的比例
           float tempDistance = mix(nearPlane, farPlane, nearHeight / (nearHeight - farHeight)); // 注意，此时的farHeight永远是小于0的
           intersectionPoint = rayOrigin + direction * tempDistance;

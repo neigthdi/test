@@ -141,7 +141,7 @@ const initScene = async () => {
     sps.isAlwaysVisible = true
 
     sps.initParticles = () => {
-      for(let p = 0; p < sps.nbParticles; p++) {
+      for (let p = 0; p < sps.nbParticles; p++) {
         sps.recycleParticle(sps.particles[p])
       }
     }

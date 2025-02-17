@@ -154,7 +154,7 @@ const initScene = async () => {
         float amplitude = 0.75; // 振幅
         float frequency = 0.4; // 频率
 
-        for(int i = 0; i < 6; i++) {
+        for (int i = 0; i < 6; i++) {
           value += amplitude * noise(uv) * frequency;
           uv *= 3.0;
           amplitude *= 0.5;

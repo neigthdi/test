@@ -43,7 +43,7 @@ attribute vec4 position;
 attribute float scale;
 void main() {
   // 每个顶点的x坐标乘以该顶点对应的一个系数scale
-  gl_Position = vec4(position.x * scale, position.y, position.z, 1.0);
+  gl_Position = vec4(position.x*scale,position.y,position.z,1.0);
 }
 ```
 

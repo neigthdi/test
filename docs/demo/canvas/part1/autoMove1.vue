@@ -64,7 +64,7 @@ const onRunning = async() => {
     const end = arr.pop()
     ctx.beginPath()
     ctx.moveTo(start.x + 10, start.y + 10)
-    for(let i=0;i<arr.length;i++){
+    for (let i=0;i<arr.length;i++){
       ctx.lineTo(arr[i].x + 10, arr[i].y + 10)
     }
     ctx.lineTo(end.x + 10, end.y + 10)
@@ -101,7 +101,7 @@ const onRunning = async() => {
   
   const dealPoints = (pointList) => {
     const newPointList: any = []
-    for(let i = 0; i < pointList.length; i += 10) {
+    for (let i = 0; i < pointList.length; i += 10) {
       newPointList.push(pointList[i])
     }
     return newPointList

@@ -143,7 +143,7 @@ const initScene = async () => {
     const allSphere: any = []
     const sphere = MeshBuilder.CreateSphere('s', { diameter: 8 }, scene)
     sphere.isVisible = false
-    for(let index = 0; index < max; index ++) {
+    for (let index = 0; index < max; index ++) {
       const clone = sphere.clone(`index_${index}`)
       clone.isVisible = true
       const ran = Math.random()

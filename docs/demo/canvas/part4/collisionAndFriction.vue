@@ -46,7 +46,7 @@ SpaceShip.prototype.draw = function (context) {
   context.beginPath()
   context.translate(this.x, this.y)
   context.rotate(this.rotation)
-  context.strokeStyle = "#000"
+  context.strokeStyle = "#dc6aff"
   context.moveTo(10, 0)
   context.lineTo(-10, 10)
   context.lineTo(-5, 0)

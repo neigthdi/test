@@ -95,7 +95,7 @@ const onRunning = async() => {
   const particles: any = []
   const totalNum = 50
 
-  for(let i = 0; i < totalNum; i++) {
+  for (let i = 0; i < totalNum; i++) {
     const color = Math.random() * (0xffffff)
     const ball = new Ball(5, color)
     ball.x = Math.random() * canvas.width
@@ -141,7 +141,7 @@ const onRunning = async() => {
     partA.x += partA.vx
     partA.y += partA.vy
 
-    for(let j = i + 1; j < totalNum; j++) {
+    for (let j = i + 1; j < totalNum; j++) {
       const partB = particles[j]
       gravitate(partA, partB)
     }
