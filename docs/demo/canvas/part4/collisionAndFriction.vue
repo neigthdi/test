@@ -54,10 +54,10 @@ SpaceShip.prototype.draw = function (context) {
   context.lineTo(10, 0)
   context.closePath()
   context.stroke()
-  if(this.showFlame == true){
+  if (this.showFlame === true) {
     context.save()
     context.beginPath()
-    context.strokeStyle = "#f69"
+    context.strokeStyle = "#f00"
     context.moveTo(-7.5, -5)
     context.lineTo(-15, 0)
     context.lineTo(-7.5, 5)

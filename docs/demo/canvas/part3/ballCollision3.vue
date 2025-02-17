@@ -273,7 +273,7 @@ const onRunning = async() => {
 const destroy = () => {
   cancelAnimationFrame(requestID.value)
   const parent = document.getElementById('ballCollision3Box') as any
-  parent.removeEventListener('mousemove', onMouseMove)
+  if(parent) parent.removeEventListener('mousemove', onMouseMove)
 }
 
 onUnmounted(() => {
