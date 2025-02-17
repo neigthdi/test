@@ -7,21 +7,21 @@
       <div>object.x += (targetX - object.x) * easing;</div>
       <div>object.y += (targetY - object.y) * easing;</div>
       <div>------------------------------------------</div>
-      <div>2、基本弹簧</div>
+      <div>1、基本弹簧</div>
       <div>vx += (targetX - object.x) * spring;</div>
       <div>vy += (targetY - object.y) * spring;</div>
       <div>object.x += (vx *= f);</div>
       <div>object.y += (vy *= f);</div>
       <div>------------------------------------------</div>
-      <div>3、偏移弹簧</div>
+      <div>2、偏移弹簧</div>
       <div>dx = object.x - fixedX;</div>
       <div>dy = object.y - fixedY;</div>
       <div>angle = Math.atan2(dy, dx);</div>
       <div>targetX = fixed + Math.cos(angle) * springLength;</div>
       <div>targetY = fixed + Math.sin(angle) * springLength;</div>
     </div>
-    <div id="slowlyAndElastic1Box">
-      <canvas v-if="isRunning" id="slowlyAndElastic1" class="stage"></canvas>
+    <div id="spring1Box">
+      <canvas v-if="isRunning" id="spring1" class="stage"></canvas>
     </div>
   </div>
 </template>
@@ -138,7 +138,7 @@ const onMouseMove = (event) => {
 
 const onRunning = async() => {
   await nextTick()
-  const canvas: any = document.getElementById('slowlyAndElastic1')
+  const canvas: any = document.getElementById('spring1')
   const ctx = canvas.getContext('2d')
 
   const width = Number(window.getComputedStyle(canvas).width.split('px')[0])
@@ -146,7 +146,7 @@ const onRunning = async() => {
   canvas.width = width
   canvas.height = height
 
-  const parent = document.getElementById('slowlyAndElastic1Box') as any
+  const parent = document.getElementById('spring1Box') as any
 
   
   const ball = new Ball(20, '#ff0000')
@@ -216,7 +216,7 @@ const onRunning = async() => {
 
 const destroy = () => {
   cancelAnimationFrame(requestID.value)
-  const parent = document.getElementById('slowlyAndElastic1Box') as any
+  const parent = document.getElementById('spring1Box') as any
   if (parent) {
     parent.removeEventListener('mousedown', onMouseDown)
     parent.removeEventListener('mouseup', onMouseUp)

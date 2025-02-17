@@ -1,8 +1,8 @@
 <template>
   <div>
     <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
-    <div id="slowlyAndElastic2Box">
-      <canvas v-if="isRunning" id="slowlyAndElastic2" class="stage"></canvas>
+    <div id="spring2Box">
+      <canvas v-if="isRunning" id="spring2" class="stage"></canvas>
     </div>
   </div>
 </template>
@@ -107,7 +107,7 @@ const onMouseMove = (e) => {
 
 const onRunning = async() => {
   await nextTick()
-  const canvas: any = document.getElementById('slowlyAndElastic2')
+  const canvas: any = document.getElementById('spring2')
   const ctx = canvas.getContext('2d')
 
   const width = Number(window.getComputedStyle(canvas).width.split('px')[0])
@@ -115,7 +115,7 @@ const onRunning = async() => {
   canvas.width = width
   canvas.height = height
 
-  const parent = document.getElementById('slowlyAndElastic2Box') as any
+  const parent = document.getElementById('spring2Box') as any
   parent.addEventListener('mousemove', onMouseMove)
   
   const ball = new Ball(20, '#ff0000')
@@ -184,7 +184,7 @@ const onRunning = async() => {
 
 const destroy = () => {
   cancelAnimationFrame(requestID.value)
-  const parent = document.getElementById('slowlyAndElastic2Box') as any
+  const parent = document.getElementById('spring2Box') as any
   if (parent) {
     parent.removeEventListener('mousemove', onMouseMove)
   }

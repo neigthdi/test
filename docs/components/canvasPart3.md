@@ -19,8 +19,11 @@
 ## 小球碰撞-3
 <preview path="../demo/canvas/part3/ballCollision3.vue"></preview>
 
-## 缓动与弹簧-1（说明）
-<preview path="../demo/canvas/part3/slowlyAndElastic1.vue"></preview>
+## 缓动-1（说明）
+<preview path="../demo/canvas/part3/easing1.vue"></preview>
 
-## 缓动与弹簧-2
-<preview path="../demo/canvas/part3/slowlyAndElastic2.vue"></preview>
+## 弹簧-1（说明）
+<preview path="../demo/canvas/part3/spring1.vue"></preview>
+
+## 弹簧-2
+<preview path="../demo/canvas/part3/spring2.vue"></preview>
