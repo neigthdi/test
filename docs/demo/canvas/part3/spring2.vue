@@ -27,6 +27,13 @@ let angle = 0
 
 
 const onTrigger = async () => {
+  dx = 0
+  dy = 0
+  vx = 0
+  vy = 0
+  targetX = 0
+  targetY = 0
+  angle = 0
   if (!isRunning.value) {
     isRunning.value = true
     await nextTick()

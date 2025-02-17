@@ -2,40 +2,82 @@
   "hash": "45942ce3",
   "configHash": "31f27b00",
   "lockfileHash": "eff15887",
-  "browserHash": "cf0c8c99",
+  "browserHash": "3a30fd83",
   "optimized": {
     "vue": {
       "src": "../../../../node_modules/.pnpm/vue@3.3.4/node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "ab0a1920",
+      "fileHash": "eec0b0a0",
       "needsInterop": false
     },
     "vitepress > @vue/devtools-api": {
       "src": "../../../../node_modules/.pnpm/@vue+devtools-api@7.6.8/node_modules/@vue/devtools-api/dist/index.js",
       "file": "vitepress___@vue_devtools-api.js",
-      "fileHash": "a31e6dc9",
+      "fileHash": "edb5e4fa",
       "needsInterop": false
     },
     "vitepress > @vueuse/core": {
       "src": "../../../../node_modules/.pnpm/@vueuse+core@11.3.0_vue@3.5.13/node_modules/@vueuse/core/index.mjs",
       "file": "vitepress___@vueuse_core.js",
-      "fileHash": "85e54daa",
+      "fileHash": "29ace9fb",
       "needsInterop": false
     },
     "@vitepress-demo-preview/component": {
       "src": "../../../../node_modules/.pnpm/@vitepress-demo-preview+component@2.3.2_vitepress@1.5.0_vue@3.3.4/node_modules/@vitepress-demo-preview/component/dist/preview-component.js",
       "file": "@vitepress-demo-preview_component.js",
-      "fileHash": "7ca4fe9b",
+      "fileHash": "f1b6f407",
       "needsInterop": false
     },
     "glslCanvas": {
       "src": "../../../../node_modules/.pnpm/glslCanvas@0.2.6_m3q7vsdrftwzhkwk3rjrznqtja/node_modules/glslCanvas/dist/GlslCanvas.es.js",
       "file": "glslCanvas.js",
-      "fileHash": "50775a55",
+      "fileHash": "44b3eab5",
+      "needsInterop": false
+    },
+    "babylonjs-materials": {
+      "src": "../../../../node_modules/.pnpm/babylonjs-materials@7.14.0/node_modules/babylonjs-materials/babylonjs.materials.js",
+      "file": "babylonjs-materials.js",
+      "fileHash": "7a923195",
+      "needsInterop": true
+    },
+    "babylonjs": {
+      "src": "../../../../node_modules/.pnpm/babylonjs@7.14.0/node_modules/babylonjs/babylon.js",
+      "file": "babylonjs.js",
+      "fileHash": "97597f23",
+      "needsInterop": true
+    },
+    "three": {
+      "src": "../../../../node_modules/.pnpm/three@0.166.0/node_modules/three/build/three.module.js",
+      "file": "three.js",
+      "fileHash": "0e427379",
+      "needsInterop": false
+    },
+    "three/examples/jsm/controls/OrbitControls.js": {
+      "src": "../../../../node_modules/.pnpm/three@0.166.0/node_modules/three/examples/jsm/controls/OrbitControls.js",
+      "file": "three_examples_jsm_controls_OrbitControls__js.js",
+      "fileHash": "88d53066",
+      "needsInterop": false
+    },
+    "three/examples/jsm/utils/BufferGeometryUtils.js": {
+      "src": "../../../../node_modules/.pnpm/three@0.166.0/node_modules/three/examples/jsm/utils/BufferGeometryUtils.js",
+      "file": "three_examples_jsm_utils_BufferGeometryUtils__js.js",
+      "fileHash": "88f213a8",
+      "needsInterop": false
+    },
+    "gsap": {
+      "src": "../../../../node_modules/.pnpm/gsap@3.12.5/node_modules/gsap/index.js",
+      "file": "gsap.js",
+      "fileHash": "a0dc040b",
       "needsInterop": false
     }
   },
   "chunks": {
+    "chunk-RMNMISGH": {
+      "file": "chunk-RMNMISGH.js"
+    },
+    "chunk-TEORZ34R": {
+      "file": "chunk-TEORZ34R.js"
+    },
     "chunk-67UUJLDS": {
       "file": "chunk-67UUJLDS.js"
     },

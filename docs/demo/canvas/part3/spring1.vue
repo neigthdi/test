@@ -40,6 +40,8 @@ const f = 0.9
 
 
 const onTrigger = async () => {
+  handles.value = []
+  movingHandle.value = null
   if (!isRunning.value) {
     isRunning.value = true
     await nextTick()

@@ -19,6 +19,7 @@ const lineX = 50
 const lineY = 180
 
 const onTrigger = async () => {
+  angle.value = 0
   if (!isRunning.value) {
     isRunning.value = true
     await nextTick()
