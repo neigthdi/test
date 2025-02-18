@@ -101,15 +101,16 @@ const onRunning = async() => {
   parent.addEventListener('mousemove', rotateMouseMove)
 
   let balls: any = []
-  let numBalls = 50
+  let numBalls = 250
   let fl = 250
-  let vpX = canvas.width / 2
-  let vpY = canvas.height / 2
+  let vpX = width / 2
+  let vpY = height / 2
   let angleY // 绕Y轴旋转的角度
+  let angleX // 绕X轴旋转的角度
 
 
   for (let i = 0; i < numBalls; i++) {
-    let size = Math.random() * 5 + 5
+    let size = Math.random() * 10 + 5
     let color = Math.random() * (0xffffff)
     let ball = new Ball3d(size, color)
     
@@ -120,18 +121,31 @@ const onRunning = async() => {
     balls.push(ball)
   }
 
-  function rotateY (ball, angle) {
-    let cos = Math.cos(angle)
-    let sin = Math.sin(angle)
-    let x1 = ball.xpos * cos - ball.zpos * sin
-    let z1 = ball.zpos * cos + ball.xpos * sin
+  const rotateY = (ball, angle) => {
+    const cos = Math.cos(angle)
+    const sin = Math.sin(angle)
+    const x1 = ball.xpos * cos - ball.zpos * sin
+    const z1 = ball.zpos * cos + ball.xpos * sin
     
     ball.xpos = x1
     ball.zpos = z1
+  }
+
+  const rotateX = (ball, angle) => {
+    const cos = Math.cos(angle)
+    const sin = Math.sin(angle)
+    const y1 = ball.ypos * cos - ball.zpos * sin
+    const z1 = ball.zpos * cos + ball.ypos * sin
     
+    ball.ypos = y1
+    ball.zpos = z1
+  }
+
+  const setPerspective = (ball) => {
     if (ball.zpos > -fl) {
-      let scale = fl / (fl + ball.zpos)
-      ball.scaleX = ball.scaleY = scale
+      const scale = fl / (fl + ball.zpos)
+      ball.scaleX = scale
+      ball.scaleY = scale
       ball.x = vpX + ball.xpos * scale
       ball.y = vpY + ball.ypos * scale
       ball.visible = true
@@ -140,16 +154,18 @@ const onRunning = async() => {
     }
   }
 
-  function move (ball) {
+  const move = (ball) => {
     rotateY(ball, angleY)
+    rotateX(ball, angleX)
+    setPerspective(ball)
   }
   
-  function zSort (a, b) {
+  const zSort = (a, b) => {
     return (b.zpos - a.zpos)
   }
   
-  function draw (ball) {
-    if(ball.visible){
+  const draw = (ball) => {
+    if (ball.visible) {
       ball.draw(ctx)
     }
   }
@@ -160,6 +176,8 @@ const onRunning = async() => {
     requestID.value = requestAnimationFrame(runAnimate)
 
     angleY = (mouseInfo.value.x - vpX) * 0.0001
+    angleX = (mouseInfo.value.y - vpY) * 0.0001
+
     balls.forEach(move)
     balls.sort(zSort)
     balls.forEach(draw)
