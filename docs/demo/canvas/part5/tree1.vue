@@ -12,7 +12,7 @@ const requestID = ref<any>()
 const isRunning = ref(false)
 const vz = ref(0)
 const trees = ref<any>([]) // 树的数组
-const treeNum = 15 // 树的数量
+const treeNum = 5 // 树的数量
 const vpX = 648 / 2 // 视点
 const vpY = 360 / 2 // 视点
 const floor = 200 // 地面高度
@@ -93,10 +93,10 @@ NatureTree.prototype.draw = function (spread, leaves, leaveType) {
   this.ctx.restore()
 }
 
-// 当前递归的层级（代数）是gen，当gen小于10时，继续递归，画树枝，否则画树叶
+// 当前递归的层级（代数）是gen，当gen小于12时，继续递归，画树枝，否则画树叶
 // 使用 rotate 和 scale 方法模拟树枝的分支
 NatureTree.prototype.branchAndLeaves = function (gen) {
-  if (gen < 10) {
+  if (gen < 12) {
     this.ctx.save()
 
     this.ctx.beginPath()
