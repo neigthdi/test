@@ -131,10 +131,12 @@ function sidebarBase() {
       text: '案例-canvas',
       collapsible: true,
       items: [
+        { text: '杂录', link: '/components/canvasMemo.md' },
         { text: 'part1', link: '/components/canvasPart1.md' },
         { text: 'part2', link: '/components/canvasPart2.md' },
         { text: 'part3', link: '/components/canvasPart3.md' },
         { text: 'part4', link: '/components/canvasPart4.md' },
+        { text: 'part5', link: '/components/canvasPart5.md' },
       ]
     },
     {

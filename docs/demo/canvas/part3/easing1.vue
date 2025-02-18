@@ -158,9 +158,7 @@ const onRunning = async() => {
 const destroy = () => {
   cancelAnimationFrame(requestID.value)
   const parent = document.getElementById('easing1Box') as any
-  if (parent) {
-    parent.removeEventListener('mousemove', onMouseMove)
-  }
+  if (parent) parent.removeEventListener('mousemove', onMouseMove)
 }
 
 onUnmounted(() => {

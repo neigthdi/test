@@ -1,7 +1,9 @@
 <template>
   <div>
     <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
-    <canvas v-if="isRunning" id="rotate1" class="stage"></canvas>
+    <div id="rotate1Box">
+      <canvas v-if="isRunning" id="rotate1" class="stage"></canvas>
+    </div>
   </div>
 </template>
 
@@ -10,6 +12,7 @@ import { ref, onUnmounted, nextTick } from 'vue'
 
 const requestID = ref<any>()
 const isRunning = ref(false)
+const mouseInfo = ref({ x: 0, y: 0 })
 
 const onTrigger = async () => {
   if (!isRunning.value) {
@@ -37,17 +40,6 @@ function parseColor (color, toNumber) {
     }
     return color
   }
-}
-
-function captureMouse (element) {
-  let mouse = { x: 0, y: 0 }
-  
-  element.addEventListener('mousemove',function (event) {
-    mouse.x = event.offsetX < 0 ? 0 : event.offsetX
-    mouse.y = event.offsetY < 0 ? 0 : event.offsetY      
-  }, false)
-
-  return mouse  
 }
 
 function Ball3d (radius, color) {
@@ -88,7 +80,12 @@ Ball3d.prototype.draw = function (context) {
   context.restore()
 }
 
-
+const rotateMouseMove = (event) => {
+  mouseInfo.value = {
+    x: event.offsetX < 0 ? 0 : event.offsetX,
+    y: event.offsetY < 0 ? 0 : event.offsetY   
+  }
+}
 
 const onRunning = async() => {
   await nextTick()
@@ -100,7 +97,9 @@ const onRunning = async() => {
   canvas.width = width
   canvas.height = height
 
-  const mouse = captureMouse(canvas)
+  const parent = document.getElementById('rotate1Box') as any
+  parent.addEventListener('mousemove', rotateMouseMove)
+
   let balls: any = []
   let numBalls = 50
   let fl = 250
@@ -160,7 +159,7 @@ const onRunning = async() => {
 
     requestID.value = requestAnimationFrame(runAnimate)
 
-    angleY = (mouse.x - vpX) * 0.0001
+    angleY = (mouseInfo.value.x - vpX) * 0.0001
     balls.forEach(move)
     balls.sort(zSort)
     balls.forEach(draw)
@@ -172,6 +171,8 @@ const onRunning = async() => {
 
 const destroy = () => {
   cancelAnimationFrame(requestID.value)
+  const parent = document.getElementById('rotate1Box') as any
+  if (parent) parent.addEventListener('mousemove', rotateMouseMove)
 }
 
 onUnmounted(() => {

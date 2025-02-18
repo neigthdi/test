@@ -3,10 +3,6 @@
     <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     <div @click="showText = !showText" class="pointer">{{ !showText ? '点击展开文字' : '点击收起文字' }}</div>
     <div v-if="showText">
-      <div>1、缓动</div>
-      <div>object.x += (targetX - object.x) * easing;</div>
-      <div>object.y += (targetY - object.y) * easing;</div>
-      <div>------------------------------------------</div>
       <div>1、基本弹簧</div>
       <div>vx += (targetX - object.x) * spring;</div>
       <div>vy += (targetY - object.y) * spring;</div>
@@ -149,6 +145,9 @@ const onRunning = async() => {
   canvas.height = height
 
   const parent = document.getElementById('spring1Box') as any
+  parent.addEventListener('mousedown', onMouseDown)
+  parent.addEventListener('mouseup', onMouseUp)
+  parent.addEventListener('mousemove', onMouseMove)
 
   
   const ball = new Ball(20, '#ff0000')
@@ -159,11 +158,6 @@ const onRunning = async() => {
     handle.y = Math.random() * height
     handles.value.push(handle)
   }
-
-
-  parent.addEventListener('mousedown', onMouseDown)
-  parent.addEventListener('mouseup', onMouseUp)
-  parent.addEventListener('mousemove', onMouseMove)
 
   // 根据一个“把手”（handle）的位置来更新球（ball）的速度
   // 这种实现通常用于模拟弹簧力对球的作用，使球朝向把手移动

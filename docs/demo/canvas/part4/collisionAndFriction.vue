@@ -10,7 +10,7 @@ import { ref, onUnmounted, nextTick } from 'vue'
 
 const requestID = ref<any>()
 const isRunning = ref(false)
-const eventListeners= ref<any>([])
+const eventListeners = ref<any>([])
 const f = 0.97
 let vr = 0
 let vx = 0
@@ -23,12 +23,14 @@ let angle = 0
 
 const onTrigger = async () => {
   if (!isRunning.value) {
+    eventListeners.value = []
     isRunning.value = true
     await nextTick()
     onRunning()
   } else {
     isRunning.value = false
     destroy()
+    eventListeners.value = []
   }
 }
 
