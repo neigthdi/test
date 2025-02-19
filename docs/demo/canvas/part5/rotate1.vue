@@ -100,19 +100,19 @@ const onRunning = async() => {
   const parent = document.getElementById('rotate1Box') as any
   parent.addEventListener('mousemove', rotateMouseMove)
 
-  let balls: any = []
-  let numBalls = 250
-  let fl = 250
-  let vpX = width / 2
-  let vpY = height / 2
+  const balls: any = []
+  const numBalls = 250
+  const fl = 250
+  const vpX = width / 2
+  const vpY = height / 2
   let angleY // 绕Y轴旋转的角度
   let angleX // 绕X轴旋转的角度
 
 
   for (let i = 0; i < numBalls; i++) {
-    let size = Math.random() * 10 + 5
-    let color = Math.random() * (0xffffff)
-    let ball = new Ball3d(size, color)
+    const size = Math.random() * 10 + 5
+    const color = Math.random() * (0xffffff)
+    const ball = new Ball3d(size, color)
     
     ball.xpos = Math.random() * 300 - 150
     ball.ypos = Math.random() * 300 - 150
@@ -190,7 +190,7 @@ const onRunning = async() => {
 const destroy = () => {
   cancelAnimationFrame(requestID.value)
   const parent = document.getElementById('rotate1Box') as any
-  if (parent) parent.addEventListener('mousemove', rotateMouseMove)
+  if (parent) parent.removeEventListener('mousemove', rotateMouseMove)
 }
 
 onUnmounted(() => {
