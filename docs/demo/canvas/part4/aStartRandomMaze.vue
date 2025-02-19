@@ -412,7 +412,7 @@ const onRunning = async() => {
     for (let i = 0, len = mapArr.length; i < len; i++) {
       for (let j = 0, len1 = mapArr[i].length; j < len1; j++) {
         if (mapArr[i][j]) {
-          createRect(j * size, i * size, size, 'black')
+          createRect(j * size, i * size, size, '#fd8e00')
         }
       }
     }
