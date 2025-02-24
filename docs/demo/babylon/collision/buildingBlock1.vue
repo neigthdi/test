@@ -2,7 +2,6 @@
   <div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
-      需要解决柱子漂浮空中
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     </div>
     <canvas v-if="isRunning" id="buildingBlock1" class="stage"></canvas>
@@ -124,13 +123,13 @@ const initScene = async () => {
   const assetsBody: any = []
 
   const createBlock = (x, y, z, i, color) => {
-    const block: any = MeshBuilder.CreateBox('block_' + i, { width: 0.2, height: 0.8, depth: 0.2 }, scene)
+    const block: any = MeshBuilder.CreateBox('block_' + i, { width: 0.2, height: 1.8, depth: 0.2 }, scene)
     block.position.set(x, y, z)
     block.checkCollisions = true
     block.material = new StandardMaterial('blockMat', scene)
     block.material.diffuseColor = color
-    const aggregate = new PhysicsAggregate(block, BABYLON.PhysicsShapeType.SPHERE, {
-      mass: 1,
+    const aggregate = new PhysicsAggregate(block, BABYLON.PhysicsShapeType.BOX, {
+      mass: 10,
       restitution: 0.25
     }, scene)
     aggregate.body.disablePreStep = false
@@ -145,8 +144,9 @@ const initScene = async () => {
     sphere.position.set(2, 0.5, 0)
     sphere.checkCollisions = true
     const aggregate = new PhysicsAggregate(sphere, BABYLON.PhysicsShapeType.SPHERE, {
-      mass: 1,
-      restitution: 0.25
+      mass: 10,
+      restitution: 0.25, // 弹性系数
+      friction: 0.5 // 摩擦力
     }, scene)
     aggregate.body.disablePreStep = false
     return {
@@ -176,7 +176,7 @@ const initScene = async () => {
   assetsBody.push(sphere)
 
   for (let i = 0; i < 5; i++) {
-    const block = createBlock(i * -1, 0.4, 0, i, BABYLON.Color3.Red())
+    const block = createBlock(i * -1, 0.9, 0, i, BABYLON.Color3.Red())
     assetsBody.push(block)
   }
 
@@ -189,7 +189,7 @@ const initScene = async () => {
         // 计算施加力的方向：从球体中心到点击位置的方向
         const impulseDirection = pickResult.pickedPoint.subtract(sphere.asset.position).normalize()
         // 力的大小
-        const impulse = impulseDirection.scale(-2) 
+        const impulse = impulseDirection.scale(-20) 
         sphere.aggregate.body.applyImpulse(impulse, pickResult.pickedPoint)
       }
     }
