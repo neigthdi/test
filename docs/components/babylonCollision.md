@@ -6,3 +6,6 @@
 
 ## 粒子的重力下降与球发生碰撞
 <preview path="../demo/babylon/collision/collisionParticle.vue"></preview>
+
+## 推倒积木-1
+<preview path="../demo/babylon/collision/buildingBlock1.vue"></preview>

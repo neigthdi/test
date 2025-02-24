@@ -9,3 +9,6 @@
 
 ## 自动移动
 <preview path="../demo/canvas/part1/autoMove1.vue"></preview>
+
+## 金属字体
+<preview path="../demo/canvas/part1/heavyMetal.vue"></preview>
