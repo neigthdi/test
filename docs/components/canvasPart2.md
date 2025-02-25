@@ -3,3 +3,6 @@
 
 ## 点击事件
 <preview path="../demo/canvas/part2/clickEvent.vue"></preview>
+
+## 图片帧爆炸
+<preview path="../demo/canvas/part2/frameExplosion.vue"></preview>
