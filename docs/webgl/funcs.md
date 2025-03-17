@@ -259,6 +259,45 @@ void main() {
 
 比较 x>=y。
 
+## inverse
+
+inverse 是一个内置的 GLSL 函数，用于计算矩阵的逆矩阵。它接受一个矩阵作为输入，并返回该矩阵的逆矩阵。    
+在图形渲染中，矩阵通常用于表示空间变换，例如从局部空间到世界空间、从世界空间到视图空间、从视图空间到裁剪空间等。逆矩阵则用于将这些变换反向应用。  
+例如：   
+&emsp;&emsp;从世界空间到局部空间：   
+&emsp;&emsp;&emsp;&emsp;如果有一个模型矩阵（modelMatrix），它将顶点从局部空间变换到世界空间。   
+&emsp;&emsp;&emsp;&emsp;使用 inverse(modelMatrix) 可以将一个点或向量从世界空间变换回局部空间。     
+&emsp;&emsp;从视图空间到世界空间：    
+&emsp;&emsp;&emsp;&emsp;如果有一个视图矩阵（viewMatrix），它将点从世界空间变换到视图空间。   
+&emsp;&emsp;&emsp;&emsp;使用 inverse(viewMatrix) 可以将点从视图空间变换回世界空间。   
+```javascript
+in vec3 position;
+  
+uniform mat4 modelMatrix;
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+uniform vec3 cameraPos; // 相机在世界空间中的位置
+
+out vec3 vOrigin; // 射线的起点
+out vec3 vDirection; // 射线的方向
+
+void main() {
+  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+  
+  // 计算射线的起点 vOrigin。通过将相机位置从世界空间变换到局部空间，得到射线的起点
+  // inverse 是一个内置的 GLSL 函数，用于计算矩阵的逆矩阵。它接受一个矩阵作为输入，并返回该矩阵的逆矩阵
+  // 这行代码的作用是将相机的位置从世界空间变换到局部空间
+  // cameraPos 是相机在世界空间中的位置，通过乘以 modelMatrix 的逆矩阵，将其变换到局部空间
+  // 这样可以确保射线的起点与模型的局部坐标系对齐
+  vOrigin = vec3(inverse(modelMatrix) * vec4(cameraPos, 1.0)).xyz;
+
+  // 计算射线的方向 vDirection，即顶点位置与射线起点的差值
+  vDirection = position - vOrigin;
+  
+  gl_Position = projectionMatrix * mvPosition;
+}
+``` 
+
 ## length
 
 float length(float x)  

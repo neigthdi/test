@@ -23,7 +23,9 @@ import {
   Texture,
   HavokPlugin,
   Matrix,
-  PhysicsAggregate
+  PhysicsAggregate,
+  PhysicsShapeType,
+  PointerEventTypes
 } from 'babylonjs'
 
 let sceneResources
@@ -115,7 +117,7 @@ const initScene = async () => {
 
     const ground = MeshBuilder.CreateGround('ground', { width: 10, height: 10	}, scene)
     ground.material = mat
-    new PhysicsAggregate(ground, BABYLON.PhysicsShapeType.BOX, {
+    new PhysicsAggregate(ground, PhysicsShapeType.BOX, {
       mass: 0
     }, scene)
   }
@@ -128,7 +130,7 @@ const initScene = async () => {
     block.checkCollisions = true
     block.material = new StandardMaterial('blockMat', scene)
     block.material.diffuseColor = color
-    const aggregate = new PhysicsAggregate(block, BABYLON.PhysicsShapeType.BOX, {
+    const aggregate = new PhysicsAggregate(block, PhysicsShapeType.BOX, {
       mass: 10,
       restitution: 0.25
     }, scene)
@@ -143,7 +145,7 @@ const initScene = async () => {
     const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 1 }, scene)
     sphere.position.set(2, 0.5, 0)
     sphere.checkCollisions = true
-    const aggregate = new PhysicsAggregate(sphere, BABYLON.PhysicsShapeType.SPHERE, {
+    const aggregate = new PhysicsAggregate(sphere, PhysicsShapeType.SPHERE, {
       mass: 10,
       restitution: 0.25, // 弹性系数
       friction: 0.5 // 摩擦力
@@ -176,12 +178,12 @@ const initScene = async () => {
   assetsBody.push(sphere)
 
   for (let i = 0; i < 5; i++) {
-    const block = createBlock(i * -1, 0.9, 0, i, BABYLON.Color3.Red())
+    const block = createBlock(i * -1, 0.9, 0, i, Color3.Red())
     assetsBody.push(block)
   }
 
   scene.onPointerObservable.add((pointerInfo) => {
-    if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
+    if (pointerInfo.type === PointerEventTypes.POINTERDOWN) {
       // 使用 scene.pickWithRay 获取鼠标点击的射线与球体的交点
       // 如果点击到球体，pickResult.hit 为 true，pickResult.pickedPoint 是点击位置
       const pickResult: any = scene.pickWithRay(scene.createPickingRay(scene.pointerX, scene.pointerY, Matrix.Identity(), camera))

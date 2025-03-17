@@ -1,6 +1,9 @@
 ## 引力-1
 <preview path="../demo/canvas/part3/gravity1.vue"></preview>
 
+## 引力-2
+<preview path="../demo/canvas/part3/gravity2.vue"></preview>
+
 ## 摩擦力-1
 <preview path="../demo/canvas/part3/friction1.vue"></preview>
 

@@ -222,6 +222,7 @@ const destroy = () => {
     cancelAnimationFrame(requestID.value)
 
     sceneResources = null
+   
   }
 
   document.removeEventListener('mousemove', onDocumentMouseMove, false)
@@ -234,5 +235,6 @@ onMounted(async() => {
 
 onUnmounted(() => {
   destroy()
+  loader = null
 })
 </script>

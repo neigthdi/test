@@ -83,6 +83,7 @@ img {
   color: red;
   cursor: pointer;
   animation: star 5s infinite ease;
+  user-select: none;
 }
 
 @keyframes star {
