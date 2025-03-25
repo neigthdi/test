@@ -67,26 +67,36 @@ const onStart = () => {
         return sphereDist;
       }
 
-      // 计算一个点 p 到一个立方体的距离
-      // 假设立方体的半尺寸为 cubeSize = vec3(1.0, 1.0, 1.0)，表示立方体在 x、y、z 轴上的半长度都为 1.0立方体的中心位于原点 (0, 0, 0)
+      // 计算一个点 p 到一个立方体的（最近的）距离，要考虑p在内部和外部的情况，二者都要计算得出结果，外部返回正值，内部返回负值
+      // 假设立方体的半尺寸为 cubeSize = vec3(1.0, 1.0, 1.0)，表示立方体在 x、y、z 轴上的半长度都为 1.0，立方体的中心位于原点 (0, 0, 0)
       // 如果点 p = vec3(1.5, 1.5, 1.5)，则 p 在立方体外部
       // 如果点 p = vec3(0.5, 0.5, 0.5)，则 p 在立方体内部
       // 如果点 p = vec3(1.0, 1.0, 1.0)，则 p 在立方体边界上
-      // 通过 sdBox 函数，可以计算出点 p 到立方体的最短距离
+      // 通过 getCubeDist 函数，可以计算出点 p 到立方体的最短距离
       float getCubeDist(vec3 p, vec3 cubePos, vec3 cubeSize) {
         // abs(p - cubePos) - cubeSize 计算点 p 相对于立方体中心 cubePos 的距离
         // 首先计算点 p 与立方体中心 c 之间的差值 p − cubePos
         // 然后取绝对值 abs(p − cubePos)，表示点 p 相对于立方体中心的水平、垂直和深度方向的距离
         // 最后减去立方体的半尺寸 cubeSize，得到 tempDist
         // tempDist 的每个分量表示点在对应方向上超出立方体边界的距离
-        // 如果点 p 在立方体内部，tempDist 的某些分量可能是负值
-        // 如果点 p 在立方体外部，tempDist 的所有分量都是正值
+        // 点在立方体内部，所有值是负值
+        // 点在立方体边界，至少一个是0
+        // 点在立方体外，至少一个是正值
         vec3 tempDist = abs(p - cubePos) - cubeSize;
+
+
         // max(tempDist, 0.0) 将 tempDist 的所有负分量设置为 0，只保留正分量，表示点到立方体外部的距离（假如其中有一个是负值，则 p 是在立方体内）
         // length(max(tempDist, 0.0)) 计算这个向量的长度，即点到立方体外部的最短距离
-        // max(tempDist.x, tempDist.y, tempDist.z) 取 tempDist 的 x、y、z 分量中的最大值
-        // min(max(tempDist.x, tempDist.y, tempDist.z), 0.0) 将这个最大值与 0 比较，取较小值，表示点到立方体内部的距离，如果点在立方体外部，这个值为 0
+        // -----------------------------------------------------------------------
+        // min(max(tempDist.x, max(tempDist.y, tempDist.z)), 0.0)这部分的作用是处理点在立方体内部的情况
+        // max(tempDist.x, max(tempDist.y, tempDist.z)) 找出 tempDist 中最大的分量，表示点在立方体内部最深的轴向距离
+        // min(..., 0.0) 确保这个值不会超过 0，因为点在立方体内部时，tempDist 的所有分量都是负值
+        // min(max(tempDist.x, tempDist.y, tempDist.z), 0.0) 将这个最大值与 0 比较，取较小值，表示点距离立方体在某个轴上最近的面的距离为（x）个单位
+        // -----------------------------------------------------------------------
         // 最后合并距离，将点到立方体外部的距离和点到立方体内部的距离相加，得到点到立方体的最短距离
+        // -----------------------------------------------------------------------
+        // 假如点在外部，则会使用 length(max(tempDist, 0.0))
+        // 假如点在内部，则会使用 min(max(tempDist.x, max(tempDist.y, tempDist.z)), 0.0)
         float cubeDist = length(max(tempDist, 0.0)) + min(max(tempDist.x, max(tempDist.y, tempDist.z)), 0.0);
         return cubeDist;
       }
@@ -132,10 +142,10 @@ const onStart = () => {
         return mat3(r, u, f);
       }
 
-      // ro 代表光线的起点
-      // rd 代表光线的方向
-      float rayMarching(vec3 ro, vec3 rd) {
-        // d0 是光线从 ro 出发后行进的总距离
+      // rayOrigin 代表光线的起点
+      // rayDirection 代表光线的方向
+      float rayMarching(vec3 rayOrigin, vec3 rayDirection) {
+        // d0 是光线从 rayOrigin 出发后行进的总距离
         float d0 = 0.0;
 
         const float MAX_STEPS = 100.0;
@@ -144,13 +154,14 @@ const onStart = () => {
         
         for (float i = 0.0; i < MAX_STEPS; i += 1.0) {
           // 光线的当前位置 pos
-          // rd * d0 计算光线在方向 rd 上行进距离 d0 后的向量，然后将这个向量加到源点 ro 上，得到新的位置 pos。
-          vec3 pos = ro + d0 * rd;
+          // rayDirection * d0 计算光线在方向 rayDirection 上行进距离 d0 后的向量，然后将这个向量加到源点 rayOrigin 上，得到新的位置 pos。
+          vec3 pos = rayOrigin + d0 * rayDirection;
           // dS 表示从当前光线位置 p 到最近的场景物体表面的距离
           float dS = getDist(pos);
           d0 += dS;
-          // 如果从当前位置到球面的距离 dS 小于某个阈值 SURFACE_DIST（该阈值也未在此代码段中定义），则可能表示光线已经“击中”了表面，因此退出循环
-          // 如果光线行进的距离 d0 大于某个最大距离 MAX_DIST（同样，该值未在此代码段中定义），则退出循环，可能是因为光线已经行进得太远而没有“击中”任何物体
+          // 如果从当前位置到球面的距离 dS 小于某个阈值 SURFACE_DIST，则可能表示光线已经“击中”了表面，因此退出循环
+          // 因为点p可能在物体内，float dS = getDist(pos)中的dS会返回负值
+          // 如果光线行进的距离 d0 大于某个最大距离 MAX_DIST，则退出循环，可能是因为光线已经行进得太远而没有“击中”任何物体
           if (dS < SURFACE_DIST || d0 > MAX_DIST) {
             break;
           }
@@ -255,30 +266,29 @@ const onStart = () => {
         lightPos.xz += vec2(sin(u_time) + 2.0, cos(u_time)) * 2.0;
 
         // 相机信息
-        // vec3 cameraPos = vec3(0.0, 3.0, 0.0);
         vec3 cameraPos = vec3(0.0, 3.0, 0.0);
         vec3 cameraUp = vec3(0.0, 1.0, 0.0);
         vec3 cameraTarget = vec3(0.0, 1.0, 6.0);
         
-        // rd 是光线的方向向量，表示光线沿着哪个方向行进
+        // rayDirection 是光线的方向向量，表示光线沿着哪个方向行进
         // 之所以 * vec3(uv, 1.0)
         // uv.x 表示水平方向的偏移
         // uv.y 表示垂直方向的偏移
         // 1.0 表示沿着相机的前进方向（即深度方向）的偏移
         // vec3(uv, 1.0) 将二维的 uv 坐标扩展为一个三维向量，其中 z 分量为 1.0
-        vec3 rd = getCameraMat(cameraPos, cameraTarget, cameraUp) * vec3(uv, 1.0);
+        vec3 rayDirection = getCameraMat(cameraPos, cameraTarget, cameraUp) * vec3(uv, 1.0);
 
         // 光线步进行进了多少距离
-        float d = rayMarching(cameraPos, rd);
+        float rayDist = rayMarching(cameraPos, rayDirection);
 
-        // 光线的当前位置 p
-        // rd * d 计算光线在方向 rd 上行进距离 d 后的向量，然后将这个向量加到源点 cameraTarget 上，得到新的位置 p。
-        vec3 p = cameraPos + rd * d;
+        // 光线的当前位置 p （从相机发出一条射线，一直延伸到接触了物体表面，这之间的距离）
+        // rayDirection * rayDist 计算光线在方向 rayDirection 上行进距离 rayDist 后的向量，然后将这个向量加到源点 cameraTarget 上，得到新的位置 p。
+        vec3 cameraToThingFace = cameraPos + rayDirection * rayDist;
 
-        vec3 curLightColor = getLight(lightPos, p);
+        vec3 curLightColor = getLight(lightPos, cameraToThingFace);
 
         // 没有光照
-        // color = vec3(d / 6.0);
+        // color = vec3(rayDist / 6.0);
 
         color = curLightColor;
 
