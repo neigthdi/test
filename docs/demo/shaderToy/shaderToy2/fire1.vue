@@ -118,7 +118,7 @@ const onStart = () => {
         // float n = noise(vec3(0.0, p.y + u_time, 0.0)); // 随着u_time的增大，是往下运动的
         // return p.y + u_time; // 随着u_time的增大，是往下运动的
         
-        float n = noise(p + vec3(0.0, u_time * 3.0, 0.0) + noise(p * 3.0) * 0.5) * 0.5 * p.y;
+        float n = noise(p + vec3(0.0, -u_time * 3.0, 0.0) + noise(p * 3.0) * 0.5) * 0.5 * p.y;
         return n;
       }
 
