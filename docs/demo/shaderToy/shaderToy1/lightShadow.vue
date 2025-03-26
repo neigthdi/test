@@ -122,6 +122,7 @@ const onStart = () => {
       }
 
 
+      // 左手坐标系
       // ro：相机的位置（Ray Origin），即相机在三维空间中的坐标。这个点是所有视线（或光线）的起点
       // target：相机的目标点，即相机“看”向的点。这个点决定了相机的前进方向（Forward向量）
       // up：相机的向上方向（Up向量），通常与相机的前进方向垂直，这个向量用于确定相机的右侧方向（Right向量）和确保相机的坐标系是正交的
@@ -131,11 +132,8 @@ const onStart = () => {
         vec3 f = normalize(target - ro); // 计算Forward向量（F）
 
         // 叉积 cross(a, b) 的结果是一个垂直于向量 a 和 b 的向量
-        // cross(U, F) 生成的向量指向相机的右侧，而 cross(F, U) 生成的向量指向相机的左侧
-        // 使用右手：伸开右手
-        // 使食指指向（Up向量）的方向
-        // 使中指指向 （Forward向量）的方向
-        vec3 r = normalize(cross(up, f)); // Right向量（R）是Forward向量和Up向量的叉积，表示相机的右侧方向
+        // 注意：由于使用的是左手坐标系，所以是使用 up 叉乘 f，而不是反过来进行叉乘，进行叉乘运算时一定要注意其方向性！
+        vec3 r = cross(up, f); // Right向量（R）是Forward向量和Up向量的叉积，表示相机的右侧方向
 
         vec3 u = normalize(cross(f, r)); // 为了确保Up向量垂直于Forward向量，需要重新计算Up向量为Right向量和Forward向量的叉积
 
@@ -271,9 +269,7 @@ const onStart = () => {
         vec3 cameraTarget = vec3(0.0, 1.0, 6.0);
         
         // rayDirection 是光线的方向向量，表示光线沿着哪个方向行进
-        // 之所以 * vec3(uv, 1.0)
-        // uv.x 表示水平方向的偏移
-        // uv.y 表示垂直方向的偏移
+        // 之所以 * vec3(uv, 1.0)，uv.x 表示水平方向的偏移，uv.y 表示垂直方向的偏移，1.0 表示沿着相机的前进方向（即深度方向）的偏移
         // 1.0 表示沿着相机的前进方向（即深度方向）的偏移
         // vec3(uv, 1.0) 将二维的 uv 坐标扩展为一个三维向量，其中 z 分量为 1.0
         vec3 rayDirection = getCameraMat(cameraPos, cameraTarget, cameraUp) * vec3(uv, 1.0);
