@@ -166,8 +166,13 @@ const onStart = () => {
 
       void main() {
         vec2 fragCoord = gl_FragCoord.xy;
-        vec2 uv = (fragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.y, u_resolution.x); // 归一化 uv 的坐标，范围在 [-1, 1] 之间
-        // vec2 uv = fragCoord.xy / min(u_resolution.y, u_resolution.x); // 没有归一化使得范围在[-1, 1]之间
+        // vec2 uv = (fragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.y, u_resolution.x); // 归一化 uv 的坐标，范围在 [-1, 1] 之间
+        vec2 uv = fragCoord.xy /u_resolution.xy; // 归一化到 [0, 1]
+
+        uv.x *= 5.0; // 将 x 轴的范围拉伸到 [0, 5]，同时会使得火苗变得更加细
+
+        uv.x -= 2.5; // 将 uv.x 的范围从 [0, 5] 偏移到 [-2.5, 2.5]。火焰的生成范围现在以 0 为中心，对称分布在屏幕的 x 轴上，即Ox = 2.5
+        uv.y -= 0.25; // 与上同理，即Oy = 0.25
 
         // 这个的运动方向是从右上角往左下角运动
         // 因为 uv 的范围是从左下角的 (-1, -1) 到右上角的 (1, 1)，加上时间变量 u_time ，所以会导致噪声从右上角向左下角移动
@@ -177,7 +182,7 @@ const onStart = () => {
         // color += fbm(vec2(uv.x, uv.y + u_time * 0.5) * 4.0);
 
         // 最终的运动是从下往上运动
-        // 由于随着 u_time 的增加，uv.y 的值会减小，噪声的采样位置在垂直方向上向下移动，从而使得噪声从下往上移动
+        // 由于随着 u_time 的增加，uv.y 的值会减小，噪声的采样位置在垂直的这个方向中，是向下移动，从而使得噪声从下往上移动（屏幕的x零y零点是不变的）
         // -------------------------------------------
         // 视觉上的“从下往上移动”
         //    虽然 uv.y 的值在减小（采样点向下移动），但在屏幕坐标系中：
@@ -187,8 +192,7 @@ const onStart = () => {
         //    噪声的采样点在 世界坐标系 中向下移动
         //    但因为屏幕的 y 轴方向是从下到上，所以噪声在 屏幕上的表现 是从下往上移动
         // -------------------------------------------
-        // uv.y * 0.25 可以使得y轴更加像火苗
-        float finalFbm = fbm(vec2(uv.x, uv.y * 0.8 - u_time * 0.4) * 1.74588 + vec2(0.2155, 0.5654));
+        float finalFbm = fbm(vec2(uv.x, uv.y - u_time * 1.2) * 1.74588 + vec2(0.2155, 0.5654));
 
         // 1、火焰的颜色（亮度）的变化：內焰颜色亮度最低，外焰颜色偏亮，再往外，变成了烟，亮度就又变暗了
         // 2、亮度应该和像素的y坐标有联系
@@ -204,8 +208,11 @@ const onStart = () => {
         float c1 = c * (1.0 - pow(uv.y, 4.0));
         c1 = clamp(c1, 0.0, 1.0);
         c1 = c1 * finalFbm; // 使得颜色正常一些，c1 乘以其他的也行
+        
+        float c2 = c * (1.0 - pow(uv.y, 4.0));
 
         vec3 color = vec3(1.5 * c1, 1.5 * c1 * c1 * c1, c1 * c1 * c1 * c1 * c1 * c1);
+        color = mix(vec3(0.0), color, c2); // 这个mix主要是防止超出length范围的一些噪音（火焰）出现
 
         gl_FragColor = vec4(color, 1.0);
       }`)
