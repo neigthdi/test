@@ -1,6 +1,5 @@
 <template>
   <div>
-    <div>未完成</div>
     <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     <canvas v-if="isRunning" id="fire2" class="stage bg-black"></canvas>
   </div>
@@ -22,9 +21,7 @@ const onTrigger = async () => {
 }
 
 onMounted(async () => {
-  isRunning.value = true
   await nextTick()
-  onStart()
 })
 
 const onStart = () => {
@@ -201,9 +198,12 @@ const onStart = () => {
         // 用length(uv)限定了只要“中间”的这一块区域，20则是慢慢调试出来的
         float c = 1.0 - 20.0 * pow(length(uv) - finalFbm * uv.y, 2.0);
 
+        // 由于float c = 1.0 - 20.0 * pow(length(uv) - finalFbm * uv.y, 2.0); 的取值范围是 −115.568,1.0
+        // 所以c1使用 clamp 限制在 0 - 1 之间，如果输入值小于0，则输出0；如果输入值大于1，则输出1；如果输入值在0到1之间，则输出该值本身
+
         float c1 = c * (1.0 - pow(uv.y, 4.0));
         c1 = clamp(c1, 0.0, 1.0);
-        c1 = c1 * finalFbm;
+        c1 = c1 * finalFbm; // 使得颜色正常一些，c1 乘以其他的也行
 
         vec3 color = vec3(1.5 * c1, 1.5 * c1 * c1 * c1, c1 * c1 * c1 * c1 * c1 * c1);
 
