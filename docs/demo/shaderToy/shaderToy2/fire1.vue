@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div>为什么是-u_time，而不是u_time？主要是glow的影响，如何理解？可能和fire2的所写运动方向有点关系？</div>
+    <div>为什么是-u_time，而不是u_time，具体解释看fire2的 main 函数里面的解析</div>
     <div class="flex space-between">
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
       <div @click="showText = !showText" class="pointer">点击{{ !showText ? '展开': '收起'}}文字</div>
