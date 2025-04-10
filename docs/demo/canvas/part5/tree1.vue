@@ -1,7 +1,7 @@
 <template>
   <div>
     <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
-    <canvas v-if="isRunning" id="tree1" class="stage"></canvas>
+    <canvas v-if="isRunning" id="tree1" class="stage bg-white"></canvas>
   </div>
 </template>
 

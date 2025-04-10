@@ -116,3 +116,11 @@ img {
 .color-blue {
   color: rgb(15, 183, 189);
 }
+
+.bg-black {
+  background: #000;
+}
+
+.bg-white {
+  background: #fff;
+}

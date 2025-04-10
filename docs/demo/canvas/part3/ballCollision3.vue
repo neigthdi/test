@@ -4,7 +4,7 @@
       <div>点击{{ !isRunning ? '运行' : '关闭' }}</div>
     </div>
     <div id="ballCollision3Box">
-      <canvas v-if="isRunning" id="ballCollision3" class="stage"></canvas>
+      <canvas v-if="isRunning" id="ballCollision3" class="stage bg-white"></canvas>
     </div>
   </div>
 </template>
