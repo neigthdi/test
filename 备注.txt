@@ -1,0 +1,5 @@
+注意：
+1、打包之后由于oimo.js只能存在一个vue文件引入，假如a.vue和b.vue都引入了oimo.js则会报错，所以b文件使用babylon.js自带的物理引擎
+所以，在theme文件的index.ts来引入oimo.js
+
+2、havok引擎暂时这样引用

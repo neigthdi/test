@@ -4,6 +4,7 @@
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     </div>
+    <div>使用Oimo</div>
     <canvas v-if="isRunning" id="collisionBall" class="stage"></canvas>
   </div>
 </template>

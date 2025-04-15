@@ -256,6 +256,7 @@ const destroy = () => {
     sceneResources.scene.dispose()
     sceneResources = null
   }
+  fountain.value = null
 }
 
 onMounted(async() => {

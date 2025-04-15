@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Babylon.js sample code</title>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+		<script src="https://assets.babylonjs.com/generated/Assets.js"></script>
+		<script src="https://preview.babylonjs.com/ammo.js"></script>
+		<script src="https://preview.babylonjs.com/cannon.js"></script>
+		<script src="https://preview.babylonjs.com/Oimo.js"></script>
+		<script src="https://preview.babylonjs.com/earcut.min.js"></script>
+		<script src="https://preview.babylonjs.com/babylon.js"></script>
+		<script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+		<script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js">
+		</script>
+		<script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+		<script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+		<script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+		<script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+		<script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+		<style>
+			html,
+			body {
+				overflow: hidden;
+				width: 100%;
+				height: 100%;
+				margin: 0;
+				padding: 0;
+			}
+
+			#renderCanvas {
+				width: 100%;
+				height: 100%;
+				touch-action: none;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id='fps' style="position: absolute;background: #fff;left: 50%;top: 0;transform: translateX(-50%);"></div>
+		<canvas id="renderCanvas"></canvas>
+		<script>
+			var canvas = document.getElementById('renderCanvas')
+			var startRenderLoop = function(engine, canvas) {
+				engine.runRenderLoop(function() {
+					if (sceneToRender && sceneToRender.activeCamera) {
+						sceneToRender.render()
+
+						fps.innerHTML = engine.getFps().toFixed(2)
+					}
+				})
+			}
+			var engine = null
+			var scene = null
+			var sceneToRender = null
+			var createDefaultEngine = function() {
+				return new BABYLON.Engine(canvas, true, {
+					preserveDrawingBuffer: true,
+					stencil: true,
+					disableWebGL2Support: false
+				})
+			}
+
+			window.initFunction = async function() {
+
+				var asyncEngineCreation = async function() {
+					try {
+						return createDefaultEngine()
+					} catch (e) {
+						console.log(
+							'the available createEngine function failed. Creating the default engine instead'
+						)
+						return createDefaultEngine()
+					}
+				}
+
+				window.engine = await asyncEngineCreation()
+				if (!engine) throw 'engine should not be null.'
+				startRenderLoop(engine, canvas)
+				window.scene = createScene()
+			}
+			initFunction().then(() => {
+				scene.then(returnedScene => {
+					sceneToRender = returnedScene
+				})
+			})
+
+			window.addEventListener('resize', function() {
+				engine.resize()
+			})
+
+			const createScene = async function() {
+				const scene = new BABYLON.Scene(engine)
+				const camera = new BABYLON.ArcRotateCamera('camera', -Math.PI / 1.5, Math.PI / 2.2, 15, new BABYLON
+					.Vector3(0, 0, 0))
+				camera.upperBetaLimit = Math.PI / 2.2
+				camera.attachControl(canvas, true)
+				camera.setPosition(new BABYLON.Vector3(100, 100, 100))
+				scene.registerBeforeRender(() => {})
+				scene.debugLayer.show()
+				var light = new BABYLON.HemisphericLight(
+					'light',
+					new BABYLON.Vector3(0, 1, 0),
+					scene
+				)
+				light.intensity = 2
+
+
+
+
+
+
+				// todo.....
+				var light2 = new BABYLON.DirectionalLight(
+				  'dir01',
+				  new BABYLON.Vector3(0, -0.5, -1.0),
+				  scene
+				)
+				light2.position = new BABYLON.Vector3(0, 5, 5)
+				// 阴影设置
+				var shadowGenerator = new BABYLON.ShadowGenerator(1024, light2)
+				shadowGenerator.useBlurExponentialShadowMap = true
+				shadowGenerator.blurKernel = 32
+				
+				// Mixamo 的模型
+				BABYLON.SceneLoader.ImportMesh(
+					'',
+					'./babylon/scenes/',
+					'Xbot.glb',
+					scene,
+					function(newMeshes) {
+						// 对阴影generator添加投射阴影的mesh
+						shadowGenerator.addShadowCaster(scene.meshes[0], true)
+						
+						for (var index = 0; index < newMeshes.length; index++) {
+							newMeshes[index].receiveShadows = false
+						}
+						
+						// scene.createDefaultEnvironment创建默认环境 
+						var helper = scene.createDefaultEnvironment({
+							enableGroundShadow: true
+						})
+						helper.setMainColor(BABYLON.Color3.Gray())
+						helper.ground.position.y += 0.01
+						
+						// setWeightForAllAnimatables 方法通常与骨骼动画（skeletal animation）相关
+						// 它用于设置场景中所有可动画对象（animatables）的权重
+						// 初始化覆盖动画，默认开启 idle
+						var idleAnim = scene.animationGroups.find(a => a.name === 'idle')
+						var idleParam = {
+							name: 'Idle',
+							anim: idleAnim,
+							weight: 1
+						}
+						idleAnim.play(true)
+						idleAnim.setWeightForAllAnimatables(1)
+						var walkAnim = scene.animationGroups.find(a => a.name === 'walk')
+						var walkParam = {
+							name: 'Walk',
+							anim: walkAnim,
+							weight: 0
+						}
+						walkAnim.play(true)
+						walkAnim.setWeightForAllAnimatables(0)
+						var runAnim = scene.animationGroups.find(a => a.name === 'run')
+						var runParam = {
+							name: 'Run',
+							anim: runAnim,
+							weight: 0
+						}
+						runAnim.play(true)
+						runAnim.setWeightForAllAnimatables(0)
+						// 初始化叠加姿势。第一帧的参考位姿切片
+						var sadPoseAnim = BABYLON.AnimationGroup.MakeAnimationAdditive(
+							scene.animationGroups.find(a => a.name === 'sad_pose')
+						)
+						var sadPoseParam = {
+							name: 'Sad Pose',
+							anim: sadPoseAnim,
+							weight: 0
+						}
+						sadPoseAnim.start(true, 1, 0.03333333507180214, 0.03333333507180214)
+						var sneakPoseAnim = BABYLON.AnimationGroup.MakeAnimationAdditive(
+							scene.animationGroups.find(a => a.name === 'sneak_pose')
+						)
+						var sneakPoseParam = {
+							name: 'Sneak Pose',
+							anim: sneakPoseAnim,
+							weight: 0
+						}
+						sneakPoseAnim.start(
+							true,
+							1,
+							0.03333333507180214,
+							0.03333333507180214
+						)
+						// 初始化叠加动画
+						var headShakeAnim = BABYLON.AnimationGroup.MakeAnimationAdditive(
+							scene.animationGroups.find(a => a.name === 'headShake')
+						)
+						var headShakeParam = {
+							name: 'Head Shake',
+							anim: headShakeAnim,
+							weight: 0
+						}
+						headShakeAnim.play(true)
+						var agreeAnim = BABYLON.AnimationGroup.MakeAnimationAdditive(
+							scene.animationGroups.find(a => a.name === 'agree')
+						)
+						var agreeParam = {
+							name: 'Agree',
+							anim: agreeAnim,
+							weight: 0
+						}
+						agreeAnim.play(true)
+						// UI
+						var advancedTexture =
+							BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI('UI')
+						var UiPanel = new BABYLON.GUI.StackPanel()
+						UiPanel.width = '220px'
+						UiPanel.fontSize = '14px'
+						UiPanel.horizontalAlignment =
+							BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT
+						UiPanel.verticalAlignment =
+							BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER
+						advancedTexture.addControl(UiPanel)
+						// 跟踪当前的覆盖动画
+						var currentParam = idleParam
+
+						function onBeforeAnimation() {
+							// 增加当前覆盖动画的权重
+							if (currentParam) {
+								currentParam.weight = BABYLON.Scalar.Clamp(
+									currentParam.weight + 0.01,
+									0,
+									1
+								)
+								currentParam.anim.setWeightForAllAnimatables(
+									currentParam.weight
+								)
+							}
+							// 减少所有非当前覆盖动画的权重
+							if (currentParam !== idleParam) {
+								idleParam.weight = BABYLON.Scalar.Clamp(
+									idleParam.weight - 0.01,
+									0,
+									1
+								)
+								idleParam.anim.setWeightForAllAnimatables(idleParam.weight)
+							}
+							if (currentParam !== walkParam) {
+								walkParam.weight = BABYLON.Scalar.Clamp(
+									walkParam.weight - 0.01,
+									0,
+									1
+								)
+								walkParam.anim.setWeightForAllAnimatables(walkParam.weight)
+							}
+							if (currentParam !== runParam) {
+								runParam.weight = BABYLON.Scalar.Clamp(
+									runParam.weight - 0.01,
+									0,
+									1
+								)
+								runParam.anim.setWeightForAllAnimatables(runParam.weight)
+							}
+							// 在当前动画权重达到 1 或当前动画未定义时所有覆盖动画权重达到 0 时候，移除回调
+							if (
+								(currentParam && currentParam.weight === 1) ||
+								(idleParam.weight === 0 &&
+									walkParam.weight === 0 &&
+									runParam.weight === 0)
+							) {
+								scene.onBeforeAnimationsObservable.removeCallback(
+									onBeforeAnimation
+								)
+							}
+						}
+						// 用于混合以绑定姿势的按钮
+						var button = BABYLON.GUI.Button.CreateSimpleButton('but0', 'None')
+						button.paddingTop = '10px'
+						button.width = '100px'
+						button.height = '50px'
+						button.color = 'white'
+						button.background = 'green'
+						button.onPointerDownObservable.add(function() {
+							// 移除当前动画
+							currentParam = undefined
+							// 重启动画观察者
+							scene.onBeforeAnimationsObservable.removeCallback(
+								onBeforeAnimation
+							)
+							scene.onBeforeAnimationsObservable.add(onBeforeAnimation)
+						})
+						UiPanel.addControl(button)
+						// 用于混合到 Idle 的按钮
+						var button = BABYLON.GUI.Button.CreateSimpleButton('but0', 'Idle')
+						button.paddingTop = '10px'
+						button.width = '100px'
+						button.height = '50px'
+						button.color = 'white'
+						button.background = 'green'
+						button.onPointerDownObservable.add(function() {
+							// 如果 idle 已经是当前动画，则什么也不做
+							if (currentParam === idleParam) {
+								return
+							}
+							// 重新启动动画观察器，将 idle 设置为当前
+							scene.onBeforeAnimationsObservable.removeCallback(
+								onBeforeAnimation
+							)
+							currentParam = idleParam
+							scene.onBeforeAnimationsObservable.add(onBeforeAnimation)
+						})
+						UiPanel.addControl(button)
+						// 用于混合 walk 的按钮
+						button = BABYLON.GUI.Button.CreateSimpleButton('but0', 'Walk')
+						button.paddingTop = '10px'
+						button.width = '100px'
+						button.height = '50px'
+						button.color = 'white'
+						button.background = 'green'
+						button.onPointerDownObservable.add(function() {
+							// 如果 walk 已经是当前动画，什么也不做
+							if (currentParam === walkParam) {
+								return
+							}
+							// 同步动画
+							if (currentParam) {
+								walkParam.anim.syncAllAnimationsWith(null)
+								currentParam.anim.syncAllAnimationsWith(
+									walkParam.anim.animatables[0]
+								)
+							}
+							// 重新启动动画观察者，将 walk 设置为当前
+							scene.onBeforeAnimationsObservable.removeCallback(
+								onBeforeAnimation
+							)
+							currentParam = walkParam
+							scene.onBeforeAnimationsObservable.add(onBeforeAnimation)
+						})
+						UiPanel.addControl(button)
+						// 用于混合 run 的按钮
+						button = BABYLON.GUI.Button.CreateSimpleButton('but0', 'Run')
+						button.paddingTop = '10px'
+						button.width = '100px'
+						button.height = '50px'
+						button.color = 'white'
+						button.background = 'green'
+						button.onPointerDownObservable.add(function() {
+							// 如果 run 已经是当前动画，则什么也不做
+							if (currentParam === runParam) {
+								return
+							}
+							// 同步动画
+							if (currentParam) {
+								runParam.anim.syncAllAnimationsWith(null)
+								currentParam.anim.syncAllAnimationsWith(
+									runParam.anim.animatables[0]
+								)
+							}
+							// 重新启动动画观察器并将 run 设置为当前
+							scene.onBeforeAnimationsObservable.removeCallback(
+								onBeforeAnimation
+							)
+							currentParam = runParam
+							scene.onBeforeAnimationsObservable.add(onBeforeAnimation)
+						})
+						UiPanel.addControl(button)
+						// 创建一个滑块来控制每个叠加姿势/动画的权重
+						var params = [
+							sadPoseParam,
+							sneakPoseParam,
+							headShakeParam,
+							agreeParam
+						]
+						params.forEach(param => {
+							// Label
+							var header = new BABYLON.GUI.TextBlock()
+							header.text = param.name + ':' + param.weight.toFixed(2)
+							header.height = '40px'
+							header.color = 'green'
+							header.textHorizontalAlignment =
+								BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT
+							header.paddingTop = '10px'
+							UiPanel.addControl(header)
+							// Slider
+							var slider = new BABYLON.GUI.Slider()
+							slider.horizontalAlignment =
+								BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT
+							slider.minimum = 0
+							slider.maximum = 1
+							slider.color = 'green'
+							slider.value = param.anim.weight
+							slider.height = '20px'
+							slider.width = '205px'
+							UiPanel.addControl(slider)
+							// 根据滑块值更新动画权重值
+							slider.onValueChangedObservable.add(v => {
+								param.anim.setWeightForAllAnimatables(v)
+								param.weight = v
+								header.text = param.name + ':' + param.weight.toFixed(2)
+							})
+							param.anim._slider = slider
+							slider.value = param.weight
+						})
+						engine.hideLoadingUI()
+					},
+					function() {}
+				)
+
+
+
+
+
+				return scene
+			}
+		</script>
+	</body>
+
+</html>

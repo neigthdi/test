@@ -9,3 +9,6 @@
 
 ## 推倒积木-1
 <preview path="../demo/babylon/collision/buildingBlock1.vue"></preview>
+
+## 模拟台球-1
+<preview path="../demo/babylon/collision/billiardBall1.vue"></preview>
