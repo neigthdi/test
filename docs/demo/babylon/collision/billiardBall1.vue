@@ -135,6 +135,61 @@ const initScene = async () => {
     }, scene)
   }
 
+  // 创建台球桌墙
+  const createTableWall = () => {
+    const wallPositions = [
+      { width: 0.2, height: 0.2, depth: 4.2, x: -5, y: 0.1, z: 0 }, // 左墙
+      { width: 0.2, height: 0.2, depth: 4.2, x: 5, y: 0.1, z: 0 }, // 右墙
+      { width: 4.3, height: 0.2, depth: 0.2, x: -2.45, y: 0.1, z: 2.5 }, // 下墙-左
+      { width: 4.3, height: 0.2, depth: 0.2, x: 2.45, y: 0.1, z: 2.5 }, // 下墙-右
+      { width: 4.3, height: 0.2, depth: 0.2, x: -2.45, y: 0.1, z: -2.5 }, // 上墙-左
+      { width: 4.3, height: 0.2, depth: 0.2, x: 2.45, y: 0.1, z: -2.5 }, // 上墙-右
+    ]
+
+    for (let i = 0; i < wallPositions.length; i++) {
+      const info = wallPositions[i]
+      const wall: any = MeshBuilder.CreateBox('wall' + i, {
+        width: info.width,
+        height: info.height,
+        depth: info.depth
+      }, scene)
+      wall.position = new Vector3(info.x, info.y, info.z)
+      wall.material = new StandardMaterial('wallMaterial' + i, scene)
+      wall.material.diffuseColor = new Color3(0.6, 0.2, 0.4)
+
+      new PhysicsAggregate(wall, PhysicsShapeType.BOX, {
+        mass: 0,
+        friction: 0.5,
+        restitution: 0.1
+      }, scene)
+    }
+  }
+  
+  // 创建球袋
+  const createPocket = () => {
+    const pocketPositions = [
+      new Vector3(-4.9, 0, -2.4),
+      new Vector3(4.9, 0, -2.4),
+      new Vector3(-4.9, 0, 2.4),
+      new Vector3(4.9, 0, 2.4),
+      new Vector3(0, 0, -2.4),
+      new Vector3(0, 0, 2.4)
+    ]
+
+    for (let i = 0; i < pocketPositions.length; i++) {
+      const pocket: any = MeshBuilder.CreateCylinder('pocket' + i, {
+        height: 0.5,
+        diameter: 0.7,
+        tessellation: 64
+      }, scene)
+      pocket.position = pocketPositions[i]
+      pocket.position.y = -0.23
+      pocket.material = new StandardMaterial('pocketMaterial' + i, scene)
+      pocket.material.diffuseColor = new Color3(0.1, 0.1, 0.1)
+      pockets.push(pocket)
+    }
+  }
+
   // 创建台球
   const createBall = () => {
     const ballColors = [
@@ -163,61 +218,6 @@ const initScene = async () => {
         restitution: 0.8
       }, scene)
       balls.push(ball)
-    }
-  }
-
-  // 创建球袋
-  const createPocket = () => {
-    const pocketPositions = [
-      new Vector3(-4.9, 0, -2.4),
-      new Vector3(4.9, 0, -2.4),
-      new Vector3(-4.9, 0, 2.4),
-      new Vector3(4.9, 0, 2.4),
-      new Vector3(0, 0, -2.4),
-      new Vector3(0, 0, 2.4)
-    ]
-
-    for (let i = 0; i < pocketPositions.length; i++) {
-      const pocket: any = MeshBuilder.CreateCylinder('pocket' + i, {
-        height: 0.5,
-        diameter: 0.7,
-        tessellation: 64
-      }, scene)
-      pocket.position = pocketPositions[i]
-      pocket.position.y = -0.23
-      pocket.material = new StandardMaterial('pocketMaterial' + i, scene)
-      pocket.material.diffuseColor = new Color3(0.1, 0.1, 0.1)
-      pockets.push(pocket)
-    }
-  }
-
-  // 创建台球桌墙
-  const createTableWall = () => {
-    const wallPositions = [
-      { width: 0.2, height: 0.2, depth: 4.2, x: -5, y: 0.1, z: 0 }, // 左墙
-      { width: 0.2, height: 0.2, depth: 4.2, x: 5, y: 0.1, z: 0 }, // 右墙
-      { width: 4.3, height: 0.2, depth: 0.2, x: -2.45, y: 0.1, z: 2.5 }, // 下墙-左
-      { width: 4.3, height: 0.2, depth: 0.2, x: 2.45, y: 0.1, z: 2.5 }, // 下墙-右
-      { width: 4.3, height: 0.2, depth: 0.2, x: -2.45, y: 0.1, z: -2.5 }, // 上墙-左
-      { width: 4.3, height: 0.2, depth: 0.2, x: 2.45, y: 0.1, z: -2.5 }, // 上墙-右
-    ]
-
-    for (let i = 0; i < wallPositions.length; i++) {
-      const info = wallPositions[i]
-      const wall: any = MeshBuilder.CreateBox('wall' + i, {
-        width: info.width,
-        height: info.height,
-        depth: info.depth
-      }, scene)
-      wall.position = new Vector3(info.x, info.y, info.z)
-      wall.material = new StandardMaterial('wallMaterial' + i, scene)
-      wall.material.diffuseColor = new Color3(0.1, 0.1, 0.1)
-
-      new PhysicsAggregate(wall, PhysicsShapeType.BOX, {
-        mass: 0,
-        friction: 0.5,
-        restitution: 0.1
-      }, scene)
     }
   }
 
