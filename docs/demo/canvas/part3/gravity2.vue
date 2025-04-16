@@ -1,6 +1,5 @@
 <template>
   <div>
-    <div>未完成</div>
     <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     <canvas v-if="isRunning" id="gravity2" class="stage"></canvas>
   </div>
@@ -23,96 +22,122 @@ const onTrigger = async () => {
   }
 }
 
+const BLACK_HOLD_RADIUS = 50
+const BLACK_HOLD_MASS = Math.pow(10, 3)
+
 class BlackHold {
-  ctx: CanvasRenderingContext2D | null = null
-  mass = 100
-  radius = 25
-  outerRadius = 55
-  innerRadius = 35
-  rotation = 0
-  x = 0
-  y = 0
+  ctx: any
+  x: number
+  y: number
+  radius: number
+  color: string
+  mass: number
+  rotationAngle: number
 
-  constructor(canvas, ctx) {
-    this.ctx = ctx
-    this.x = canvas.width / 2
-    this.y = canvas.height / 2
-  }
+	constructor(ctx, config) {
+		const {
+			x,
+			y,
+			radius,
+			color
+		} = config
+		this.ctx = ctx
+		this.x = x
+		this.y = y
+		this.radius = radius
+		this.color = color
+		this.mass = BLACK_HOLD_MASS
+		this.rotationAngle = 0
+	}
 
+	addRotatinAngle() {
+		this.rotationAngle += 0.005
+	}
 
-  drawBall() {
-    this.ctx?.save()
-    this.ctx?.rotate(this.rotation)
-    this.ctx?.beginPath()
-    this.ctx?.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false)
-    if (this.ctx) {
-      this.ctx.fillStyle = 'orange'
-    }
-    this.ctx?.fill()
-    this.ctx?.restore()
-  }
+	draw() {
+		this.addRotatinAngle()
+		this.drawRound()
+		this.drawRect()
+	}
 
-  drawRing() {
-    this.ctx?.save()
-    this.ctx?.beginPath()
-    this.ctx?.arc(this.x, this.y, this.outerRadius, 0, Math.PI * 2, false)
-    if (this.ctx) {
-      this.ctx.fillStyle = 'pink'
-    }
-    this.ctx?.fill()
-    
-    if(this.ctx) {
-      this.ctx.globalCompositeOperation = 'destination-out'; // 使用透明色擦除
-    }
-    this.ctx?.beginPath()
-    this.ctx?.arc(this.x, this.y, this.innerRadius, 0, Math.PI * 2, false)
-    this.ctx?.fill()
-    if(this.ctx) {
-      this.ctx.globalCompositeOperation = 'source-over' // 恢复默认绘制模式
-    }
-    this.ctx?.restore()
-  }
+	drawRound() {
+		this.ctx.save()
+		this.ctx.beginPath()
+		this.ctx.fillStyle = this.color
+		this.ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI)
+		this.ctx.fill()
+		this.ctx.restore()
+	}
 
-  increaseMass(ball) {
-
-  }
+	drawRect() {
+		this.ctx.save()
+		this.ctx.beginPath()
+		// 将画布原点移动到矩形的中心
+		this.ctx.translate(this.x, this.y)
+		// 应用旋转
+		this.ctx.rotate(this.rotationAngle)
+		this.ctx.fillStyle = 'orange'
+		// this.ctx.fillRect(this.x - 25, this.y - 25, 50, 50) // 因为平移到this.x, this.y，所以不用this.x - 25, this.y - 25
+		this.ctx.fillRect(-25, -25, 50, 50)
+		this.ctx.fill()
+		this.ctx.restore()
+	}
 }
 
+
 class Ball {
-  ctx: CanvasRenderingContext2D | null = null
-  mass = 0
-  radius = 0
-  rotation = 0
-  x = 0
-  y = 0
+  ctx: any
+  x: number
+  y: number
+  radius: number
+  color: string
+  mass: number
+  angle: number
+  orbitRadius: number // 设置轨道半径
+  tangentialSpeed: number // 切向速度
+  vx: number
+  vy: number
+  isAlive: boolean
 
-  constructor(ctx, canvas)  {
-    this.ctx = ctx
-    this.createBallInfo(canvas)
-  }
+	constructor(ctx, config) {
+		const {
+			radius,
+			x,
+			y,
+			color,
+			mass,
+			angle,
+			orbitRadius, // 设置轨道半径
+		} = config
+		this.ctx = ctx
+		this.radius = radius
+		this.x = x
+		this.y = y
+		this.color = color
+		this.mass = mass
+		this.angle = angle
+		this.orbitRadius = orbitRadius // 设置轨道半径
+		this.tangentialSpeed = Math.sqrt(BLACK_HOLD_MASS / this.orbitRadius) // 根据轨道半径计算切向速度，v = √￣(GM/r)，M是被围绕的物体，r是两者的距离
 
-  createBallInfo(canvas) {
-    this.x = canvas.width * Math.random()
-    this.y = canvas.height * Math.random()
-    this.mass = Math.random() * 40 + 40
-    this.radius = this.mass / 4
-  }
+		this.vx = 0
+		this.vy = 0
 
-  draw() {
-    this.ctx?.save()
-    this.ctx?.rotate(this.rotation)
-    this.ctx?.beginPath()
-    this.ctx?.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false)
-    if (this.ctx) {
-      this.ctx.fillStyle = 'orange'
-    }
-    this.ctx?.fill()
-    this.ctx?.restore()
-  }
+		this.isAlive = true
+	}
 
-  isAlive(blackHold) {
 
-  }
+	draw() {
+		this.ctx.save()
+		this.ctx.beginPath()
+		this.ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI)
+		this.ctx.fillStyle = this.color
+		this.ctx.fill()
+		this.ctx.restore()
+	}
+
+	destroy() {
+		this.isAlive = false
+	}
 }
 
 const onRunning = async() => {
@@ -124,16 +149,127 @@ const onRunning = async() => {
   const height = Number(window.getComputedStyle(canvas).height.split('px')[0])
   canvas.width = width
   canvas.height = height
+  const centerX = width / 2
+  const centerY = height / 2
 
-  const blackHold = new BlackHold(canvas, ctx)
+  const gravitate = (blackHold, star) => {
+    const dx = star.x - blackHold.x
+    const dy = star.y - blackHold.y
+    const distQ = dx * dx + dy * dy
+    const dist = Math.sqrt(distQ)
+
+    // 引力计算，计算朝着黑洞前进的x，y
+    const F = blackHold.mass * star.mass / distQ
+    // 引力加速度分量
+    const ax = F * dx / dist
+    const ay = F * dy / dist
+    star.vx -= ax / star.mass
+    star.vy -= ay / star.mass
+    star.x += star.vx
+    star.y += star.vy
+
+    // 计算完引力后，计算围绕黑洞旋转的x，y
+    const afterDx = star.x - blackHold.x
+    const afterDy = star.y - blackHold.y
+    const afterDistQ = afterDx * afterDx + afterDy * afterDy
+    const afterDist = Math.sqrt(afterDistQ)
+    star.angle += star.tangentialSpeed / star.orbitRadius
+    star.orbitRadius = afterDist
+    star.x = blackHold.x + star.orbitRadius * Math.cos(star.angle)
+    star.y = blackHold.y + star.orbitRadius * Math.sin(star.angle)
+  }
+
+  const draw = particle => {
+    particle.draw(particle.ctx)
+  }
+
+  const move = (blackHold, star) => {
+    gravitate(blackHold, star)
+  }
+
+  const destroy = (blackHold, star) => {
+    const blackHoldRadius = blackHold.radius
+    const starRadius = star.radius
+
+    const dx = star.x - blackHold.x
+    const dy = star.y - blackHold.y
+    const distQ = dx * dx + dy * dy
+    const dist = Math.sqrt(distQ)
+
+    const deathLine = Math.abs(starRadius - blackHoldRadius)
+
+    return dist <= deathLine
+  }
+
+  let starAliveList: any = []
+  
+  const blackHold = new BlackHold(ctx, {
+    radius: BLACK_HOLD_RADIUS,
+    x: centerX,
+    y: centerY,
+    color: '#000',
+    mass: BLACK_HOLD_MASS
+  })
+
+  for (let i = 0; i < 2; i++) {
+    const radius = Math.random() * 15
+    const mass = radius * Math.random()
+    const orbitRadius = 50 + Math.random() * 200 // 随机生成轨道半径
+    const angle = Math.random() * 2 * Math.PI // 随机生成初始角度
+    const x = centerX + orbitRadius * Math.cos(angle) // 根据轨道半径和角度计算初始 x 坐标
+    const y = centerY + orbitRadius * Math.sin(angle) // 根据轨道半径和角度计算初始 y 坐标
+    const star = new Ball(ctx, {
+      radius: radius,
+      x: x,
+      y: y,
+      color: '#0c7',
+      mass: Math.pow(10, mass),
+      angle: angle,
+      orbitRadius: orbitRadius // 设置轨道半径
+    })
+
+    starAliveList.push(star)
+  }
+
 
   const runAnimate = () => {
     ctx.clearRect(0, 0, width, height)
 
-   
-    blackHold.drawRing()
+    starAliveList.forEach(star => {
+      move(blackHold, star)
+      draw(star)
 
-    blackHold.drawBall()
+      const isDeath = destroy(blackHold, star)
+      if (isDeath) star.destroy()
+    })
+
+    
+
+    starAliveList = starAliveList.filter(v => v.isAlive)
+    if(starAliveList.length <= 0 ) {
+      for (let i = 0; i < 2; i++) {
+        const radius = Math.random() * 15
+        const mass = radius * Math.random()
+        const orbitRadius = 50 + Math.random() * 200 // 随机生成轨道半径
+        const angle = Math.random() * 2 * Math.PI // 随机生成初始角度
+        const x = centerX + orbitRadius * Math.cos(angle) // 根据轨道半径和角度计算初始 x 坐标
+        const y = centerY + orbitRadius * Math.sin(angle) // 根据轨道半径和角度计算初始 y 坐标
+        const star = new Ball(ctx, {
+          radius: radius,
+          x: x,
+          y: y,
+          color: '#0c7',
+          mass: Math.pow(10, mass),
+          angle: angle,
+          orbitRadius: orbitRadius // 设置轨道半径
+        })
+
+        starAliveList.push(star)
+      }
+    }
+
+    blackHold.draw()
+
 
     requestID.value = requestAnimationFrame(runAnimate)
 
@@ -150,104 +286,3 @@ onUnmounted(() => {
   destroy()
 })
 </script>
-
-<!-- <!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>Canvas with Background Image and Rings</title>
-	</head>
-	<body>
-		<canvas id="myCanvas" width="400" height="400"></canvas>
-		<script>
-			const canvas = document.getElementById('myCanvas');
-			const ctx = canvas.getContext('2d');
-
-			// 加载背景图片
-
-			// 等待图片加载完成
-			// 绘制背景图片
-
-			// 圆 A 和圆环 A 的参数
-			const centerX = 200;
-			const centerY = 200;
-			const radiusA = 50; // 圆 A 的半径
-			const outerRadiusRing = 120; // 圆环 A 的外半径
-			const innerRadiusRing = 80; // 圆环 A 的内半径
-
-			// 圆 B 的参数
-			let positionBX = 150; // 圆 B 的初始 X 坐标
-			const positionBY = 200; // 圆 B 的初始 Y 坐标
-			const radiusB = 30; // 圆 B 的半径
-
-			// 绘制圆 A
-			function drawCircleA() {
-				ctx.beginPath();
-				ctx.arc(centerX, centerY, radiusA, 0, Math.PI * 2, false);
-				ctx.fillStyle = 'red';
-				ctx.fill();
-			}
-
-			// 绘制圆环 A
-			function drawRingA() {
-				// 绘制外圆（黑色）
-				ctx.beginPath();
-				ctx.arc(centerX, centerY, outerRadiusRing, 0, Math.PI * 2, false);
-				ctx.fillStyle = 'black';
-				ctx.fill();
-
-				// 擦除内圆（透明色或背景色）
-				ctx.globalCompositeOperation = 'destination-out'; // 使用透明色擦除
-				ctx.beginPath();
-				ctx.arc(centerX, centerY, innerRadiusRing, 0, Math.PI * 2, false);
-				ctx.fill();
-				ctx.globalCompositeOperation = 'source-over'; // 恢复默认绘制模式
-				
-				// ctx.beginPath();
-				// ctx.arc(centerX, centerY, radiusA, 0, Math.PI * 2, false);
-				// ctx.fillStyle = 'red';
-				// ctx.fill();
-			}
-
-			// 绘制圆 B
-			function drawCircleB() {
-				ctx.beginPath();
-				ctx.arc(positionBX, positionBY, radiusB, 0, Math.PI * 2, false);
-				ctx.fillStyle = 'blue';
-				ctx.fill();
-			}
-
-			// 动画逻辑
-			function animate() {
-				ctx.clearRect(0,0,canvas.width,canvas.height)
-
-				// 绘制圆 A
-				
-
-				// 绘制圆环 A
-				drawRingA();
-				
-				// 绘制圆 B
-				drawCircleB();
-				
-				drawCircleA();
-
-				
-
-				// 更新圆 B 的位置
-				positionBX += 1; // 每帧向右移动 1 像素
-
-				// 如果圆 B 移出画布，重置位置
-				if (positionBX > canvas.width) {
-					positionBX = -radiusB;
-				}
-
-				requestAnimationFrame(animate);
-			}
-
-			// 开始动画
-			animate();
-		</script>
-	</body>
-</html> -->
