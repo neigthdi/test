@@ -5,7 +5,10 @@
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     </div>
     <div>使用Havok</div>
-    <div>力度：{{ impulse }}</div>
+    <div class="flex space-between">
+      <div>力度：{{ impulse }}</div>
+      <div>{{ gameOver }}</div>
+    </div>
     <canvas v-if="isRunning" id="billiardBall1" class="stage"></canvas>
   </div>
 </template>
@@ -39,7 +42,9 @@ let isAiming = false
 let balls: any = []
 let pockets: any = []
 let clickBall: any = null
-let impulse = ref(0)
+const impulse = ref(0)
+
+const gameOver = ref('')
 
 const fps = ref(0)
 const isRunning = ref(false)
@@ -49,6 +54,7 @@ const onTrigger = async () => {
     isRunning.value = true
     await nextTick()
     sceneResources = await initScene()
+    gameOver.value = ''
   } else {
     isRunning.value = false
     destroy()
@@ -396,7 +402,7 @@ const initScene = async () => {
 
   	// 检查游戏是否结束
   	if (balls.length === 0) {
-  		alert('游戏结束！')
+      gameOver.value = '游戏结束'
   	}
   })
 

@@ -41,9 +41,13 @@ export default {
         link: 'https://thebookofshaders.com/?lan=ch'
       },
       {
-        text: 'shader案例',
+        text: 'shader案例网站-1',
         link: 'https://www.shadertoy.com/browse'
-      }
+      },
+      {
+        text: 'shader案例网站-2',
+        link: 'https://glslsandbox.com/'
+      },
     ],
     sidebar: {
       '/': sidebarBase()
