@@ -269,10 +269,10 @@ const initScene = async () => {
     })
     keys.push({
       frame: 90,
-      value: cueTemp.position // 后退 1 单位
+      value: cueTemp.position // 后退 1 单位（即返回原位置）
     })
 
-    if(!cueAnimation) {
+    if(!cueAnimation) { // 防止重复new
       cueAnimation = new Animation(
         'boxAnimation',
         'position',
@@ -370,7 +370,7 @@ const initScene = async () => {
         const y = scene.pointerY
         const m =  Matrix.Identity()
         const pickResult = scene.pickWithRay(scene.createPickingRay(x, y, m, camera))
-        // 计算施加力的方向：从球体中心到点击位置的方向
+        // 计算施加冲量的方向：从球体中心到点击位置的方向
         const impulseDirection = pickResult?.pickedPoint?.subtract(clickBall.position).normalize()
         const resultImpulse = impulseDirection?.scale(-impulse.value)
         clickBall.customAggregate.body.applyImpulse(resultImpulse, pickResult?.pickedPoint)

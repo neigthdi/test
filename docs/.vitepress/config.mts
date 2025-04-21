@@ -90,7 +90,6 @@ function sidebarBase() {
         { text: '钩子', link: '/other/hook' },
         { text: '存储', link: '/other/storage' },
         { text: 'clone和createInstance', link: '/other/cloneAndCreateInstance' },
-        { text: '光相关', link: '/other/light' }
       ]
     },
     {
@@ -102,6 +101,7 @@ function sidebarBase() {
         { text: '数据类型', link: '/webgl/dataType' },
         { text: '内置函数', link: '/webgl/funcs' },
         { text: '矩阵变换', link: '/webgl/matrixTransformation' },
+        { text: '光相关', link: '/webgl/light' },
       ]
     },
     {
@@ -116,6 +116,7 @@ function sidebarBase() {
         { text: '粒子', link: '/components/babylonParticle.md' },
         { text: '碰撞', link: '/components/babylonCollision.md' },
         { text: '纹理', link: '/components/babylonTexture.md' },
+        { text: '几何体相关', link: '/components/babylonGeometry.md' },
         { text: 'RPG相关', link: '/components/babylonRpg.md' },
         { text: 'shader1', link: '/components/babylonShader1.md' },
         { text: 'shader2', link: '/components/babylonShader2.md' },

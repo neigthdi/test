@@ -46,6 +46,43 @@ mesh.animations.push(myAnim)
 scene.beginAnimation(target, from, to, true)
 ```
 
+## 案例
+
+```javascript
+  let animation
+  // 创建动画，90 / 60 = 1.5s，90帧，60帧每秒，1.5秒完成动画
+  const createAnimation = (thing, direction) => {
+    const keys: any = []
+    keys.push({
+      frame: 0,
+      value: thing.position.clone()
+    })
+    keys.push({
+      frame: 45,
+      value: thing.position.add(direction.scale(1)) // 沿着direction方向前进 1 单位
+    })
+    keys.push({
+      frame: 90,
+      value: thing.position // 后退 1 单位（即返回原位置）
+    })
+
+    if(!animation) { // 防止重复new
+      animation = new Animation(
+        'boxAnimation',
+        'position',
+        60, // 帧率
+        Animation.ANIMATIONTYPE_VECTOR3,
+        Animation.ANIMATIONLOOPMODE_CYCLE
+      )
+      thing.animations.push(animation)
+    }
+
+    animation.setKeys(keys)
+   
+    scene.beginAnimation(thing, 0, 90, true) // 设置true为循环播放
+  }
+```
+
 ## 动画和 Promise
 
 从 Babylon.js v3.3 开始，可以使用 Promise 等待动画结束

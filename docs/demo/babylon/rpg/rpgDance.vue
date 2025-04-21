@@ -31,7 +31,7 @@ import {
   Texture,
   ActionManager,
   ExecuteCodeAction,
-  SceneLoader
+  ImportMeshAsync
 } from 'babylonjs'
 import {
   AdvancedDynamicTexture,
@@ -174,11 +174,7 @@ const initScene = async () => {
   }
 
   const loaderPeople = async () => {
-    const module = await SceneLoader.ImportMeshAsync(
-      '',
-      '/scenes/',
-      'HVGirl.glb'
-    )
+    const module = await ImportMeshAsync('/scenes/HVGirl.glb', scene)
     // meshes第0是root
     const people = module.meshes[0]
 

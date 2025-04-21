@@ -24,7 +24,7 @@ import {
   StandardMaterial,
   CubeTexture,
   Texture,
-  SceneLoader
+  ImportMeshAsync
 } from 'babylonjs'
 
 let sceneResources
@@ -108,12 +108,8 @@ const initScene = async () => {
     skyBox.material = skyBoxMaterial
   }
 
-  const createVillage = () => {
-    SceneLoader.ImportMeshAsync(
-      '',
-      '/scenes/',
-      'valleyvillage.glb'
-    )
+  const createVillage = async () => {
+    await ImportMeshAsync('/scenes/valleyvillage.glb', scene)
   }
 
   const runAnimate = () => {

@@ -1,6 +1,6 @@
 import {
   require_babylon
-} from "./chunk-RUMFRTKG.js";
-import "./chunk-BUSYA2B4.js";
+} from "./chunk-4QPWKAW5.js";
+import "./chunk-5WRI5ZAA.js";
 export default require_babylon();
 //# sourceMappingURL=babylonjs.js.map

@@ -23,7 +23,7 @@ import {
   CubeTexture,
   Texture,
   Mesh,
-  SceneLoader,
+  ImportMeshAsync,
   ParticleSystem
 } from 'babylonjs'
 
@@ -97,12 +97,8 @@ const initScene = async () => {
     skyBox.material = skyBoxMaterial
   }
 
-  const createVillage = () => {
-    SceneLoader.ImportMeshAsync(
-      '',
-      '/scenes/',
-      'valleyvillage.glb'
-    )
+  const createVillage = async () => {
+    await ImportMeshAsync('/scenes/valleyvillage.glb', scene)
   }
 
   const createParticleSystem = (lathe) => {

@@ -21,7 +21,7 @@ import {
   StandardMaterial,
   CubeTexture,
   Texture,
-  SceneLoader,
+  ImportMeshAsync,
   HemisphericLight,
   SpotLight
 } from 'babylonjs'
@@ -143,7 +143,7 @@ const initScene = async () => {
   }
 
   const createLamp = async () => {
-    const loaderResult =  await SceneLoader.ImportMeshAsync('', '/scenes/', 'lamp.babylon')
+    const loaderResult =  await ImportMeshAsync('/scenes/lamp.babylon', scene)
     const bulb: any = loaderResult.meshes.find(v => v.name === 'bulb')
     // const bulb = scene.getMeshByName('bulb')
     bulb.material.emissiveColor = Color3.White()
@@ -177,12 +177,8 @@ const initScene = async () => {
     return [lampLight, bulb]
   }
 
-  const createVillage = () => {
-    SceneLoader.ImportMeshAsync(
-      '',
-      '/scenes/',
-      'valleyvillage.glb'
-    )
+  const createVillage = async () => {
+    await ImportMeshAsync('/scenes/valleyvillage.glb', scene)
   }
 
   const runAnimate = () => {

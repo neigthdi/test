@@ -1,9 +1,9 @@
 import {
   require_babylon
-} from "./chunk-RUMFRTKG.js";
+} from "./chunk-4QPWKAW5.js";
 import {
   __commonJS
-} from "./chunk-BUSYA2B4.js";
+} from "./chunk-5WRI5ZAA.js";
 
 // node_modules/.pnpm/babylonjs-loaders@8.2.1/node_modules/babylonjs-loaders/babylonjs.loaders.js
 var require_babylonjs_loaders = __commonJS({
