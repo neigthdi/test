@@ -68,9 +68,64 @@ let light1 = new BABYLON.HemisphericLight(
 )
 ```
 
+### 五、区域光源
+AreaLight 是一种特殊的光源类型，用于模拟真实世界中的区域光源     
+它与传统的点光源（PointLight）、方向光源（DirectionalLight）和聚光灯（SpotLight）不同，AreaLight 可以模拟一个具有面积的光源，从而产生更自然的光照效果    
+作用。
+
+#### 作用    
+&emsp;&emsp;1、模拟真实光源：     
+&emsp;&emsp;&emsp;&emsp;AreaLight 可以模拟真实世界中的光源，例如：     
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;一盏灯（如台灯、吊灯）。   
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;一扇窗户（自然光通过窗户照射进来）。    
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;一个发光的平面（如广告牌、LED屏幕）。    
+&emsp;&emsp;&emsp;&emsp;这种光源的光线是从一个区域（而不是一个点）发出的，因此可以产生更柔和的阴影和更自然的光照效果。    
+&emsp;&emsp;2、改善光照质量：    
+&emsp;&emsp;&emsp;&emsp;与传统的点光源相比，AreaLight 可以减少阴影的硬边，使阴影更加柔和，它可以更好地模拟环境光，使场景看起来更加真实。    
+&emsp;&emsp;3、支持多种形状：     
+&emsp;&emsp;&emsp;&emsp;AreaLight 支持多种形状，如矩形、圆形等，可以根据需要选择合适的形状来模拟不同的光源。    
+
+
+#### 使用场景     
+&emsp;&emsp;1、室内场景：     
+&emsp;&emsp;&emsp;&emsp;（1）：模拟窗户光：在室内场景中，可以通过 AreaLight 模拟窗户的光线。例如，设置一个矩形的 AreaLight，使其方向指向室内，模拟自然光通过窗户照射进来的效果。     
+&emsp;&emsp;&emsp;&emsp;（2）：模拟室内灯具：如吊灯、台灯等。通过设置光源的形状和位置，可以模拟这些灯具发出的光线 。    
+&emsp;&emsp;2、建筑可视化：     
+&emsp;&emsp;&emsp;&emsp;（1）：在建筑可视化中，AreaLight 可以用来模拟建筑内部的照明系统。例如，模拟走廊中的灯光、会议室的吊灯等。     
+&emsp;&emsp;&emsp;&emsp;（2）：模拟建筑外部的灯光，如广告牌、路灯等。     
+&emsp;&emsp;3、游戏开发：     
+&emsp;&emsp;&emsp;&emsp;（1）：环境光模拟：在游戏场景中，使用 AreaLight 可以模拟环境光，使场景更加真实。例如，模拟森林中的阳光透过树叶的效果。     
+&emsp;&emsp;&emsp;&emsp;（2）：动态光源：可以将 AreaLight 与动态对象结合，例如，模拟一个移动的光源（如手电筒）。     
+&emsp;&emsp;4、艺术和动画：     
+&emsp;&emsp;&emsp;&emsp;（1）：在艺术作品和动画中，AreaLight 可以用来创造特定的氛围和效果。例如，模拟舞台灯光、特效灯光等。     
+&emsp;&emsp;&emsp;&emsp;（2）：可以通过调整光源的形状和颜色，实现创意的光照效果。     
+
+```javascript
+// 创建一个矩形的 AreaLight
+const areaLight = new BABYLON.AreaLight(
+    'areaLight', // 名称
+    new BABYLON.Vector3(0, 5, 0), // 位置
+    new BABYLON.Vector3(0, 0, 1), // 方向
+    new BABYLON.Vector3(2, 0, 0), // 宽度方向
+    new BABYLON.Vector3(0, 0, 2), // 高度方向
+    scene
+);
+
+// 设置光源的强度和颜色
+areaLight.intensity = 1
+areaLight.diffuse = new BABYLON.Color3(1, 1, 0.8) // 模拟自然光的颜色
+
+// 创建一个平面，用于接收光照
+const ground = BABYLON.MeshBuilder.CreateGround('ground', { width: 10, height: 10 }, scene)
+
+// 创建一个材质，用于显示光照效果
+const groundMaterial = new BABYLON.StandardMaterial('groundMaterial', scene)
+ground.material = groundMaterial
+```
+
 ## 光的颜色属性
 
-光源有三个属性会影响到颜色。其中有两个属性 diffuse(漫反射)和 specular(镜面反射)适用于所有的四种光源，而第三种 groundColor(地面反射)仅适用于半球光。
+光源有三个属性会影响到颜色。其中有两个属性 diffuse(漫反射)和 specular(镜面反射)适用于所有的四种光源，而第三种 groundColor(地面反射)仅适用于半球光
 
 ```javascript
 // 设置灯光的颜色，赤橙黄绿青蓝紫

@@ -30,7 +30,7 @@ const onStart = () => {
     const glslCanvas: any = new module.default(canvas)
 
     glslCanvas.load(`
-      #extension GL_OES_standard_derivatives : enable
+      #extension GL_OES_standard_derivatives: enable
       precision highp float;
 
       uniform vec2 u_resolution;

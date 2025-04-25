@@ -9,3 +9,7 @@
 
 ## 柏林噪音生成地图
 <preview path="../demo/shaderToy/shaderToy2/perlinNoiseMap.vue"></preview>
+
+
+## 动物跳动、草地、天空云、山
+<preview path="../demo/shaderToy/shaderToy2/animalJump.vue"></preview>

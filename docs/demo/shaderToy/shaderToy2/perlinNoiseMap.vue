@@ -29,7 +29,7 @@ const onStart = () => {
     const random = Math.random()
  
     glslCanvas.load(`
-      #extension GL_OES_standard_derivatives : enable
+      #extension GL_OES_standard_derivatives: enable
       precision highp float;
 
       uniform vec2 u_resolution;
