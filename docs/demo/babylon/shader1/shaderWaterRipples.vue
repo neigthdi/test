@@ -1,5 +1,11 @@
 <template>
   <div>
+    学习  
+    <span style="color: red">CustomMaterial和Texture结合</span>、
+    <span style="color: green">Fragment_Definitions</span>、
+    <span style="color: blue">Fragment_Before_Fog</span>、
+    <span style="color: pink">AddUniform</span>、
+    <span style="color: orange">Material.getEffect().setFloat('time', timeDiff)</span>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
