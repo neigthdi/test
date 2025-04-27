@@ -90,7 +90,6 @@ function sidebarBase() {
         { text: '钩子', link: '/other/hook' },
         { text: '存储', link: '/other/storage' },
         { text: 'clone和createInstance', link: '/other/cloneAndCreateInstance' },
-        { text: 'webWorkers', link: '/other/webWorkers' },
       ]
     },
     {
