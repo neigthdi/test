@@ -2,78 +2,84 @@
   "hash": "ebef2e50",
   "configHash": "31f27b00",
   "lockfileHash": "b52c77c9",
-  "browserHash": "7d6b7ade",
+  "browserHash": "4d97bbe7",
   "optimized": {
     "vue": {
       "src": "../../../../node_modules/.pnpm/vue@3.3.4/node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "6c1d4930",
+      "fileHash": "f832e914",
       "needsInterop": false
     },
     "vitepress > @vue/devtools-api": {
       "src": "../../../../node_modules/.pnpm/@vue+devtools-api@7.6.8/node_modules/@vue/devtools-api/dist/index.js",
       "file": "vitepress___@vue_devtools-api.js",
-      "fileHash": "f517d262",
+      "fileHash": "748582db",
       "needsInterop": false
     },
     "vitepress > @vueuse/core": {
       "src": "../../../../node_modules/.pnpm/@vueuse+core@11.3.0_vue@3.5.13/node_modules/@vueuse/core/index.mjs",
       "file": "vitepress___@vueuse_core.js",
-      "fileHash": "72d835f0",
+      "fileHash": "cd3686f6",
       "needsInterop": false
     },
     "@vitepress-demo-preview/component": {
       "src": "../../../../node_modules/.pnpm/@vitepress-demo-preview+component@2.3.2_vitepress@1.5.0_vue@3.3.4/node_modules/@vitepress-demo-preview/component/dist/preview-component.js",
       "file": "@vitepress-demo-preview_component.js",
-      "fileHash": "de376160",
+      "fileHash": "3f210f79",
       "needsInterop": false
     },
     "babylonjs": {
       "src": "../../../../node_modules/.pnpm/babylonjs@8.2.1/node_modules/babylonjs/babylon.js",
       "file": "babylonjs.js",
-      "fileHash": "ba7feae8",
+      "fileHash": "5984b502",
       "needsInterop": true
     },
     "babylonjs-loaders": {
       "src": "../../../../node_modules/.pnpm/babylonjs-loaders@8.2.1/node_modules/babylonjs-loaders/babylonjs.loaders.js",
       "file": "babylonjs-loaders.js",
-      "fileHash": "5a32aa26",
+      "fileHash": "52ad4b7c",
       "needsInterop": true
     },
     "glslCanvas": {
       "src": "../../../../node_modules/.pnpm/glslCanvas@0.2.6_m3q7vsdrftwzhkwk3rjrznqtja/node_modules/glslCanvas/dist/GlslCanvas.es.js",
       "file": "glslCanvas.js",
-      "fileHash": "0b70aaf5",
+      "fileHash": "87ecc637",
       "needsInterop": false
     },
     "three": {
       "src": "../../../../node_modules/.pnpm/three@0.166.0/node_modules/three/build/three.module.js",
       "file": "three.js",
-      "fileHash": "e354a33f",
+      "fileHash": "525209b6",
       "needsInterop": false
     },
     "three/examples/jsm/controls/OrbitControls.js": {
       "src": "../../../../node_modules/.pnpm/three@0.166.0/node_modules/three/examples/jsm/controls/OrbitControls.js",
       "file": "three_examples_jsm_controls_OrbitControls__js.js",
-      "fileHash": "427f0972",
+      "fileHash": "cc3f7f03",
       "needsInterop": false
     },
     "three/examples/jsm/utils/BufferGeometryUtils.js": {
       "src": "../../../../node_modules/.pnpm/three@0.166.0/node_modules/three/examples/jsm/utils/BufferGeometryUtils.js",
       "file": "three_examples_jsm_utils_BufferGeometryUtils__js.js",
-      "fileHash": "639667fd",
+      "fileHash": "8c7beadd",
       "needsInterop": false
     },
     "gsap": {
       "src": "../../../../node_modules/.pnpm/gsap@3.12.5/node_modules/gsap/index.js",
       "file": "gsap.js",
-      "fileHash": "41830aab",
+      "fileHash": "a878c9e3",
       "needsInterop": false
     },
     "babylonjs-gui": {
       "src": "../../../../node_modules/.pnpm/babylonjs-gui@8.2.1/node_modules/babylonjs-gui/babylon.gui.js",
       "file": "babylonjs-gui.js",
-      "fileHash": "e0d5ea61",
+      "fileHash": "7f163b4f",
+      "needsInterop": true
+    },
+    "babylonjs-materials": {
+      "src": "../../../../node_modules/.pnpm/babylonjs-materials@8.2.1/node_modules/babylonjs-materials/babylonjs.materials.js",
+      "file": "babylonjs-materials.js",
+      "fileHash": "81d32cb8",
       "needsInterop": true
     }
   },

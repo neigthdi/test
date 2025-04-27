@@ -12,3 +12,6 @@
 
 ## sphere的溶解
 <preview path="../demo/babylon/shader1/shaderSphereDissolve.vue"></preview>
+
+## 粒子的颜色变换
+<preview path="../demo/babylon/shader1/shaderParticle.vue"></preview>
