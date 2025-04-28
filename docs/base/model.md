@@ -3,19 +3,19 @@
 ```javascript
 //球
 // 名字, 细分段数 (高度细节或不需), 大小, 将被放到的场景
-let sphere = BABYLON.MeshBuilder.CreateSphere('sphere', 10, 1, scene)
+let sphere = BABYLON.MeshBuilder.CreateSphere('sphere', { diameter: 8 }, scene)
 sphere.position = new BABYLON.Vector3(-5, 3, 0)
 ```
 
 ```javascript
 // 盒子
-let box = BABYLON.MeshBuilder.CreateBox('box', 2, scene)
+let box = BABYLON.MeshBuilder.CreateBox('box', { size: 150 }, scene)
 box.position = new BABYLON.Vector3(5, 3, 0)
 ```
 
 ```javascript
 // 平面
-let plane = BABYLON.MeshBuilder.CreatePlane('plane', 10, scene)
+let plane = BABYLON.MeshBuilder.CreatePlane('plane', { size: 10 }, scene)
 plane.position = new BABYLON.Vector3(0, -2, -50)
 plane.rotation.y = Math.PI
 ```
@@ -24,19 +24,28 @@ plane.rotation.y = Math.PI
 // 圆柱
 let cylinder = BABYLON.MeshBuilder.CreateCylinder(
   'cylinder',
-  3,
-  3,
-  3,
-  12,
-  scene,
-  false
+  {
+    height: 0.5,
+    diameter: 0.7,
+    tessellation: 64
+  },
+  scene
 )
 cylinder.position = new BABYLON.Vector3(0, -3, 0)
 ```
 
 ```javascript
 // 圆环体
-let torus = BABYLON.MeshBuilder.CreateTorus('torus', 5, 1, 10, scene, false)
+let torus = BABYLON.MeshBuilder.CreateTorus(
+  'torus',
+  {
+    diameter: 10,
+    sideOrientation: 2,
+    tessellation: 5,
+    thickness: 7,
+    updatable: true
+  }, 
+  scene)
 torus.position = new BABYLON.Vector3(0, 2, 0)
 ```
 

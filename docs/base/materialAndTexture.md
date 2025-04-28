@@ -60,13 +60,13 @@ mesh.material = myMaterial
 参数 6、update：布尔值，默认为 true，动态纹理会立即更新。
 
 ```javascript
-let dynaicTexture = new BABYLON.DynamicTexture(
+let dynamicTexture = new BABYLON.DynamicTexture(
   'test',
   { width: 100, height: 100 },
   scene
 )
-dynaicTexture.drawText(
-  'someting',
+dynamicTexture.drawText(
+  'something',
   50,
   50,
   'Times New Roman',
@@ -76,20 +76,20 @@ dynaicTexture.drawText(
   true
 )
 
-sphereMaterial.diffuseTexture = dynaicTexture
+sphereMaterial.diffuseTexture = dynamicTexture
 sphere.material = sphereMaterial
 ```
 
 ### 通过动态纹理获取画布对象
 
 ```javascript
-let dynaicTexture = new BABYLON.DynamicTexture(
+let dynamicTexture = new BABYLON.DynamicTexture(
   'test',
   { width: 100, height: 100 },
   scene
 )
-dynaicTexture.drawText(
-  'someting',
+dynamicTexture.drawText(
+  'something',
   50,
   50,
   'Times New Roman',
@@ -98,10 +98,10 @@ dynaicTexture.drawText(
   true,
   true
 )
-sphereMaterial.diffuseTexture = dynaicTexture
+sphereMaterial.diffuseTexture = dynamicTexture
 // sphere.material=sphereMaterial
 // 获取画布对象
-let ctx = dynaicTexture.getContext()
+let ctx = dynamicTexture.getContext()
 ctx.beginPath()
 ctx.moveTo(50, 50)
 ctx.lineTo(100, 100)
@@ -111,22 +111,22 @@ ctx.fillStyle = 'red'
 ctx.fill()
 ctx.stroke()
 // 更新纹理
-dynaicTexture.update()
+dynamicTexture.update()
 ```
 
 ### 通过动态纹理加载图像
 
 ```javascript
-let dynaicTexture = new BABYLON.DynamicTexture(
+let dynamicTexture = new BABYLON.DynamicTexture(
   'test',
   { width: 100, height: 100 },
   scene
 )
 
-sphereMaterial.diffuseTexture = dynaicTexture
+sphereMaterial.diffuseTexture = dynamicTexture
 //sphere.material=sphereMaterial
 //获取画布对象
-let ctx = dynaicTexture.getContext()
+let ctx = dynamicTexture.getContext()
 
 let img = new Image()
 img.src = '../img/10.png'
@@ -134,7 +134,7 @@ img.src = '../img/10.png'
 img.onload = function () {
   // ctx.drawImage(this, img_start_x, img_start_y,img_w, img_h, can_x, can_y, destination_w, destination_h);
   ctx.drawImage(this, 0, 0, 1000, 1000, 0, 0, 100, 100)
-  dynaicTexture.update()
+  dynamicTexture.update()
 }
 ```
 
@@ -184,3 +184,87 @@ RenderTargetTexture 在 Babylon.js 中的作用主要有以下几点：
 8、纹理缓存：在某些情况下，渲染一个复杂的场景可能需要大量的计算资源。通过将渲染结果存储在 RenderTargetTexture 中，你可以在需要时重复使用这个纹理，而不需要每次都重新渲染。   
 
 9、创建环境贴图：RenderTargetTexture 可以用来创建环境贴图（如立方体贴图），这些贴图可以用于环境光遮蔽或者反射效果。   
+
+
+##### 把sphere渲染到plane中
+```javascript
+/** 
+<script src="https://preview.babylonjs.com/ammo.js"></script>
+<script src="https://preview.babylonjs.com/cannon.js"></script>
+<script src="https://preview.babylonjs.com/Oimo.js"></script>
+<script src="https://preview.babylonjs.com/earcut.min.js"></script>
+<script src="https://preview.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/gui/babylon.gui.js"></script>
+<script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+<script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+<script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+<script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+<script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+<script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+<script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+*/
+const canvas = document.getElementById('renderCanvas')
+const engine = new BABYLON.Engine(canvas, true)
+
+const createScene = function() {
+  const scene = new BABYLON.Scene(engine)
+
+  const camera = new BABYLON.ArcRotateCamera('camera', 0, 0, 10, BABYLON.Vector3.Zero(), scene)
+  camera.attachControl(canvas, true)
+  camera.setPosition(new BABYLON.Vector3(0, 0, -20))
+
+  new BABYLON.MeshBuilder.CreateLines(
+    'axisX', {
+      colors: [new BABYLON.Color4(1, 0, 0, 1), new BABYLON.Color4(1, 0, 0, 1)],
+      points: [new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(2000, 0, 0)]
+    }, scene
+  )
+  new BABYLON.MeshBuilder.CreateLines(
+    'axisY', {
+      colors: [new BABYLON.Color4(0, 1, 0, 1), new BABYLON.Color4(0, 1, 0, 1)],
+      points: [new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(0, 2000, 0)]
+    }, scene
+  )
+  new BABYLON.MeshBuilder.CreateLines(
+    'axisZ', {
+      colors: [new BABYLON.Color4(0, 0, 1, 1), new BABYLON.Color4(0, 0, 1, 1)],
+      points: [new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(0, 0, 2000)]
+    }, scene
+  )
+
+  const light = new BABYLON.DirectionalLight('dir01', new BABYLON.Vector3(0, 0, 1), scene)
+
+  const sphere = BABYLON.MeshBuilder.CreateSphere('sphere', { diameter: 3 }, scene)
+  const mat = new BABYLON.StandardMaterial('mat', scene)
+  mat.emissiveColor = new BABYLON.Color3(0.2, 0.3, 0.4)
+  sphere.material = mat
+
+  const rtCamera = new BABYLON.ArcRotateCamera('rtCamera', 0, 0, 10, BABYLON.Vector3.Zero(), scene)
+  rtCamera.setTarget(BABYLON.Vector3.Zero())
+  rtCamera.setPosition(new BABYLON.Vector3(0, 0, -20))
+
+  const renderTargetTexture = new BABYLON.RenderTargetTexture('renderTargetTexture', 512, scene)
+  renderTargetTexture.renderList.push(sphere)
+  renderTargetTexture.camera = rtCamera
+  scene.customRenderTargets.push(renderTargetTexture)
+
+  const m = new BABYLON.StandardMaterial('m', scene)
+  m.diffuseTexture = renderTargetTexture
+  m.backFaceCulling = false // 确保双面渲染
+
+  const plane = BABYLON.MeshBuilder.CreatePlane('plane', { size: 5 }, scene)
+  plane.material = m
+  plane.position = new BABYLON.Vector3(0, 4, 0)
+
+  return scene
+}
+
+const scene = createScene()
+engine.runRenderLoop(function() {
+  scene.render()
+})
+
+window.addEventListener('resize', function() {
+  engine.resize()
+})
+```
