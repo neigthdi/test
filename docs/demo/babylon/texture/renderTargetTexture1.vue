@@ -18,6 +18,7 @@ import {
   Vector3,
   Color4,
   Color3,
+  DirectionalLight,
   HemisphericLight,
   MeshBuilder,
   RenderTargetTexture,
@@ -70,11 +71,12 @@ const initScene = async () => {
   camera.wheelPrecision = 30
   camera.panningSensibility = 200
   camera.attachControl(ele, true)
-  camera.setPosition(new Vector3(20, 20, 20))
+  camera.setPosition(new Vector3(0, 0, 20))
 
   const createLight = () => {
-    const light = new HemisphericLight('dir01', new Vector3(0, 0, 1), scene)
-    return light
+    const light1 = new DirectionalLight('dir01', new Vector3(0, 0, -1), scene)
+    const light2 = new HemisphericLight('light',new Vector3(1, 1, 0), scene)
+    return [light1, light2]
   }
 
   const createAxis = () => {
@@ -189,16 +191,18 @@ const initScene = async () => {
   }
 
   const createTexture = () => {
-    const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 3 }, scene)
+    const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 4 }, scene)
     const mat = new StandardMaterial('mat', scene)
     mat.emissiveColor = new Color3(0.2, 0.3, 0.4)
     sphere.material = mat
-
+    runAnimation(sphere)
+    
+    // 调整相机视角，确保球体在纹理中是圆形
     const rtCamera = new ArcRotateCamera('rtCamera', 0, 0, 10, Vector3.Zero(), scene)
-    rtCamera.setTarget( Vector3.Zero())
-    rtCamera.setPosition(new Vector3(10, 0, 10))
+    rtCamera.setTarget(Vector3.Zero())
+    rtCamera.setPosition(new Vector3(0, 0, 20))
 
-    const renderTargetTexture = new RenderTargetTexture('renderTargetTexture', 512, scene) as any
+    const renderTargetTexture = new RenderTargetTexture('renderTargetTexture', { width: 256, height: 256 }, scene) as any
     renderTargetTexture.renderList.push(sphere)
     renderTargetTexture.camera = rtCamera
     scene.customRenderTargets.push(renderTargetTexture)
@@ -207,12 +211,9 @@ const initScene = async () => {
     m.diffuseTexture = renderTargetTexture
     m.backFaceCulling = false // 确保双面渲染
 
-    const plane = MeshBuilder.CreatePlane('plane', { size: 5 }, scene)
+    const plane = MeshBuilder.CreatePlane('plane', { size: 4 }, scene)
     plane.material = m
     plane.position = new Vector3(0, 4, 0)
-    plane.rotation.x = -Math.PI / 2
-
-    runAnimation(sphere)
   }
 
 
