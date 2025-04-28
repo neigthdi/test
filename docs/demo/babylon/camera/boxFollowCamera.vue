@@ -24,6 +24,12 @@ import {
   Axis,
   Quaternion,
 } from 'babylonjs'
+import {
+  AdvancedDynamicTexture,
+  StackPanel,
+  Control,
+  TextBlock,
+} from 'babylonjs-gui'
 
 let sceneResources
 
@@ -97,6 +103,52 @@ const initScene = async () => {
     return [axisX, axisY, axisZ]
   }
 
+  const createGui = async () => {
+    const adt = AdvancedDynamicTexture.CreateFullscreenUI('UI')
+
+    const xBox = MeshBuilder.CreateBox('x', { size: 1 }, scene)
+    xBox.position = new Vector3(80, 0, 0)
+    const xPanel = new StackPanel()
+    xPanel.width = '20px'
+    xPanel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT
+    xPanel.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM
+    const x = new TextBlock()
+    x.text = 'X'
+    x.height = '30px'
+    x.color = 'red'
+    adt.addControl(xPanel)
+    xPanel.addControl(x)
+    xPanel.linkWithMesh(xBox)
+
+    const yBox = MeshBuilder.CreateBox('x', { size: 1 }, scene)
+    yBox.position = new Vector3(0, 80, 0)
+    const yPanel = new StackPanel()
+    yPanel.width = '20px'
+    yPanel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT
+    yPanel.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM
+    const y = new TextBlock()
+    y.text = 'Y'
+    y.height = '30px'
+    y.color = 'green'
+    adt.addControl(yPanel)
+    yPanel.addControl(y)
+    yPanel.linkWithMesh(yBox)
+
+    const zBox = MeshBuilder.CreateBox('x', { size: 1 }, scene)
+    zBox.position = new Vector3(0, 0, 80)
+    const zPanel = new StackPanel()
+    zPanel.width = '20px'
+    zPanel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT
+    zPanel.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM
+    const z = new TextBlock()
+    z.text = 'Z'
+    z.height = '30px'
+    z.color = 'blue'
+    adt.addControl(zPanel)
+    zPanel.addControl(z)
+    zPanel.linkWithMesh(zBox)
+  }
+
   const createLight = () => {
     const light = new DirectionalLight('dir01', new Vector3(0, -1, -0.3), scene)
     light.position = new Vector3(20, 60, 30)
@@ -132,6 +184,7 @@ const initScene = async () => {
   }
 
   createAxis()
+  createGui()
   createLight()
   const box = createBox()
   runAnimate()
