@@ -75,6 +75,13 @@ function sidebarBase() {
       ]
     },
     {
+      text: 'html模板',
+      collapsible: true,
+      items: [
+        { text: '模板', link: '/template/template' },
+      ]
+    },
+    {
       text: '事件',
       collapsible: true,
       items: [
