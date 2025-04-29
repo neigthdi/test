@@ -188,21 +188,6 @@ RenderTargetTexture 在 Babylon.js 中的作用主要有以下几点：
 
 ##### 把sphere渲染到plane中
 ```javascript
-/** 
-<script src="https://preview.babylonjs.com/ammo.js"></script>
-<script src="https://preview.babylonjs.com/cannon.js"></script>
-<script src="https://preview.babylonjs.com/Oimo.js"></script>
-<script src="https://preview.babylonjs.com/earcut.min.js"></script>
-<script src="https://preview.babylonjs.com/babylon.js"></script>
-<script src="https://cdn.babylonjs.com/gui/babylon.gui.js"></script>
-<script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
-<script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
-<script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
-<script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
-<script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
-<script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
-<script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
-*/
 const canvas = document.getElementById('renderCanvas')
 const engine = new BABYLON.Engine(canvas, true)
 

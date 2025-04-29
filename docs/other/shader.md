@@ -2,7 +2,7 @@
 要获取着色器材质，下面的类称为:
 
 ```javascript
-var myShaderMaterial = new BABYLON.ShaderMaterial(name, scene, route, options)
+const myShaderMaterial = new BABYLON.ShaderMaterial(name, scene, route, options)
 ```
 
 ```javascript
@@ -40,7 +40,7 @@ BABYLON.Effect.ShadersStore['xxxVertexShader'] = `
   attribute vec3 position;
   attribute vec2 uv;
   uniform mat4 worldViewProjection;
-  varying vec2 vUV;
+  constying vec2 vUV;
   void main(void) {
     gl_Position = worldViewProjection * vec4(position, 1.0);
     vUV = uv;
@@ -48,7 +48,7 @@ BABYLON.Effect.ShadersStore['xxxVertexShader'] = `
 
 BABYLON.Effect.ShadersStore['customssFragmentShader'] = `
   precision highp float;
-  varying vec2 vUV;
+  constying vec2 vUV;
   uniform sampler2D textureSampler;
   void main(void) {
     gl_FragColor = texture2D(textureSampler, vUV);
@@ -60,7 +60,7 @@ BABYLON.Effect.ShadersStore['customssFragmentShader'] = `
 // normal     ---> 法线
 // uv         ---> uv（因为xy被占用了，所以用uv表示xy）
 // projection ---> 投影
-var shaderMaterial = new BABYLON.ShaderMaterial(
+const shaderMaterial = new BABYLON.ShaderMaterial(
   'shader',
   scene,
   {
@@ -79,14 +79,14 @@ var shaderMaterial = new BABYLON.ShaderMaterial(
   }
 )
 
-var mainTexture = new BABYLON.Texture('amiga.jpg', scene)
+const mainTexture = new BABYLON.Texture('amiga.jpg', scene)
 shaderMaterial.setTexture('textureSampler', mainTexture)
 ```
 
 ### 方法二
 
 ```javascript
-var shaderMat = new BABYLON.ShaderMaterial(
+const shaderMat = new BABYLON.ShaderMaterial(
   'cloud',
   scene,
   {
@@ -104,7 +104,7 @@ var shaderMat = new BABYLON.ShaderMaterial(
 ## 使用自定义的 attribute 传入着色器
 
 ```javascript
-let material = new BABYLON.ShaderMaterial('particle', scene, './js/particle', {
+const material = new BABYLON.ShaderMaterial('particle', scene, './js/particle', {
   uniforms: [
     'worldViewProjection',
     'uTime',

@@ -97,18 +97,18 @@ BABYLON.PixelationPostProcess 是 Babylon.js 中的一个后期处理效果，�
 ```javascript
 
 // 创建一个盒子
-var box = BABYLON.MeshBuilder.CreateBox("box", {size: 2}, scene);
+const box = BABYLON.MeshBuilder.CreateBox("box", {size: 2}, scene);
 
 // 应用材质
-var material = new BABYLON.StandardMaterial("material", scene);
+const material = new BABYLON.StandardMaterial("material", scene);
 box.material = material;
 
 // 创建像素化效果的后期处理
-var pixelationEffect = new BABYLON.PostProcessRenderEffect(engine, "pixelation", function () {
+const pixelationEffect = new BABYLON.PostProcessRenderEffect(engine, "pixelation", function () {
     return new BABYLON.PixelationPostProcess("pixelation", 10, camera);
 });
 
 // 将像素化效果添加到默认渲染管道中
-var pipeline = new BABYLON.DefaultRenderingPipeline("default", true, scene);
+const pipeline = new BABYLON.DefaultRenderingPipeline("default", true, scene);
 pipeline.addEffect(pixelationEffect);
 ```
