@@ -42,7 +42,7 @@ const onStart = () => {
         float amplitude = 1.0;
         float frequency = 1.0;
 
-        // 没有AA采样
+        // 没有 AA 采样
         // float y = amplitude * sin(u_time) * cos(uv.x * frequency + u_time);
         // if(uv.y < y) {
         //   color = vec3(1.0);
@@ -54,19 +54,19 @@ const onStart = () => {
         // 对每个像素进行多次采样
         for (int i = 0; i < AA; ++i) {
           for (int j = 0; j < AA; ++j) {
-            // 计算当前采样点的偏移量，范围是[-0.5, 0.5]，但经过除以AA后，范围会缩小到[-(1/2AA), (1/2AA)]
+            // 计算当前采样点的偏移量，范围是 [-0.5, 0.5]，但经过除以 AA 后，范围会缩小到 [-(1/2AA), (1/2AA)]
             vec2 offset = vec2(float(i), float(j)) / float(AA) - 0.5;
 
-            // 根据偏移量和原始UV坐标计算采样点的UV坐标。这里再次考虑了分辨率的纵横比，以确保采样均匀
+            // 根据偏移量和原始 UV 坐标计算采样点的 UV 坐标。这里再次考虑了分辨率的纵横比，以确保采样均匀
             vec2 sampleUV = uv + offset / min(u_resolution.y, u_resolution.x);
 
-            // 根据采样点的UV坐标和时间计算波形的高度
+            // 根据采样点的 UV 坐标和时间计算波形的高度
             float y = amplitude * sin(u_time) * cos(sampleUV.x * frequency + u_time);
  
-            // 使用step函数判断采样点的y坐标是否小于波形的y坐标。如果是，则返回1；否则返回0
-            float sample = step(sampleUV.y, y); // step 函数返回0或1
+            // 使用 step 函数判断采样点的 y 坐标是否小于波形的 y 坐标。如果是，则返回 1；否则返回 0
+            float sample = step(sampleUV.y, y); // step 函数返回 0 或 1
 
-            // 将判断结果累加到totalSampled中
+            // 将判断结果累加到 totalSampled 中
             totalSampled += sample;
           }
         }

@@ -91,10 +91,31 @@ const onStart = () => {
       }
 
 
+      // 计算一个点 p 到一个球体的距离
+      // 球体的中心由 sphere 表示，半径由 radius 表示
+      float getSphereDist(vec3 p) {
+        float y = sin(u_time * 5.0) + 2.0;
+        float z = 0.0 - u_time * 2.5;
+        vec3 spherePos = vec3(0.0, y , z);
+        float radius = 1.0;
+
+        // 从当前点的位置 p 到球体中心的距离中减去球体的半径，得到点 p 到球体表面的最短距离
+        // 如果点 p 在球体内部，sphereDist 为负值
+        // 如果点 p 在球体表面，sphereDist 为零
+        // 如果点 p 在球体外部，sphereDist 为正值
+        float sphereDist = length(p - spherePos) - radius;
+
+        return sphereDist;
+      }
+
+
       // 取物体距离相机最近的 dist
       float getDist(vec3 pos) {
+        float sphereDist = getSphereDist(pos);
+       
         float groundDist = getGroundDist(pos);
-        return groundDist;
+
+        return min(groundDist, sphereDist);
       }
 
 
@@ -210,15 +231,12 @@ const onStart = () => {
         // 地面的黑白格子
         // 由于 getDist 中有 planeDist，所以 p 点包含了地面
         // 修改不同的 groundY，会看到最远处的变化
-        // float groundY = 0.05;
-        // if(p.y < groundY) {
-        //   return groundGrid(p) * dif;
-        // }
+        float groundY = 0.5;
+        if(p.y < groundY) {
+          return groundGrid(p) * dif;
+        }
 
-        // return vec3(dif);
-
-        
-        return groundGrid(p) * dif;
+        return vec3(dif);
       }
       
 
@@ -231,12 +249,14 @@ const onStart = () => {
 
         vec3 color = vec3(0.0);
 
-        vec3 lightPos = vec3(2.0, 5.0, 2.0 - u_time);
+        float t = u_time * 2.5;
+
+        vec3 lightPos = vec3(3.0, 8.0, -2.0 - t);
 
         // 相机信息
-        vec3 cameraPos = vec3(0.0, 3.0, 5.0 - u_time);
+        vec3 cameraPos = vec3(0.0, 3.0, -8.0 - t);
         vec3 cameraUp = vec3(0.0, 1.0, 0.0);
-        vec3 cameraTarget = vec3(0.0, 0.0, 0.0 - u_time);
+        vec3 cameraTarget = vec3(0.0, 0.0, 0.0 - t);
 
         // rayDirection 是视线（或光线）的方向向量，表示视线（或光线）沿着哪个方向行进
         // 之所以 * vec3(uv, 1.0)，uv.x 表示水平方向的偏移，uv.y 表示垂直方向的偏移，1.0 表示沿着相机的前进方向（即深度方向）的偏移
@@ -251,14 +271,25 @@ const onStart = () => {
         // rayDirection * rayDist 计算视线（或光线在方向 rayDirection 上行进距离 rayDist 后的向量，然后将这个向量加到源点 cameraTarget 上，得到新的位置 p。
         vec3 cameraToThingFace = cameraPos + rayDirection * rayDist;
 
-        vec3 curLightColor = getLight(lightPos, cameraToThingFace);
+        vec3 exceptSkyColor = getLight(lightPos, cameraToThingFace);
 
-        // color = curLightColor;
+        // color = exceptSkyColor;
 
         // 天空颜色
         vec3 skyColor = getSkyColor(rayDirection);
 
-        color = mix(skyColor, curLightColor, pow(smoothstep(0.0, -0.02, rayDirection.y), 0.2));
+        // color = mix(skyColor, exceptSkyColor, pow(smoothstep(0.0, -0.02, rayDirection.y), 0.5));
+
+
+        float MAX_DIST = 1000.0;
+        if (rayDist < MAX_DIST) {
+          // 击中物体，直接使用物体颜色
+          color = exceptSkyColor;
+        } else {
+          // 未击中物体，混合天空颜色
+          float mixFactor = pow(smoothstep(0.0, -0.02, rayDirection.y), 0.1);
+          color = mix(skyColor, exceptSkyColor, mixFactor);
+        }
 
         gl_FragColor = vec4(color, 1.0);
       }`)
