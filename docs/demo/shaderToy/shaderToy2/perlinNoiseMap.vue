@@ -38,10 +38,10 @@ const onStart = () => {
       #define fre 1.0 // 噪声的频率（frequency），控制噪声的细节程度
       #define oct 5.0 // 噪声的八度数（octaves），用于生成更复杂的噪声
 
-      #define laun 2.0 // 每八度的频率倍数（lacunarity），通常为2.0，表示每增加一个八度，频率翻倍
-      #define pers 0.8 // 振幅衰减率（persistence），通常为0.8，表示每增加一个八度，振幅减少20%，用于控制每个八度对最终噪声的贡献
+      #define laun 2.0 // 每八度的频率倍数（lacunarity），通常为 2.0，表示每增加一个八度，频率翻倍
+      #define pers 0.8 // 振幅衰减率（persistence），通常为 0.8，表示每增加一个八度，振幅减少 20%，用于控制每个八度对最终噪声的贡献
 
-      #define zoom 5.0 // 用于缩放UV坐标，控制地形的“放大”或“缩小”程度
+      #define zoom 5.0 // 用于缩放 UV 坐标，控制地形的“放大”或“缩小”程度
 
       #define edge 1.0 // 边缘宽度，用于控制地形的边缘效果，平滑过渡
       #define delta_edge 0.2 // 边缘宽度的过渡范围，用于控制边缘效果的过渡程度
@@ -85,24 +85,24 @@ const onStart = () => {
       void main() {
         vec2 fragCoord = gl_FragCoord.xy;
         vec2 uv = (fragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.y, u_resolution.x);
-        vec2 u = fragCoord.xy / u_resolution.xy; // 将屏幕坐标归一化到[0, 1]范围内
+        vec2 u = fragCoord.xy / u_resolution.xy; // 将屏幕坐标归一化到 [0, 1] 范围内
         float d = min(min(u.x, edge - u.x), min(u.y, edge - u.y)); // 计算当前像素到边缘的距离
 
-        float dw = smoothstep(0.0, delta_edge, d); // 使用smoothstep函数在边缘处平滑过渡，避免边缘突变
+        float dw = smoothstep(0.0, delta_edge, d); // 使用 smoothstep 函数在边缘处平滑过渡，避免边缘突变
 
-        float val = 0.0; // 初始化噪声值val为0
-        uv *= zoom; // 缩放UV坐标，控制地形的“放大”或“缩小”程度
+        float val = 0.0; // 初始化噪声值 val 为 0
+        uv *= zoom; // 缩放 UV 坐标，控制地形的“放大”或“缩小”程度
 
         // 使用循环生成分形噪声
         // 每个八度的振幅 a 和频率 f 根据 pers 和 laun 衰减
-        // 将每个八度的噪声值累加到val中
+        // 将每个八度的噪声值累加到 val 中
         for (float i = 0.; i < oct; i++) {
           float a = amp * pow(pers, i);
           float f = fre * pow(laun, i);
           val += a * noise(uv * f) / oct;
         }
 
-        // 将噪声值val乘以dw，在边缘处平滑过渡
+        // 将噪声值 val 乘以 dw，在边缘处平滑过渡
         val *= dw;
 
         vec3 col = vec3(0.0);

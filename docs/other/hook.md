@@ -35,7 +35,7 @@ alphaF:
 用于自定义片段着色器中透明度的最终计算。   
 
 alphaTest:   
-用于自定义alpha测试的阈值。    
+用于自定义 alpha 测试的阈值。    
 
 pick:   
 用于自定义拾取（picking）过程中的颜色编码。  
@@ -63,7 +63,7 @@ material.customType = {
 
 ## fragment_Before_Fog
 
-#### 案例1：
+#### 案例 1：
 
 ```javascript
 const material = new BABYLON.StandardMaterial('material', scene);
@@ -84,7 +84,7 @@ material.customFragment = `
 mesh.material = material;
 ```
 
-#### 案例2：
+#### 案例 2：
 
 ```javascript
 const material = new BABYLON.CustomMaterial('material', scene)
@@ -138,7 +138,7 @@ material.onBindObservable.add(function() {
 })
 ```
 
-#### 案例3：
+#### 案例 3：
 
 ```javascript
 // fragment_Before_Fog 是一个用于自定义片段着色器（Fragment Shader）的钩子（hook）

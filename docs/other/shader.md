@@ -40,7 +40,7 @@ BABYLON.Effect.ShadersStore['xxxVertexShader'] = `
   attribute vec3 position;
   attribute vec2 uv;
   uniform mat4 worldViewProjection;
-  constying vec2 vUV;
+  varying vec2 vUV;
   void main(void) {
     gl_Position = worldViewProjection * vec4(position, 1.0);
     vUV = uv;
@@ -48,7 +48,7 @@ BABYLON.Effect.ShadersStore['xxxVertexShader'] = `
 
 BABYLON.Effect.ShadersStore['customssFragmentShader'] = `
   precision highp float;
-  constying vec2 vUV;
+  varying vec2 vUV;
   uniform sampler2D textureSampler;
   void main(void) {
     gl_FragColor = texture2D(textureSampler, vUV);

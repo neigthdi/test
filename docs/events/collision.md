@@ -11,7 +11,7 @@ mesh1.intersectMesh(mesh2)
 
 Babylon.js 具有物理引擎插件系统，有助于向场景中添加交互。  
 该引擎具有类和 API，可帮助应用应用脉冲、力、改变速度、回调函数，以便在需要时以及在网格与其他网格发生碰撞时需要执行某些操作时调用。  
-可以使用的物理插件-  
+可以使用的物理插件 -  
 &emsp;&emsp;Cannon  
 &emsp;&emsp;Oimo  
 &emsp;&emsp;Energy
@@ -21,12 +21,12 @@ Babylon.js 具有物理引擎插件系统，有助于向场景中添加交互。
 
 ```javascript
 scene.enablePhysics()
-// 或者，重力为55g的场景
+// 或者，重力为 55g 的场景
 scene.enablePhysics(new BABYLON.Vector3(0, -55, 0), new BABYLON.OimoJSPlugin())
 ```
 
 对于交互，物理引擎使用 impostor。   
-当应用于 impostor 时，对象的形状不能改变。如果更改，则必须创建新的 impostor 。
+当应用于 impostor 时，对象的形状不能改变。如果更改，则必须创建新的 impostor。
 
 ```javascript
 mesh.physicsImpostor = newBABYLON.PhysicsImpostor(
@@ -87,7 +87,7 @@ box.position = new BABYLON.Vector3(0, 5, 0); // 放置在空中
 box.physicsImpostor = new BABYLON.PhysicsImpostor(
   box,
   BABYLON.PhysicsImpostor.BoxImpostor,
-  { mass: 1, restitution: 0.9 }, // 质量为1，弹性系数为0.9
+  { mass: 1, restitution: 0.9 }, // 质量为 1，弹性系数为 0.9
   scene
 );
  
@@ -117,7 +117,7 @@ BABYLON.PhysicsImpostor.（<---前缀）
 
 ### 质量
 
-唯一的强制参数是质量，即物体的质量。 0 作为值时，将创建一个静态 impostor。
+唯一的强制参数是质量，即物体的质量。0 作为值时，将创建一个静态 impostor。
 
 ### 摩檫力
 

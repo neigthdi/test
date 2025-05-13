@@ -24,13 +24,13 @@ const box1 = BABYLON.MeshBuilder.CreateBox('box1', {
   size: 1
 }, scene)
 box1.position = new BABYLON.Vector3(0, 1, 0)
-box1.layerMask = 0x1 // 设置层级掩码为0x1
+box1.layerMask = 0x1 // 设置层级掩码为 0x1
 
 const box2 = BABYLON.MeshBuilder.CreateBox('box2', {
   size: 1
 }, scene)
 box2.position = new BABYLON.Vector3(0, 1, 2)
-box2.layerMask = 0x2 // 设置层级掩码为0x2
+box2.layerMask = 0x2 // 设置层级掩码为 0x2
 
 // 创建射线
 const ray = new BABYLON.Ray(new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(0, 0, 1))
@@ -39,11 +39,11 @@ const ray = new BABYLON.Ray(new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(0,
 canvas.addEventListener('click', function(event) {
   // 将屏幕坐标转换为射线
   const pickResult1 = scene.pick(scene.pointerX, scene.pointerY, function(mesh) {
-    return mesh.layerMask === 0x1 // 只检测层级掩码为0x1的物体
+    return mesh.layerMask === 0x1 // 只检测层级掩码为 0x1 的物体
   })
 
   const pickResult2 = scene.pick(scene.pointerX, scene.pointerY, function(mesh) {
-    return mesh.layerMask === 0x2 // 只检测层级掩码为0x2的物体
+    return mesh.layerMask === 0x2 // 只检测层级掩码为 0x2 的物体
   })
 
   if (pickResult1.hit) {
@@ -57,26 +57,26 @@ canvas.addEventListener('click', function(event) {
 ```
 
 ### 3. 多相机场景下的选择性渲染
-场景：需要同时显示多个相机视图（如主界面、UI层、小地图），且不同视图需渲染不同对象。   
+场景：需要同时显示多个相机视图（如主界面、UI 层、小地图），且不同视图需渲染不同对象。   
 实现方式：   
-&emsp;&emsp;为每个相机分配唯一的layerMask（如0x1、0x2等）。   
-&emsp;&emsp;为需要被特定相机渲染的对象设置相同的layerMask。    
-&emsp;&emsp;相机仅渲染与其layerMask匹配的对象。   
+&emsp;&emsp;为每个相机分配唯一的 layerMask（如 0x1、0x2 等）。   
+&emsp;&emsp;为需要被特定相机渲染的对象设置相同的 layerMask。    
+&emsp;&emsp;相机仅渲染与其 layerMask 匹配的对象。   
 
 ```javascript
-// 相机1渲染layerMask为0x1的对象
+// 相机 1 渲染 layerMask 为 0x1 的对象
 const camera1 = new BABYLON.ArcRotateCamera('camera1', ...)
 camera1.layerMask = 0x1
  
-// 相机2渲染layerMask为0x2的对象
+// 相机 2 渲染 layerMask 为 0x2 的对象
 const camera2 = new BABYLON.ArcRotateCamera('camera2', ...)
 camera2.layerMask = 0x2
  
-// 对象1仅被相机1渲染
+// 对象 1 仅被相机 1 渲染
 const mesh1 = BABYLON.MeshBuilder.CreateBox('box1', ...)
 mesh1.layerMask = 0x1
  
-// 对象2仅被相机2渲染
+// 对象 2 仅被相机 2 渲染
 const mesh2 = BABYLON.MeshBuilder.CreateBox('box2', ...)
 mesh2.layerMask = 0x2
 ```

@@ -43,6 +43,8 @@ const onStart = () => {
       uniform float u_time;
       uniform vec2 u_mouse;
 
+       const float MAX_DIST = 1000.0;
+
 
       // sky
       // 根据给定的方向向量 e 计算天空的颜色这个函数模拟了天空的渐变效果，从地平线到天顶的颜色变化
@@ -179,7 +181,6 @@ const onStart = () => {
 
         const float MAX_STEPS = 100.0;
         float SURFACE_DIST = 0.0001;
-        float MAX_DIST = 1000.0;
         
         for (float i = 0.0; i < MAX_STEPS; i += 1.0) {
           // 视线（或光线）的当前位置 pos
@@ -281,7 +282,6 @@ const onStart = () => {
         // color = mix(skyColor, exceptSkyColor, pow(smoothstep(0.0, -0.02, rayDirection.y), 0.5));
 
 
-        float MAX_DIST = 1000.0;
         if (rayDist < MAX_DIST) {
           // 击中物体，直接使用物体颜色
           color = exceptSkyColor;
