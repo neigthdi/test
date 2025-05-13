@@ -4,7 +4,7 @@
 ## 水面波纹
 <preview path="../demo/babylon/shader1/shaderWaterRipples.vue"></preview>
 
-## sphere的溶解
+## sphere 的溶解
 <preview path="../demo/babylon/shader1/shaderSphereDissolve.vue"></preview>
 
 ## 粒子的颜色变换

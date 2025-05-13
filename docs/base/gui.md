@@ -33,7 +33,7 @@ Control 是所有 GUI 控件的基类。它包含一些基本的属性和方法�
 ```javascript
 // GUI
 const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.
-CreateFullscreenUI("UI",true);
+CreateFullscreenUI('UI',true);
 //渲染分辨率和纹理大小之间的比率为 1。但可以使用
 //advancedTexture.renderScale. 例如，如果想要更清晰的文本，这可能会很有用。
 //设置分辨率
@@ -88,7 +88,7 @@ onPointerClickObservable：单击控件时引发。
 onClipboardObservable：在触发剪贴板事件时引发。  
 #### 粘贴板示例：
 ```javascript
-const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI('UI');
 //设置分辨率
 advancedTexture.idealWidth=500
 advancedTexture.idealHeight=500
@@ -96,10 +96,10 @@ advancedTexture.idealHeight=500
 //但可以决定（主要是出于性能原因）强制纹理也使用理想尺寸的分辨率
 advancedTexture.renderAtIdealSize = true
 const textblock = new BABYLON.GUI.TextBlock();
-textblock.text = "复制（ctr+c）\n 点击网格";
+textblock.text = '复制（ctr+c）\n 点击网格';
 textblock.fontSize = 24;
 textblock.top = -100;
-textblock.color = "white";
+textblock.color = 'white';
 advancedTexture.addControl(textblock);
 
 //注册粘贴板事件
@@ -113,28 +113,28 @@ advancedTexture.onClipboardObservable.add((ev) => {
         if (pick.hit){
             //SceneSerializer：场景序列化，SerializeMesh：序列化网格
             let selializedData =   BABYLON.SceneSerializer.SerializeMesh(pick.pickedMesh);
-            let blob = new Blob([JSON.stringify(selializedData)], {type: "application/json;charset=utf-8"});
+            let blob = new Blob([JSON.stringify(selializedData)], {type: 'application/json;charset=utf-8'});
             let url = URL.createObjectURL(blob);
             //将二进制数据流添加到粘贴板
-            ev.event.clipboardData.setData("text/uri-list", url);
-            textblock.text = "ctr+v粘贴\n" + pick.pickedMesh.name;
+            ev.event.clipboardData.setData('text/uri-list', url);
+            textblock.text = 'ctr+v粘贴\n' + pick.pickedMesh.name;
         }
         
     }
     //粘贴事件
     if (ev.type === BABYLON.ClipboardEventTypes.PASTE){
         //粘贴板数据中存在text/uri-list
-        if (ev.event.clipboardData.types.indexOf("text/uri-list") > -1){
-            let blobURL = ev.event.clipboardData.getData("text/uri-list");
+        if (ev.event.clipboardData.types.indexOf('text/uri-list') > -1){
+            let blobURL = ev.event.clipboardData.getData('text/uri-list');
             //SceneLoader：场景阅读器
-            BABYLON.SceneLoader.ImportMesh("", "", blobURL, scene,
+            BABYLON.SceneLoader.ImportMesh('', '', blobURL, scene,
                 function(meshes){
                 let position = new BABYLON.Vector3(Math.random() * 10 +
                 Math.random() * (-10), Math.random() * 10 +
                 Math.random() * (-10), Math.random() * 10);
                 meshes[0].position = position;
             });
-            textblock.text = "";
+            textblock.text = '';
         }
     }
 });
@@ -144,25 +144,25 @@ advancedTexture.onClipboardObservable.add((ev) => {
 * 具有相同键绑定的任何其他事件。
 */
 setTimeout(() => {
-    textblock.text = "粘贴结束"
+    textblock.text = '粘贴结束'
     //删除粘贴板事件
     advancedTexture.unRegisterClipboardEvents();
 }, 60000);
 ```
 #### 鼠标的observables示例：
 ```javascript
-const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI('UI');
 //设置分辨率
 advancedTexture.idealWidth=500
 advancedTexture.idealHeight=500
 const panel = new BABYLON.GUI.StackPanel();    
 advancedTexture.addControl(panel);   
 
-const button = BABYLON.GUI.Button.CreateSimpleButton("but", "Click Me");
+const button = BABYLON.GUI.Button.CreateSimpleButton('but', 'Click Me');
 button.width = 0.2;
-button.height = "40px";
-button.color = "white";
-button.background = "green";
+button.height = '40px';
+button.color = 'white';
+button.background = 'green';
 //右对齐
 /*
 *取值值可以取自BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_*
@@ -173,22 +173,22 @@ button.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
 
 let text = 0
 button.onPointerDownObservable.add(function() {
-    textblock.text = "Down!";
+    textblock.text = 'Down!';
 });
 button.onPointerUpObservable.add(function() {
-    textblock.text = "Up!";
+    textblock.text = 'Up!';
     text += 1
     button.children[0].text='单机次数'+text
 });
 button.onPointerEnterObservable.add(function() {
-    textblock.text = "Enter!";
+    textblock.text = 'Enter!';
 });
 button.onPointerOutObservable.add(function() {
-    textblock.text = "Out!";
+    textblock.text = 'Out!';
 });    
 button.onPointerMoveObservable.add(function(coordinates) {
     const relative = button.getLocalCoordinates(coordinates);
-    textblock.text = relative.x + ", " + relative.y;
+    textblock.text = relative.x + ', ' + relative.y;
 });    
 panel.addControl(button); 
 ```

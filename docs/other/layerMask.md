@@ -6,13 +6,13 @@ layerMask 是一个非常有用的属性，用于控制哪些对象可以与特�
 layerMask 可以用于控制哪些对象可以投射阴影，以及哪些对象可以接收阴影。这对于优化阴影渲染和避免不必要的计算非常有用。    
 假设有一个场景，其中包含多个对象，但只想让某些对象投射阴影，而其他对象不投射阴影。可以通过设置 layerMask 来实现这一点。    
 ```javascript
-const light = new DirectionalLight("light", new Vector3(0, -1, 0), scene)
+const light = new DirectionalLight('light', new Vector3(0, -1, 0), scene)
 light.includeOnlyWithLayerMask = 0b0001 // 只有 layerMask 为 0b0001 的对象会投射阴影
 
-const sphere = MeshBuilder.CreateSphere("sphere", { diameter: 2 }, scene)
+const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 2 }, scene)
 sphere.layerMask = 0b0001 // 这个对象会投射阴影
 
-const box = MeshBuilder.CreateBox("box", { size: 2 }, scene)
+const box = MeshBuilder.CreateBox('box', { size: 2 }, scene)
 box.layerMask = 0b0010 // 这个对象不会投射阴影
 ```
 
@@ -65,18 +65,18 @@ canvas.addEventListener('click', function(event) {
 
 ```javascript
 // 相机1渲染layerMask为0x1的对象
-const camera1 = new BABYLON.ArcRotateCamera("camera1", ...)
+const camera1 = new BABYLON.ArcRotateCamera('camera1', ...)
 camera1.layerMask = 0x1
  
 // 相机2渲染layerMask为0x2的对象
-const camera2 = new BABYLON.ArcRotateCamera("camera2", ...)
+const camera2 = new BABYLON.ArcRotateCamera('camera2', ...)
 camera2.layerMask = 0x2
  
 // 对象1仅被相机1渲染
-const mesh1 = BABYLON.MeshBuilder.CreateBox("box1", ...)
+const mesh1 = BABYLON.MeshBuilder.CreateBox('box1', ...)
 mesh1.layerMask = 0x1
  
 // 对象2仅被相机2渲染
-const mesh2 = BABYLON.MeshBuilder.CreateBox("box2", ...)
+const mesh2 = BABYLON.MeshBuilder.CreateBox('box2', ...)
 mesh2.layerMask = 0x2
 ```

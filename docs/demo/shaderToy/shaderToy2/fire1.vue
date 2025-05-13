@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div>为什么是-u_time，而不是u_time，具体解释看fire2的 main 函数里面的解析</div>
+    <div>为什么是-u_time，而不是 u_time，具体解释看 fire2 的 main 函数里面的解析</div>
     <div class="flex space-between">
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
       <div @click="showText = !showText" class="pointer">点击{{ !showText ? '展开': '收起'}}文字</div>
@@ -104,7 +104,7 @@ onMounted(async () => {
 // min(100.0 - length(p), abs(fireDist)) 返回的是点 p 到整个场景的最小距离。如果  > 0，说明点 p 在场景的外部；如果  = 0，说明点 p 在场景的表面上；如果 < 0，说明点 p 在场景的内部
 // fireDist 返回的是点 p 到火焰形状的最小距离。如果  > 0，说明点 p 在火焰的外部；如果 = 0，说明点 p 在火焰的表面上；如果  < 0，说明点 p 在火焰的内部
 // -------------------------------------------
-// 为什么只能在d>eps才能继续判断fireDist < .0，如果d<eps时候判断fireDist < .0，会怎么样？
+// 为什么只能在 d>eps 才能继续判断 fireDist < .0，如果 d<eps 时候判断 fireDist < .0，会怎么样？
 // 在光线行进算法中，d 表示当前点 p 到整个场景的最近距离。如果 d > eps，说明当前点 p 还在场景的外部，光线可以继续向前行进。如果 d <= eps，则认为光线已经到达或穿过场景的表面，此时应该停止行进。
 // 如果在 d < eps 时仍然判断 fireDist < .0，可能会导致以下问题：
 //    a. 光线穿透表面
@@ -135,23 +135,23 @@ const onStart = () => {
 
       // 左手坐标系
       // ro：相机的位置（Ray Origin），即相机在三维空间中的坐标这个点是所有视线（或光线）的起点
-      // target：相机的目标点，即相机“看”向的点这个点决定了相机的前进方向（Forward向量）
-      // up：相机的向上方向（Up向量），通常与相机的前进方向垂直，这个向量用于确定相机的右侧方向（Right向量）和确保相机的坐标系是正交的
+      // target：相机的目标点，即相机“看”向的点这个点决定了相机的前进方向（Forward 向量）
+      // up：相机的向上方向（Up 向量），通常与相机的前进方向垂直，这个向量用于确定相机的右侧方向（Right 向量）和确保相机的坐标系是正交的
       // 相机源点、目标、向上方向
-      // R、U、F分别是Right、Up和Forward向量
+      // R、U、F 分别是 Right、Up 和 Forward 向量
       mat3 getCameraMat(vec3 ro, vec3 target, vec3 up) {
-        vec3 f = normalize(target - ro); // 计算Forward向量（F）
+        vec3 f = normalize(target - ro); // 计算 Forward 向量（F）
 
         // 叉积 cross(a, b) 的结果是一个垂直于向量 a 和 b 的向量
         // 注意：由于使用的是左手坐标系，所以是使用 up 叉乘 f，而不是反过来进行叉乘，进行叉乘运算时一定要注意其方向性！
-        vec3 r = cross(up, f); // Right向量（R）是Forward向量和Up向量的叉积，表示相机的右侧方向
+        vec3 r = cross(up, f); // Right 向量（R）是 Forward 向量和 Up 向量的叉积，表示相机的右侧方向
 
-        vec3 u = normalize(cross(f, r)); // 为了确保Up向量垂直于Forward向量，需要重新计算Up向量为Right向量和Forward向量的叉积
+        vec3 u = normalize(cross(f, r)); // 为了确保 Up 向量垂直于 Forward 向量，需要重新计算 Up 向量为 Right 向量和 Forward 向量的叉积
 
         return mat3(r, u, f);
       }
 
-      // 基于Perlin噪声的火焰效果噪声函数
+      // 基于 Perlin 噪声的火焰效果噪声函数
       // 作用：这是一个 3D 噪声函数，用于生成平滑的随机值
       // 由于 Perlin 噪声的性质，这个函数的输出值在 [−1,1] 范围内
       float noise(vec3 p) {
@@ -176,7 +176,7 @@ const onStart = () => {
       // 球体的定义
       // spr.xyz 是球心的坐标，spr.w 是球的半径
       float getSphereDist(vec3 p) {
-        vec4 sphere = vec4(0.0, 0.0, 0.0, 1.0); // 把第二个设成-1.0可以看到下半部，把第二个设成1.0看到上半部，把第二个设成0.0看到全部
+        vec4 sphere = vec4(0.0, 0.0, 0.0, 1.0); // 把第二个设成 -1.0 可以看到下半部，把第二个设成 1.0 看到上半部，把第二个设成 0.0 看到全部
         vec3 sphereVec = vec3(1.0, 1.0, 1.0);
         vec3 ellipseVec = vec3(1.0, 0.5, 1.0);
         return length(sphere.xyz - p * sphereVec) - sphere.w;
@@ -191,10 +191,10 @@ const onStart = () => {
       // ---------------------------------------------
       // (x * x) / (1 * 1) + (y * y) / (0.5 * 0.5) + (z * z) / (1 * 1) = 1
       // x^2 + 4y^2 = 1
-      // 由于x的系数是1，y的系数是4，可以知道椭圆的长轴在y轴上，短轴在x轴上
+      // 由于 x 的系数是 1，y 的系数是 4，可以知道椭圆的长轴在 y 轴上，短轴在 x 轴上
       float getEllipseDist(vec3 p) {
-        // point进行非均匀的缩放，x轴保持原比例，y轴压缩为原来的0.5倍，z轴保持原比例
-        // 由于是y轴被压缩，椭圆在y轴被被拉伸
+        // point 进行非均匀的缩放，x 轴保持原比例，y 轴压缩为原来的 0.5 倍，z 轴保持原比例
+        // 由于是 y 轴被压缩，椭圆在 y 轴被被拉伸
         vec3 pointScale = vec3(1.0, 0.5, 1.0);
 
         // 平移
@@ -207,16 +207,16 @@ const onStart = () => {
       }
 
       // 太奇怪，思考不明白
-      // 正常而言，p是随时间而向上移动，即 p + vec3(0.0, u_time * 3.0, 0.0) 。但是要-u_time才能正确显示效果，即等于 p - vec3(0.0, u_time * 3.0, 0.0)
-      // noise(p * 3.0) * 0.5： 添加更高频率的噪声，用于增加火焰的细节
-      // 0.25 * p.y：  火焰的动态效果在 Y 轴方向上逐渐减弱，模拟火焰向上延伸时逐渐变细的特性
+      // 正常而言，p 是随时间而向上移动，即 p + vec3(0.0, u_time * 3.0, 0.0) 。但是要-u_time 才能正确显示效果，即等于 p - vec3(0.0, u_time * 3.0, 0.0)
+      // noise(p * 3.0) * 0.5：添加更高频率的噪声，用于增加火焰的细节
+      // 0.25 * p.y：火焰的动态效果在 Y 轴方向上逐渐减弱，模拟火焰向上延伸时逐渐变细的特性
       float fireNoise(vec3 p) {
-        // float n = noise(vec3(0.0, p.y + u_time, 0.0)); // 随着u_time的增大，是往下运动的
+        // float n = noise(vec3(0.0, p.y + u_time, 0.0)); // 随着 u_time 的增大，是往下运动的
         // return n;
 
-        // return p.y + u_time; // 随着u_time的增大，是往下运动的
+        // return p.y + u_time; // 随着 u_time 的增大，是往下运动的
 
-        // return u_time; // 随着u_time的增大，椭圆是逐渐变小
+        // return u_time; // 随着 u_time 的增大，椭圆是逐渐变小
 
         float n = noise(p + vec3(0.0, -u_time * 3.0, 0.0) + noise(p * 3.0) * 0.5) * 0.5 * p.y;
         return n;
@@ -260,7 +260,7 @@ const onStart = () => {
           //      如果点 p 更接近场景边界，使用 100.0 - length(p) 作为距离
           //      如果点 p 更接近火焰表面，使用 abs(fireDist) 作为距离
           //-----------------------------------------------------------
-          // + eps：确保d的值避免数值不稳定性或除零错误
+          // + eps：确保 d 的值避免数值不稳定性或除零错误
           //-----------------------------------------------------------
           // 为什么不是 abs(fireDist) + eps？
           // 如果只使用 abs(fireDist) + eps，则只考虑了点 p 到火焰表面的距离，而没有考虑点 p 到场景边界的距离。这可能导致以下问题：
@@ -273,7 +273,7 @@ const onStart = () => {
           // 如果 d > eps，说明当前点距离表面还有一段距离，光线可以继续前进
           // 如果 d <= eps，说明光线已经接近表面，可以停止前进
           // 这个条件用于避免光线在表面附近发生数值不稳定或无限循环的情况
-          // 表明 min(100.0 - length(p), abs(fireDist)) 取的是abs(fireDist)的值
+          // 表明 min(100.0 - length(p), abs(fireDist)) 取的是 abs(fireDist) 的值
           if (d > eps) {
             // 检查当前点是否在发光源的范围内（通过 fireDist < 0.0 判断，在内部）
             // 如果在发光源范围内，标记当前点为被照亮（glowed = true）
@@ -293,7 +293,7 @@ const onStart = () => {
       void main() {
         vec2 fragCoord = gl_FragCoord.xy;
         vec2 uv = 2.0 * (fragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.y, u_resolution.x); // 归一化 uv 的坐标，范围在 [-1, 1] 之间
-        // vec2 uv = fragCoord.xy / u_resolution.xy; // 将屏幕坐标归一化到[0, 1]范围内
+        // vec2 uv = fragCoord.xy / u_resolution.xy; // 将屏幕坐标归一化到 [0, 1] 范围内
         uv.x *= u_resolution.x / u_resolution.y; // 修正宽高比，使得火焰变细或变粗
         
 

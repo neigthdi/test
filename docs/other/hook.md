@@ -42,7 +42,7 @@ pick:
 
 使用这些钩子时，可以在材质的 customType 属性中指定相应的代码块。例如：   
 ```javascript
-const material = new BABYLON.StandardMaterial("material", scene);
+const material = new BABYLON.StandardMaterial('material', scene);
 
 material.customType = {
     vertex: [
@@ -66,7 +66,7 @@ material.customType = {
 #### 案例1：
 
 ```javascript
-const material = new BABYLON.StandardMaterial("material", scene);
+const material = new BABYLON.StandardMaterial('material', scene);
 // 添加自定义片段着色器代码
 material.customFragment = `
   // 定义自定义变量或函数
@@ -145,16 +145,16 @@ material.onBindObservable.add(function() {
 // 允许开发者在应用雾效果（fog）之前插入自定义代码
 // 这个特性非常有用，因为它允许修改片段的颜色或进行其他计算，然后再应用雾效果
 // 如果想要自定义片段着色器的某些部分，可以这样设置材质：
-const material = new BABYLON.StandardMaterial("material", scene);
+const material = new BABYLON.StandardMaterial('material', scene);
 material.customType = {
     fragment: {
         fragment_Definitions: [
             // 在这里添加自定义的片段定义
-            "float customValue = 1.0;"
+            'float customValue = 1.0;'
         ],
         fragment_Before_Fog: [
             // 在这里添加在雾效果之前执行的自定义代码
-            "color.rgb *= customValue;"
+            'color.rgb *= customValue;'
         ]
     }
 };

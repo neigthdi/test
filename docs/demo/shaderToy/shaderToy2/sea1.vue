@@ -52,10 +52,10 @@ const onStart = () => {
       const mat2 octave_m = mat2(1.6, 1.2, -1.2, 1.6); // 倍频程矩阵
 
       // 这段代码将一个包含欧拉角的向量 vec3 ang 转换为一个旋转矩阵 mat3 m
-      // 欧拉角是三个角度，分别表示绕x轴、y轴和z轴的旋转
+      // 欧拉角是三个角度，分别表示绕 x 轴、y 轴和 z 轴的旋转
       // 这个函数的目的是根据这三个角度计算出相应的旋转矩阵
       // 旋转矩阵的计算基于欧拉角的旋转顺序
-      // 通常，旋转顺序可以是任意的，但这段代码假设的旋转顺序是先绕x轴旋转，然后绕y轴旋转，最后绕z轴旋转
+      // 通常，旋转顺序可以是任意的，但这段代码假设的旋转顺序是先绕 x 轴旋转，然后绕 y 轴旋转，最后绕 z 轴旋转
       // 旋转矩阵的计算公式是：
       // R=RzRyRx
       // --------------------
@@ -83,15 +83,15 @@ const onStart = () => {
       // cos⁡(θz)	−sin⁡(θz)	0          cos⁡(θy)	  sin⁡(θy)sin⁡(θx)	sin⁡(θy)cos⁡(θx)
       // sin⁡(θz)	cos⁡(θz)	0     *    0	       cos⁡(θx)	        −sin⁡(θx) 
       // 0	     0	      1          −sin⁡(θy)	cos⁡(θy)sin⁡(θx)	cos⁡(θy)cos⁡(θx)
-      // 得到最终的finalMatrix
+      // 得到最终的 finalMatrix
       // cos⁡(θy)cos⁡(θz)	   sin⁡(θy)sin⁡(θx)cos⁡(θz)−cos⁡(θx)sin⁡(θz)	   sin⁡(θy)cos⁡(θx)cos⁡(θz)+sin⁡(θx)sin⁡(θz)
       // cos⁡(θy)sin⁡(θz)	   sin⁡(θy)sin⁡(θx)sin⁡(θz)+cos⁡(θx)cos⁡(θz)	   sin⁡(θy)cos⁡(θx)sin⁡(θz)−sin⁡(θx)cos⁡(θz)
       // −sin⁡(θy)	        cos⁡(θy)sin⁡(θx)	                         cos⁡(θy)cos⁡(θx)
       mat3 getRotationMatrixByEulerAngle(vec3 ang) {
-        vec2 a1 = vec2(sin(ang.x), cos(ang.x)); // 计算绕x轴旋转的角度 ang.x 的正弦和余弦值类似人头上下点头的动作
-        vec2 a2 = vec2(sin(ang.y), cos(ang.y)); // 计算绕y轴旋转的角度 ang.y 的正弦和余弦值类似人头左右摇头的动作
-        vec2 a3 = vec2(sin(ang.z), cos(ang.z)); // 计算绕z轴旋转的角度 ang.z 的正弦和余弦值类似人头左右摆头的动作
-        mat3 finalMatrix; // 定义一个3x3的矩阵
+        vec2 a1 = vec2(sin(ang.x), cos(ang.x)); // 计算绕 x 轴旋转的角度 ang.x 的正弦和余弦值类似人头上下点头的动作
+        vec2 a2 = vec2(sin(ang.y), cos(ang.y)); // 计算绕 y 轴旋转的角度 ang.y 的正弦和余弦值类似人头左右摇头的动作
+        vec2 a3 = vec2(sin(ang.z), cos(ang.z)); // 计算绕 z 轴旋转的角度 ang.z 的正弦和余弦值类似人头左右摆头的动作
+        mat3 finalMatrix; // 定义一个 3x3 的矩阵
         finalMatrix[0] = vec3(a1.y * a3.y + a1.x * a2.x * a3.x, a1.y * a2.x * a3.x + a3.y * a1.x, -a2.y * a3.x); // 计算旋转矩阵的第一行
         finalMatrix[1] = vec3(-a2.y * a1.x, a1.y * a2.y, a2.x); // 计算旋转矩阵的第二行
         finalMatrix[2] = vec3(a3.y * a1.x * a2.x + a1.y * a3.x, a1.x * a3.x  -a1.y * a3.y * a2.x, a2.y * a3.y); // 计算旋转矩阵的第三行
@@ -101,18 +101,18 @@ const onStart = () => {
 
 
       // sky
-      // 根据给定的方向向量e计算天空的颜色这个函数模拟了天空的渐变效果，从地平线到天顶的颜色变化
+      // 根据给定的方向向量 e 计算天空的颜色这个函数模拟了天空的渐变效果，从地平线到天顶的颜色变化
       vec3 getSkyColor(vec3 e) {
-        // max(e.y, 0.0)：确保e.y的值不小于0，因为天空的颜色通常在地平线以上
-        // max(e.y, 0.0) * 0.8：将e.y的值乘以0.8，使颜色变化更加平缓
-        // max(e.y, 0.0) * 0.8 + 0.2：在乘以0.8的基础上加上0.2，确保地平线处的颜色不会太暗
-        // (max(e.y, 0.0) * 0.8 + 0.2) * 0.8：再次乘以0.8，进一步调整颜色的亮度
+        // max(e.y, 0.0)：确保 e.y 的值不小于 0，因为天空的颜色通常在地平线以上
+        // max(e.y, 0.0) * 0.8：将 e.y 的值乘以 0.8，使颜色变化更加平缓
+        // max(e.y, 0.0) * 0.8 + 0.2：在乘以 0.8 的基础上加上 0.2，确保地平线处的颜色不会太暗
+        // (max(e.y, 0.0) * 0.8 + 0.2) * 0.8：再次乘以 0.8，进一步调整颜色的亮度
         e.y = (max(e.y, 0.0) * 0.8 + 0.2) * 0.8;
-        // pow(1.0 - e.y, 2.0)：计算1.0 - e.y的平方，用于模拟天空颜色的非线性变化这个值将用于红色分量，使天空在地平线处更红
-        // 1.0 - e.y：直接使用1.0 - e.y作为绿色分量，使天空在地平线处更绿
-        // 0.6 + (1.0 - e.y) * 0.4：计算蓝色分量，使天空在地平线处更蓝0.6是基础蓝色，(1.0 - e.y) * 0.4根据e.y的值增加蓝色
+        // pow(1.0 - e.y, 2.0)：计算 1.0 - e.y 的平方，用于模拟天空颜色的非线性变化这个值将用于红色分量，使天空在地平线处更红
+        // 1.0 - e.y：直接使用 1.0 - e.y 作为绿色分量，使天空在地平线处更绿
+        // 0.6 + (1.0 - e.y) * 0.4：计算蓝色分量，使天空在地平线处更蓝 0.6 是基础蓝色，(1.0 - e.y) * 0.4 根据 e.y 的值增加蓝色
         // vec3(pow(1.0 - e.y, 2.0), 1.0 - e.y, 0.6 + (1.0 - e.y) * 0.4)：将计算得到的红、绿、蓝分量组合成一个颜色向量
-        // vec3(pow(1.0 - e.y, 2.0), 1.0 - e.y, 0.6 + (1.0 - e.y) * 0.4) * 1.1：将颜色向量乘以1.1，增加颜色的亮度
+        // vec3(pow(1.0 - e.y, 2.0), 1.0 - e.y, 0.6 + (1.0 - e.y) * 0.4) * 1.1：将颜色向量乘以 1.1，增加颜色的亮度
         return vec3(pow(1.0 - e.y, 2.0), 1.0 - e.y, 0.6 + (1.0 - e.y) * 0.4) * 1.1;
       }
 
@@ -167,7 +167,7 @@ const onStart = () => {
 
 
 
-      // choppy需要每次迭代都不一样，计算海浪的波浪起伏
+      // choppy 需要每次迭代都不一样，计算海浪的波浪起伏
       float seaOctave(vec2 uv, float choppy) {
         uv += noise(uv);        
         vec2 wave1 = 1.0 - abs(sin(uv)); // 计算海浪的波浪起伏
@@ -191,7 +191,7 @@ const onStart = () => {
 
 
         // 由于 WebGL 1.0 的限制，最简单且通常最可行的解决方案是使用固定的迭代次数
-        // WebGL 2.0则不用这样，可以用动态传入的iteration
+        // WebGL 2.0 则不用这样，可以用动态传入的 iteration
         if(iteration == ITERATION_GEOMETRY) {
           for (int j = 0; j < ITERATION_GEOMETRY; j += 1) {
             d = seaOctave((tempUv + SEA_TIME) * freq, choppy); // 计算海浪分量的高度差
@@ -205,7 +205,7 @@ const onStart = () => {
         }
 
         // 由于 WebGL 1.0 的限制，最简单且通常最可行的解决方案是使用固定的迭代次数
-        // WebGL 2.0则不用这样，可以用动态传入的iteration
+        // WebGL 2.0 则不用这样，可以用动态传入的 iteration
         if(iteration == ITERATION_FRAGMENT) {
           for (int j = 0; j < ITERATION_FRAGMENT; j += 1) {
             d = seaOctave((tempUv + SEA_TIME) * freq, choppy); // 计算海浪分量的高度差
@@ -220,7 +220,7 @@ const onStart = () => {
 
         
 
-        // 返回输入位置 point 的 y 分量减去计算出的海浪高度 h这给出了该点相对于海平面的高度
+        // 返回输入位置 point 的 y 分量减去计算出的海浪高度 h 这给出了该点相对于海平面的高度
         return point.y - h;
       }
 
@@ -233,19 +233,19 @@ const onStart = () => {
         vec3 n;
         n.y = computedSeaPlaneHeight(p, ITERATION_FRAGMENT); // 计算位置 p 处的地形高度或密度，并将其存储在 n.y 中
         
-        // 为什么减去n.y，因为通过计算偏移点的高度与原始点高度（n.y）的差值，可以得到该方向上的高度变化率，即斜率，查看（自定义效果-海浪-1.png）
+        // 为什么减去 n.y，因为通过计算偏移点的高度与原始点高度（n.y）的差值，可以得到该方向上的高度变化率，即斜率，查看（自定义效果 - 海浪 -1.png）
         // computedSeaPlaneHeight(vec3(p.x + eps, p.y, p.z), ITERATION_FRAGMENT) 计算点 p+ϵi 处的高度
         // 计算位置 p 在 x 方向偏移 eps 后的地形高度或密度，并将其与 n.y（即原始位置 p 的高度或密度）相减，以估算 x 方向的斜率
         // n.x ≈ h(p+ϵi)−h(p) / ϵ
         n.x = computedSeaPlaneHeight(vec3(p.x + eps, p.y, p.z), ITERATION_FRAGMENT) - n.y; 
         
-        // 为什么减去n.y，因为通过计算偏移点的高度与原始点高度（n.y）的差值，可以得到该方向上的高度变化率，即斜率，查看（自定义效果-海浪-1.png）
+        // 为什么减去 n.y，因为通过计算偏移点的高度与原始点高度（n.y）的差值，可以得到该方向上的高度变化率，即斜率，查看（自定义效果 - 海浪 -1.png）
         // computedSeaPlaneHeight(vec3(p.x, p.y, p.z + eps), ITERATION_FRAGMENT) 计算点 p+ϵk 处的高度
         // 计算位置 p 在 z 方向偏移 eps 后的地形高度或密度，并将其与 n.y（即原始位置 p 的高度或密度）相减，以估算 z 方向的斜率
         // n.z ≈ h(p+ϵk)−h(p) / ϵ
         n.z = computedSeaPlaneHeight(vec3(p.x, p.y, p.z + eps), ITERATION_FRAGMENT) - n.y; 
 
-        // eps是dot(distanceVector, distanceVector) * EPSILON_NRM
+        // eps 是 dot(distanceVector, distanceVector) * EPSILON_NRM
         // 简化处理：在某些情况下，开发者可能会为了简化计算而进行一些近似处理
         // 特殊需求：可能在你的应用场景中，法线的 y 分量需要根据 ϵ 进行调整
         // 通常应该将法线的 y 分量设置为 1，而不是 ϵ，即 n.y = 1.0;
@@ -257,7 +257,7 @@ const onStart = () => {
       // 函数旨在计算海洋表面某一点 p 的颜色，考虑到法向量 n、光源方向 l、观察方向 eye 和到观察者的距离 dist
       vec3 getSeaColor(vec3 p, vec3 n, vec3 l, vec3 eye, vec3 dist) {
         // 计算菲涅耳效应，即光线从一种介质进入另一种介质时反射和折射的比例
-        // 这里使用点积来计算法向量 n 和观察方向 -eye (因为观察方向通常指向观察者，而我们需要的是指向光源或表面的相反方向)之间的夹角的余弦值，然后用 1.0 减去这个值得到菲涅耳因子
+        // 这里使用点积来计算法向量 n 和观察方向 -eye (因为观察方向通常指向观察者，而我们需要的是指向光源或表面的相反方向) 之间的夹角的余弦值，然后用 1.0 减去这个值得到菲涅耳因子
         // clamp 函数确保这个值在 0.0 到 1.0 之间
         float fresnel = clamp(1.0 - dot(n, -eye), 0.0, 1.0);
         
@@ -265,7 +265,7 @@ const onStart = () => {
         // 然后，使用 min 函数确保结果不会超过 0.5，这可能是为了限制反射光的强度
         fresnel = min(fresnel * fresnel * fresnel, 0.5);
         
-        // 计算反射光颜色reflect 函数计算光线从表面反射的方向，然后 getSkyColor 函数返回该方向上的天空颜色
+        // 计算反射光颜色 reflect 函数计算光线从表面反射的方向，然后 getSkyColor 函数返回该方向上的天空颜色
         vec3 reflected = getSkyColor(reflect(eye, n));
 
         // 计算折射光颜色
@@ -303,38 +303,38 @@ const onStart = () => {
 
       // 高度图的描图
       // 作用是进行光线与高度图（如海面）的交点追踪，用于在给定起点和方向的情况下，找到与海面相交的位置
-      // 具体来说，通过一系列的迭代计算，确定光线从起点rayOrigin沿着方向direction出发，与高度图（在这个场景中是海面）相交的具体位置，并将这个交点位置输出到参数intersectionPoint中
+      // 具体来说，通过一系列的迭代计算，确定光线从起点 rayOrigin 沿着方向 direction 出发，与高度图（在这个场景中是海面）相交的具体位置，并将这个交点位置输出到参数 intersectionPoint 中
       // 这个函数是渲染海洋场景的关键部分，它结合了深度映射（depth mapping）和步进（stepping）技术来确定光线与海洋表面的交点
       float heightMapTracing(vec3 rayOrigin, vec3 direction, out vec3 intersectionPoint) {
-        float nearPlane = 0.0; // 初始化近平面（near plane）的距离为0
-        float farPlane = 1000.0; // 初始化远平面（far plane）的距离farPlane为一个较大的数（1000.0），这是光线投射的最大距离
+        float nearPlane = 0.0; // 初始化近平面（near plane）的距离为 0
+        float farPlane = 1000.0; // 初始化远平面（far plane）的距离 farPlane 为一个较大的数（1000.0），这是光线投射的最大距离
         
-        // 先计算farHeight，再计算nearHeight的原因
+        // 先计算 farHeight，再计算 nearHeight 的原因
         // 在渲染或图形处理中，远处的物体通常对最终图像的影响较小，因此可以先以较低的精度或分辨率计算远处的高度（hx），以减少计算量
         // 随后，再对近处的物体进行更精细的计算（hm），以确保图像质量
-        // 所以会return farPlane
+        // 所以会 return farPlane
 
         float farHeight = computedSeaPlaneHeight(rayOrigin + direction * farPlane, ITERATION_GEOMETRY); // 计算远平面位置的高度
-        // 如果farHeight小于0，则表明了远平面位置的高度小于0，即光线投射方向上没有海面的交点，这时直接返回0.0，表示没有交点
+        // 如果 farHeight 小于 0，则表明了远平面位置的高度小于 0，即光线投射方向上没有海面的交点，这时直接返回 0.0，表示没有交点
         // 需要计算近平面位置的高度，以确定光线投射方向上的海面交点位置
         if(farHeight > 0.0) {
-          intersectionPoint = rayOrigin + direction * farPlane; // 如果远平面位置的高度大于0，则将远平面位置作为交点位置
+          intersectionPoint = rayOrigin + direction * farPlane; // 如果远平面位置的高度大于 0，则将远平面位置作为交点位置
           return farPlane; // 返回远平面的距离
         }
 
-        // for循环用于迭代计算光线投射方向上的海面交点位置，光线步进算法
+        // for 循环用于迭代计算光线投射方向上的海面交点位置，光线步进算法
         float nearHeight = computedSeaPlaneHeight(rayOrigin + direction * nearPlane, ITERATION_GEOMETRY); // 计算近平面位置的高度
-        for (int i = 0; i < NUM_STEPS; i++) { // 开始一个循环，循环次数由NUM_STEPS定义，这是光线投射过程中的步进次数
-          // 计算当前步的中点距离middle distance这是通过线性插值（mix）nearPlane和farPlane得到的，插值因子基于当前步的高度差与总高度差的比例
-          float tempDistance = mix(nearPlane, farPlane, nearHeight / (nearHeight - farHeight)); // 注意，此时的farHeight永远是小于0的
+        for (int i = 0; i < NUM_STEPS; i++) { // 开始一个循环，循环次数由 NUM_STEPS 定义，这是光线投射过程中的步进次数
+          // 计算当前步的中点距离 middle distance 这是通过线性插值（mix）nearPlane 和 farPlane 得到的，插值因子基于当前步的高度差与总高度差的比例
+          float tempDistance = mix(nearPlane, farPlane, nearHeight / (nearHeight - farHeight)); // 注意，此时的 farHeight 永远是小于 0 的
           intersectionPoint = rayOrigin + direction * tempDistance;
           float tempHeight = computedSeaPlaneHeight(rayOrigin + direction * tempDistance, ITERATION_GEOMETRY);
           
           // 如果 tempHeight < 0.0，这意味着中点位置 p 的高度低于基准面，即光线投射方向上没有海面的交点，这时需要继续迭代步进，以确定交点位置，因此，更新远平面的时间（或距离）和高度
           // 由于近平面的高度值 nearHeight 通常是正数（因为近平面被设置为稍高于地形表面），所以交点不可能位于近平面和中点之间
           // 因此，可以推断出交点必定位于当前步的中点到远平面之间的某个位置
-          // 为了缩小搜索范围，算法将远平面的时间（或距离） farPlane 和高度值 farHeight 更新为中点的时间 tempDistance 和高度 tempHeight
-          // 因为所有比此刻的tempDistance更大的值，求出来的tempHeight也是小于0的，所以要把farPlane的值，变小
+          // 为了缩小搜索范围，算法将远平面的时间（或距离）farPlane 和高度值 farHeight 更新为中点的时间 tempDistance 和高度 tempHeight
+          // 因为所有比此刻的 tempDistance 更大的值，求出来的 tempHeight 也是小于 0 的，所以要把 farPlane 的值，变小
           if(tempHeight < 0.0) {    
             farPlane = tempDistance; 
             farHeight = tempHeight;
@@ -354,46 +354,46 @@ const onStart = () => {
 
       vec3 getPixel(in vec2 uv, float time) {
 
-        // ray的内容---start
+        // ray 的内容---start
         // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
-        // 这一行定义了一个三维向量ang，表示欧拉角（Euler angles），用于描述光线方向的旋转
+        // 这一行定义了一个三维向量 ang，表示欧拉角（Euler angles），用于描述光线方向的旋转
         vec3 angle = vec3(sin(1.25 * time) * 0.1, sin(time) * 0.2 + 0.3, time * 0.5);   
 
         // 表示从观察点（通常是相机位置）到屏幕上的某个像素点的方向向量这个向量用于光线追踪，确定光线从相机出发，穿过屏幕上的某个像素点，进入场景的方向
         // 通过归一化操作，将从相机位置到屏幕上的某个像素点的方向向量转换为一个单位向量
         // 这个方向向量用于光线追踪，确定光线在场景中的传播路径，确保计算结果的准确性和高效性
         vec3 direction = normalize(vec3(uv.xy, -2.0));
-        // 这一行的作用是对光线的方向向量dir的z分量进行调整具体来说，通过增加一个与uv向量长度成比例的值来改变光线的倾斜角度这种调整可以模拟出从不同视角观察场景时，光线方向的变化，从而增强场景的立体感和深度感
+        // 这一行的作用是对光线的方向向量 dir 的 z 分量进行调整具体来说，通过增加一个与 uv 向量长度成比例的值来改变光线的倾斜角度这种调整可以模拟出从不同视角观察场景时，光线方向的变化，从而增强场景的立体感和深度感
         direction.z += length(uv) * 0.14;
-        // 这一行的作用是将光线的方向向量dir进行归一化，保持方向一致性，并根据欧拉角ang对光线方向进行旋转
+        // 这一行的作用是将光线的方向向量 dir 进行归一化，保持方向一致性，并根据欧拉角 ang 对光线方向进行旋转
         direction = normalize(direction) * getRotationMatrixByEulerAngle(angle);
 
-        // rayOrigin表示光线的起源点，即射线的起点
+        // rayOrigin 表示光线的起源点，即射线的起点
         // 作用：
-        // 1、光线追踪的起点：在光线追踪算法中，从rayOrigin这个点出发，沿着direction（光线的方向向量）进行追踪，与场景中的物体（如海面）进行交点计算
-        // 2、影响观察视角和场景动态：rayOrigin的z坐标随时间变化，使得光线的起点在z轴方向上随时间移动，从而产生动态的观察效果，增加了场景的真实感和动态感同时，其y坐标值决定了观察视角的高度，影响观察者对场景的视野范围和细节感知
+        // 1、光线追踪的起点：在光线追踪算法中，从 rayOrigin 这个点出发，沿着 direction（光线的方向向量）进行追踪，与场景中的物体（如海面）进行交点计算
+        // 2、影响观察视角和场景动态：rayOrigin 的 z 坐标随时间变化，使得光线的起点在 z 轴方向上随时间移动，从而产生动态的观察效果，增加了场景的真实感和动态感同时，其 y 坐标值决定了观察视角的高度，影响观察者对场景的视野范围和细节感知
         vec3 rayOrigin = vec3(0.0, 3.5, 5.0); 
         // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
-        // ray的内容---end
+        // ray 的内容---end
 
-        // tracing的内容---start
+        // tracing 的内容---start
         // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
         // 相交点
         vec3 intersectionPoint;
-        // distanceFromStart2End表示从起点到相交点的距离
+        // distanceFromStart2End 表示从起点到相交点的距离
         float distanceFromStart2End = heightMapTracing(rayOrigin, direction, intersectionPoint);
         vec3 distanceVector = intersectionPoint - rayOrigin; // 计算相交点与起点的距离
         vec3 n = getNormal(intersectionPoint, dot(distanceVector, distanceVector) * EPSILON_NRM);
         // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
-        // tracing的内容---end
+        // tracing 的内容---end
 
 
         // light
-        // light表示光源的方向
-        // normalize(vec3(0.0, 1.0, 0.8))得到的结果是一个单位向量，大约为vec3(0.0, 0.7810, 0.6248)
-        // 这个向量的方向与原始向量相同，但长度为1，常用于表示方向，特别是在光照计算中作为光源方向向量
+        // light 表示光源的方向
+        // normalize(vec3(0.0, 1.0, 0.8)) 得到的结果是一个单位向量，大约为 vec3(0.0, 0.7810, 0.6248)
+        // 这个向量的方向与原始向量相同，但长度为 1，常用于表示方向，特别是在光照计算中作为光源方向向量
         // 作用：
-        // 1、光照计算的依据：在光照模型中，light用于计算光线与物体表面的交互效果，如漫反射和镜面反射等它指定了光源相对于场景中物体的方向，从而影响物体表面的明暗、颜色和高光等视觉效果
+        // 1、光照计算的依据：在光照模型中，light 用于计算光线与物体表面的交互效果，如漫反射和镜面反射等它指定了光源相对于场景中物体的方向，从而影响物体表面的明暗、颜色和高光等视觉效果
         // 2、影响场景的光照效果：通过与物体表面的法线向量等进行点乘等运算，计算出不同光照成分（如漫反射光、镜面反射光等）的强度，进而影响最终渲染出的图像的光影效果，使场景具有立体感和真实感
         vec3 light = normalize(vec3(0.0, 1.0, 0.8)); 
 

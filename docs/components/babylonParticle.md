@@ -1,4 +1,4 @@
-## gpu粒子
+## gpu 粒子
 <preview path="../demo/babylon/particle/particleGPU.vue"></preview>
 
 ## 喷泉

@@ -1,6 +1,6 @@
 ## abs
 
-float abs(float x)返回 x 的无符号绝对值，即如果 x 大于 0 则返回 x，否则返回-x。
+float abs(float x) 返回 x 的无符号绝对值，即如果 x 大于 0 则返回 x，否则返回-x。
 
 ## bool all(bvec x)
 
@@ -16,11 +16,11 @@ float abs(float x)返回 x 的无符号绝对值，即如果 x 大于 0 则返�
 
 ## ceil
 
-float ceil(float x)返回大于等于 x 并且最接近 x 的整数，就是向上取整。
+float ceil(float x) 返回大于等于 x 并且最接近 x 的整数，就是向上取整。
 
 ## clamp
 
-float clamp(float x, float minVal, float maxVal)将 x 限制在 minVal 和 maxVal 之间。
+float clamp(float x, float minVal, float maxVal) 将 x 限制在 minVal 和 maxVal 之间。
 ```javascript
 #version 330 core  
 out vec4 FragColor;  
@@ -28,8 +28,8 @@ void main() {
   float x = -1.0; // 输入值  
   float minVal = 0.0; // 最小值  
   float maxVal = 1.0; // 最大值  
-  float clampedX = clamp(x, minVal, maxVal); // 将x限制在0.0和1.0之间  
-  // 假设要将clampedX用作红色分量，绿色和蓝色分量设为0，透明度设为1  
+  float clampedX = clamp(x, minVal, maxVal); // 将 x 限制在 0.0 和 1.0 之间  
+  // 假设要将 clampedX 用作红色分量，绿色和蓝色分量设为 0，透明度设为 1  
   FragColor = vec4(clampedX, 0.0, 0.0, 1.0);  
 }
 ```
@@ -37,33 +37,33 @@ void main() {
 ## cross
 
 vec3 cross(vec3 x, vec3 y)  
-值得注意的是此函数只允许输入的变量为两个 vec3 类型，并且会返回一个 vec3 类型的值，该向量是x和y的叉积结果。   
-叉积的结果是一个向量，该向量垂直于x和y所在的平面，且其方向遵循右手定则（即，如果将右手的四指从x向量旋转到y向量，那么大拇指所指的方向就是叉积向量的方向）。    
+值得注意的是此函数只允许输入的变量为两个 vec3 类型，并且会返回一个 vec3 类型的值，该向量是 x 和 y 的叉积结果。   
+叉积的结果是一个向量，该向量垂直于 x 和 y 所在的平面，且其方向遵循右手定则（即，如果将右手的四指从 x 向量旋转到 y 向量，那么大拇指所指的方向就是叉积向量的方向）。    
 第一个参数 a(x0, x1, x2)，第二个参数 b(y0, y1, y2)  
 result[0]=x[1]*y[2]-y[1]*x[2]  
 result[1]=x[2]*y[0]-y[2]*x[0]  
 result[2]=x[0]*y[1]-y[0]*x[1]  
 
 应用场景：   
-cross函数在图形学和物理计算中有多种应用场景，包括但不限于：   
+cross 函数在图形学和物理计算中有多种应用场景，包括但不限于：   
 1、表面法线计算：在三维建模和渲染中，经常需要计算表面的法线向量。对于由三角形网格组成的模型，可以通过计算三角形两个边的叉积来获取顶点的法线向量（通常需要对相邻三角形的法线进行平均或采用其他平滑技术）。   
 2、物理模拟：在物理模拟中，叉积可以用于计算力矩（Torque），力矩是力和力的转动半径的叉积，它描述了力如何使物体围绕某个点旋转。    
-3、模长与面积：叉乘结果的模长（长度）等于x和y构成的平行四边形的面积。这在三维图形学中非常有用，比如计算三角形面积或检测两个向量是否平行。   
+3、模长与面积：叉乘结果的模长（长度）等于 x 和 y 构成的平行四边形的面积。这在三维图形学中非常有用，比如计算三角形面积或检测两个向量是否平行。   
 4、方向判断：叉乘还可以用于判断两个向量的相对方向。例如，在光照和阴影计算中，可以利用叉乘来判断表面法线（Normal）与光源方向（Light Direction）之间的相对位置，确定光线方向与表面法线之间的角度，从而确定光照效果。   
 
 注意事项：  
-1、cross函数只适用于三维向量。    
-2、叉积的结果向量垂直于原始的两个向量所在的平面，但如果将其中一个向量乘以一个标量（除了-1或1），叉积的结果向量将保持相同的方向但长度会发生变化。   
+1、cross 函数只适用于三维向量。    
+2、叉积的结果向量垂直于原始的两个向量所在的平面，但如果将其中一个向量乘以一个标量（除了 -1 或 1），叉积的结果向量将保持相同的方向但长度会发生变化。   
 3、叉积的结果向量的长度（即模长）等于原始两个向量构成的平行四边形的面积。     
 ```javascript
 #version 330 core  
 out vec4 FragColor;  
 void main() {  
-  vec3 vecA = vec3(1.0, 0.0, 0.0); // X轴单位向量  
-  vec3 vecB = vec3(0.0, 1.0, 0.0); // Y轴单位向量  
+  vec3 vecA = vec3(1.0, 0.0, 0.0); // X 轴单位向量  
+  vec3 vecB = vec3(0.0, 1.0, 0.0); // Y 轴单位向量  
   vec3 crossResult = cross(vecA, vecB); // 计算叉积  
-  // 叉积结果应为Z轴单位向量(0.0, 0.0, 1.0)，因为X轴和Y轴的叉积是Z轴  
-  FragColor = vec4(crossResult, 1.0); // 将叉积结果作为颜色输出（这里仅作示例，实际上颜色值会被归一化到[0,1]范围内）  
+  // 叉积结果应为 Z 轴单位向量 (0.0, 0.0, 1.0)，因为 X 轴和 Y 轴的叉积是 Z 轴  
+  FragColor = vec4(crossResult, 1.0); // 将叉积结果作为颜色输出（这里仅作示例，实际上颜色值会被归一化到 [0,1] 范围内）  
 }
 ```
 
@@ -74,30 +74,30 @@ float distance(float p0, float p1)
 
 <font color=red>注意：distance 返回的是两点之间的距离。length 返回的是向量的长度（模长）。</font>    
 
-在图形渲染中，distance函数可以用于多种场景，如：  
+在图形渲染中，distance 函数可以用于多种场景，如：  
 1、碰撞检测：通过计算物体间的距离来判断它们是否发生了碰撞。  
 2、光照计算：在光照模型中，计算光源与物体表面点之间的距离，以决定光照的强度和方向。  
 3、阴影生成：在生成阴影时，需要计算物体与光源以及物体与接收阴影的平面之间的距离。   
-4、空间分割：在空间分割算法（如八叉树、四叉树等）中，distance函数用于确定物体与空间分割边界的距离，以决定物体应该被分配到哪个子空间中。  
+4、空间分割：在空间分割算法（如八叉树、四叉树等）中，distance 函数用于确定物体与空间分割边界的距离，以决定物体应该被分配到哪个子空间中。  
 
 ## dot
 
 float dot(float x, float y)  
 此函数会返回 x 和 y 的点积，也就是矢量中每一个点的乘积相加，这是一个标量值。      
-点积是一种可以衡量两个向量相似度的方式。具体来说，反映了向量A沿着向量B的方向的投影，有多长。    
-可以想象，把向量A投影到向量B上，点积就是投影的长度与向量B的长度的乘积。    
-两个向量A和B的点积定义为A·B = ∥a∥∥b∥cos⁡(θ) ，其中∥a∥和∥b∥分别是向量A和B的模长（长度），θ是它们之间的夹角。       
-当向量被归一化以后，即长度变为1，则：a⋅b=cos(θ)，此时，点积就直接等于两个向量之间夹角的余弦值。       
-例如 a 向量为(x1, y1),b 向量(x2, y2)那么 dot(a, b)就会返回 x1*x2+y1*y2。  
+点积是一种可以衡量两个向量相似度的方式。具体来说，反映了向量 A 沿着向量 B 的方向的投影，有多长。    
+可以想象，把向量 A 投影到向量 B 上，点积就是投影的长度与向量 B 的长度的乘积。    
+两个向量 A 和 B 的点积定义为 A·B = ∥a∥∥b∥cos⁡(θ) ，其中∥a∥和∥b∥分别是向量 A 和 B 的模长（长度），θ是它们之间的夹角。       
+当向量被归一化以后，即长度变为 1，则：a⋅b=cos(θ)，此时，点积就直接等于两个向量之间夹角的余弦值。       
+例如 a 向量为 (x1, y1),b 向量 (x2, y2) 那么 dot(a, b) 就会返回 x1*x2+y1*y2。  
 
 余弦距离 = 1 - 余弦相似度    
 
 应用场景：       
-1、方向判断：点积的符号（正、负或零）可以判断两个向量的相对方向。如果点积为正，则两向量夹角小于90度；如果为负，则夹角大于90度；如果为零，则两向量垂直。       
+1、方向判断：点积的符号（正、负或零）可以判断两个向量的相对方向。如果点积为正，则两向量夹角小于 90 度；如果为负，则夹角大于 90 度；如果为零，则两向量垂直。       
 2、计算投影：点积也可以用来计算一个向量在另一个向量上的投影长度。     
 3、光照计算：在图形渲染中，点积常用于光照模型中，以计算光源方向与表面法线之间的夹角，从而确定光照的强度和方向。        
-4、归一化验证：通过比较向量与其自身的点积（即长度的平方），可以验证向量是否已被归一化（即长度为1）。      
-5、dot可以被用来间接地实现画圆的功能。虽然dot方法本身不直接用于画圆，但它是绘制点的基本工具，而这些点可以用来近似表示一个圆。（距离场原理）       
+4、归一化验证：通过比较向量与其自身的点积（即长度的平方），可以验证向量是否已被归一化（即长度为 1）。      
+5、dot 可以被用来间接地实现画圆的功能。虽然 dot 方法本身不直接用于画圆，但它是绘制点的基本工具，而这些点可以用来近似表示一个圆。（距离场原理）       
 ```javascript
 #version 330 core  
 out vec4 FragColor;  
@@ -105,7 +105,7 @@ void main() {
   vec3 lightDir = vec3(1.0, 1.0, 1.0); // 光源方向  
   vec3 normal = vec3(0.0, 0.0, 1.0); // 表面法线  
   float intensity = dot(lightDir, normal); // 计算光照强度（点积）  
-  // 这里仅为示例，实际中可能需要根据intensity进行光照计算  
+  // 这里仅为示例，实际中可能需要根据 intensity 进行光照计算  
   FragColor = vec4(intensity, intensity, intensity, 1.0); // 将光照强度作为颜色输出  
 }
 ```
@@ -131,24 +131,24 @@ void main(){
 ## faceforward
 
 float faceforward(float N, float I, float Nref)     
-faceforward函数根据参考向量（Nref）和入射向量（I）之间的夹角（通过点积判断）来决定目标向量（N）的方向是否需要反转。    
+faceforward 函数根据参考向量（Nref）和入射向量（I）之间的夹角（通过点积判断）来决定目标向量（N）的方向是否需要反转。    
 N：一个向量，表示需要被调整方向的向量。  
 I：一个向量，通常表示光线方向或入射方向。  
 Nref：一个向量，通常表示参考方向或表面法线。    
-返回一个与N同类型的向量，其方向根据I和Nref的点积结果进行调整。      
-如果Nref和I的点积小于0（即夹角大于90度），则返回N；否则，返回-N，dot(Nref, I)<0 则返回 N，否则返回-N。    
+返回一个与 N 同类型的向量，其方向根据 I 和 Nref 的点积结果进行调整。      
+如果 Nref 和 I 的点积小于 0（即夹角大于 90 度），则返回 N；否则，返回-N，dot(Nref, I)<0 则返回 N，否则返回-N。    
 
 应用场景：   
-1、光照计算：在光照模型中，faceforward可以用来确定光照方向对表面法线的影响，从而计算正确的光照效果。   
-2、反射和折射：在处理反射和折射时，faceforward可以用来确定反射或折射光线的方向，特别是当需要基于表面法线和光线方向来确定这些方向时。   
-3、法线映射：在法线映射技术中，faceforward可以用来调整法线向量的方向，以确保它们与表面的整体方向一致。   
+1、光照计算：在光照模型中，faceforward 可以用来确定光照方向对表面法线的影响，从而计算正确的光照效果。   
+2、反射和折射：在处理反射和折射时，faceforward 可以用来确定反射或折射光线的方向，特别是当需要基于表面法线和光线方向来确定这些方向时。   
+3、法线映射：在法线映射技术中，faceforward 可以用来调整法线向量的方向，以确保它们与表面的整体方向一致。   
 ```javascript
-// 在这个示例中，faceforward函数根据
+// 在这个示例中，faceforward 函数根据
 // 光源方向（-lightDir，因为通常光源方向是指向光源的，需要的是从表面指向光源的方向）
 // 表面法线（normal）
-// 从而调整someVector的方向
-// 然而，请注意这个示例中的someVector可能是任意的
-// 而faceforward的实际应用场景通常涉及与光照、反射或折射等相关的向量
+// 从而调整 someVector 的方向
+// 然而，请注意这个示例中的 someVector 可能是任意的
+// 而 faceforward 的实际应用场景通常涉及与光照、反射或折射等相关的向量
 #version 330 core  
 out vec4 FragColor;  
 uniform vec3 lightDir; // 光源方向  
@@ -160,7 +160,7 @@ void main() {
   
     // ...（后续可能的光照计算或向量使用）  
   
-    // 这里仅为示例，实际中可能需要根据adjustedVector进行进一步处理  
+    // 这里仅为示例，实际中可能需要根据 adjustedVector 进行进一步处理  
     FragColor = vec4(adjustedVector, 1.0); // 将调整后的向量作为颜色输出（仅为演示）  
 }
 ```
@@ -168,17 +168,17 @@ void main() {
 ## floor
 
 float floor(float x) 返回小于等于 x 并且最接近 x 的整数，就是向下取整。   
-如果x<0，比如x=-0.2，返回-1.
+如果 x<0，比如 x=-0.2，返回 -1.
 
 ## fract
 
-float fract(float x)返回 x 的小数部分。     
-fract(x)函数返回x的小数部分，即x - floor(x)，结果总是在[0, 1)范围内。    
+float fract(float x) 返回 x 的小数部分。     
+fract(x) 函数返回 x 的小数部分，即 x - floor(x)，结果总是在[0, 1) 范围内。    
 fract 函数在图形编程中有很多应用场景，比如：  
 1、纹理动画：通过不断改变纹理坐标的小数部分，可以模拟纹理的滑动或滚动效果，而不需要移动纹理本身。  
 2、周期性变化：在着色器中创建周期性变化的效果，如颜色渐变、波纹效果等。  
 3、噪声生成：在生成噪声纹理或进行噪声模拟时，fract 可以帮助创建周期性或重复的噪声模式。    
-4、根据小数部分切分屏幕：基于fract函数的返回值，可以决定每个片元应该显示哪个屏幕区域的内容。这通常涉及到对fract的返回值进行条件判断，并根据结果调整纹理坐标或选择不同的纹理。  
+4、根据小数部分切分屏幕：基于 fract 函数的返回值，可以决定每个片元应该显示哪个屏幕区域的内容。这通常涉及到对 fract 的返回值进行条件判断，并根据结果调整纹理坐标或选择不同的纹理。  
 ```javascript
 #version 330 core  
 out vec4 FragColor;  
@@ -201,7 +201,7 @@ void main() {
       // 右下角区域  
       FragColor = vec4(1.0, 1.0, 0.0, 1.0); // 黄色  
   }  
-  // 在实际应用中，可能会根据fractCoords的值来选择不同的纹理  
+  // 在实际应用中，可能会根据 fractCoords 的值来选择不同的纹理  
   // 例如：FragColor = texture(textureArray[index], someCoords);  
 }
 ``` 
@@ -228,18 +228,18 @@ bvec4 greaterThan(ivec4 x, ivec4 y)
 ```javascript
 #version 330 core  
 out vec4 FragColor;  
-// 假设有一个3D纹理存储了体积数据，其中包含密度值  
+// 假设有一个 3D 纹理存储了体积数据，其中包含密度值  
 uniform sampler3D volumeTexture;  
 // 密度阈值  
 uniform float densityThreshold;  
-// 其他可能的uniform变量，如相机位置、光照参数等  
+// 其他可能的 uniform 变量，如相机位置、光照参数等  
 void main() {  
   // 获取当前片元对应的体素在体积纹理中的坐标  
   vec3 texCoord = // ... 根据片元位置和体积尺寸计算得到的纹理坐标  
   // 从体积纹理中采样密度值  
   float density = texture(volumeTexture, texCoord).r; // 假设密度值存储在红色通道  
-  // 使用greaterThan函数判断密度是否超过阈值  
-  bool isDense = greaterThan(density, densityThreshold).r; // 注意greaterThan返回的是bvec类型，需要访问.r来获取第一个分量的布尔值  
+  // 使用 greaterThan 函数判断密度是否超过阈值  
+  bool isDense = greaterThan(density, densityThreshold).r; // 注意 greaterThan 返回的是 bvec 类型，需要访问.r 来获取第一个分量的布尔值  
   // 根据密度阈值决定渲染效果  
   if (isDense) {  
       // 密度超过阈值，使用不透明或半透明的颜色渲染  
@@ -350,7 +350,7 @@ dest = x * (1 - a) + y * a;
 当a在0到1之间时，dest是x和y之间的线性插值。   
 
 ```javascript
-// 颜色1，颜色2，混合比例
+// 颜色 1，颜色 2，混合比例
 mix(x,y,a) = x*(1-a)+y*a
 mix(x,y,0.0) = x
 mix(x,y,1.0) = y
@@ -371,7 +371,7 @@ void main() {
   vec4 color2=vec4(0.0,0.0,1.0,1.0);
   gl_FragColor = mix(color1,color2,st.t);
   //对于渐变颜色，则选取两端的两个坐标点，然后分别分析颜色。
-  //从下到上颜色由红变成蓝，则下面的点mix color1小，上面的相反。
+  //从下到上颜色由红变成蓝，则下面的点 mix color1 小，上面的相反。
 }
 ```
 
@@ -388,16 +388,16 @@ float mod(float x, float y)返回 x 除以 y 的余数。
 使用 mod 函数（取模运算）时，结果<font color=red>不包含</font>模数（下面案例中的 TAU）的原因主要是为了保持结果在一个循环或周期性范围内，同时避免达到或超过原始定义的范围
 
 ```javascript
-// 在这个示例中，TexCoords是输入的纹理坐标
-// 通过mod函数对TexCoords.x进行取模运算，使其值在0到1之间循环
+// 在这个示例中，TexCoords 是输入的纹理坐标
+// 通过 mod 函数对 TexCoords.x 进行取模运算，使其值在 0 到 1 之间循环
 // 从而实现纹理在水平方向上的重复
-// 然后使用新的纹理坐标newTexCoords进行纹理采样，并将采样结果输出到片元颜色FragColor中
+// 然后使用新的纹理坐标 newTexCoords 进行纹理采样，并将采样结果输出到片元颜色 FragColor 中
 #version 330 core  
 out vec4 FragColor;  
 in vec2 TexCoords; // 纹理坐标  
 uniform sampler2D texture1; // 纹理采样器  
 void main() {  
-  // 使用mod函数对纹理坐标的u分量进行取模运算，实现纹理在水平方向上的重复  
+  // 使用 mod 函数对纹理坐标的 u 分量进行取模运算，实现纹理在水平方向上的重复  
   float u = mod(TexCoords.x, 1.0);  
   vec2 newTexCoords = vec2(u, TexCoords.y);  
   // 使用新的纹理坐标进行纹理采样  
@@ -483,7 +483,7 @@ void main() {
   // 计算反射向量  
   vec3 R = reflect(I, Normal);  
   // ...（这里可以添加更多代码来计算反射光线的颜色等）  
-  // 为了示例，直接将反射向量的x分量映射到红色通道  
+  // 为了示例，直接将反射向量的 x 分量映射到红色通道  
   // 注意：这只是一个示例，实际使用中可能需要更复杂的计算  
   FragColor = vec4(R.x, 0.0, 0.0, 1.0);  
 }
@@ -512,7 +512,7 @@ void main() {
   // 计算折射向量  
   vec3 R = refract(I, Normal, eta);  
   // ...（这里可以添加更多代码来处理折射光线的颜色等）  
-  // 为了示例，直接将折射向量的x分量映射到红色通道  
+  // 为了示例，直接将折射向量的 x 分量映射到红色通道  
   // 注意：这只是一个示例，实际使用中可能需要更复杂的计算  
   if (R != vec3(0.0)) { // 检查是否发生了折射（避免除以零）  
     FragColor = vec4(R.x, 0.0, 0.0, 1.0);  
@@ -523,7 +523,7 @@ void main() {
 ```
 
 ## saturate
-saturate函数的作用是将输入值限制在0到1的范围内，即如果输入值小于0，则输出0；如果输入值大于1，则输出1；如果输入值在0到1之间，则输出该值本身
+saturate 函数的作用是将输入值限制在 0 到 1 的范围内，即如果输入值小于 0，则输出 0；如果输入值大于 1，则输出 1；如果输入值在 0 到 1 之间，则输出该值本身
 ```javascript
 vec3 saturate(vec3 v) {
     return clamp(v, 0.0, 1.0);
@@ -548,7 +548,7 @@ genType 可以是 float、vec2、vec3、vec4、int、ivec2、ivec3、ivec4、uin
 out vec4 FragColor;  
 uniform float uValue;  
 void main() {  
-  // 计算uValue的符号  
+  // 计算 uValue 的符号  
   float signValue = sign(uValue);  
   // 根据符号值设置颜色  
   // 注意：这里只是为了演示，实际应用中可能需要更复杂的逻辑  
@@ -564,27 +564,27 @@ void main() {
 
 ## smoothstep
 
-float smoothstep(float edge0, float edge1, float x)如果 x<=edge0 则返回 0.0，如果 x>=edge1 则返回 1.0。  
+float smoothstep(float edge0, float edge1, float x) 如果 x<=edge0 则返回 0.0，如果 x>=edge1 则返回 1.0。  
 SmoothStep 用来生成：指定范围内 0 到 1 的平滑过渡值。  
 也叫作平滑阶梯/过度函数。 
 
-有两种情况：分别是edge0 < edge1，和edge0 > edge1
+有两种情况：分别是 edge0 < edge1，和 edge0 > edge1
 
-假设edge0 = 0.0，edge1 = 1.0，edge0 < edge1，x取不同值时： 
-当x小于或等于edge0（即0.0）时，smoothstep将返回0，因为x小于或等于较小的边界值。    
-当x大于或等于edge1（即1.0）时，smoothstep将返回1，因为x大于或等于较大的边界值。  
-当x在edge0和edge1之间时（即0.0到1.0之间），smoothstep将返回一个从1平滑过渡到0的值。  
-如果x = -0.5，则smoothstep(0.0, 1.0, -0.5) = 0.0（因为x小于edge0）。  
-如果x = 0.25，则smoothstep(0.0, 1.0, 0.25)将返回一个0到1之间的值，接近但小于0.5（因为x在edge0和edge1之间）。  
-如果x = 1.5，则smoothstep(0.0, 1.0, 1.5) = 1.0（因为x大于edge1）。  
+假设 edge0 = 0.0，edge1 = 1.0，edge0 < edge1，x 取不同值时： 
+当 x 小于或等于 edge0（即 0.0）时，smoothstep 将返回 0，因为 x 小于或等于较小的边界值。    
+当 x 大于或等于 edge1（即 1.0）时，smoothstep 将返回 1，因为 x 大于或等于较大的边界值。  
+当 x 在 edge0 和 edge1 之间时（即 0.0 到 1.0 之间），smoothstep 将返回一个从 1 平滑过渡到 0 的值。  
+如果 x = -0.5，则 smoothstep(0.0, 1.0, -0.5) = 0.0（因为 x 小于 edge0）。  
+如果 x = 0.25，则 smoothstep(0.0, 1.0, 0.25) 将返回一个 0 到 1 之间的值，接近但小于 0.5（因为 x 在 edge0 和 edge1 之间）。  
+如果 x = 1.5，则 smoothstep(0.0, 1.0, 1.5) = 1.0（因为 x 大于 edge1）。  
 
-假设edge0 = 1.0，edge1 = 0.0，edge0 > edge1，x取不同值时：  
-当x大于或等于edge0（即1.0）时，smoothstep将返回0，因为x大于或等于较大的边界值。  
-当x小于或等于edge1（即0.0）时，smoothstep将返回1，因为x小于或等于较小的边界值。    
-当x在edge1和edge0之间时（即0.0到1.0之间），smoothstep将返回一个从1平滑过渡到0的值。  
-如果x = -0.5，则smoothstep(1.0, 0.0, -0.5) = 1.0（因为x小于edge0）。    
-如果x = 0.25，则smoothstep(1.0, 0.0, 0.25)将返回一个0到1之间的值，接近但小于0.5（因为x在edge0和edge1之间）。    
-如果x = 1.5，则smoothstep(1.0, 0.0, 1.5) = 0.0（因为x大于edge1）。    
+假设 edge0 = 1.0，edge1 = 0.0，edge0 > edge1，x 取不同值时：  
+当 x 大于或等于 edge0（即 1.0）时，smoothstep 将返回 0，因为 x 大于或等于较大的边界值。  
+当 x 小于或等于 edge1（即 0.0）时，smoothstep 将返回 1，因为 x 小于或等于较小的边界值。    
+当 x 在 edge1 和 edge0 之间时（即 0.0 到 1.0 之间），smoothstep 将返回一个从 1 平滑过渡到 0 的值。  
+如果 x = -0.5，则 smoothstep(1.0, 0.0, -0.5) = 1.0（因为 x 小于 edge0）。    
+如果 x = 0.25，则 smoothstep(1.0, 0.0, 0.25) 将返回一个 0 到 1 之间的值，接近但小于 0.5（因为 x 在 edge0 和 edge1 之间）。    
+如果 x = 1.5，则 smoothstep(1.0, 0.0, 1.5) = 0.0（因为 x 大于 edge1）。    
 
 ```javascript
 float smoothstep(float a, float b, float x)
@@ -605,36 +605,36 @@ in vec2 TexCoords;
 uniform sampler2D texture1;  
 uniform float uValue;  
 void main() {  
-  // 假设uValue是一个非负浮点数  
+  // 假设 uValue 是一个非负浮点数  
   float sqrtValue = sqrt(uValue);  
-  // 仅为演示：这里并没有真正使用sqrtValue来影响颜色  
-  // 但在实际应用中，可能会根据sqrtValue来修改颜色或其他属性  
-  // 假设我们有一个纹理，但我们想根据uValue的平方根来调整纹理的亮度  
+  // 仅为演示：这里并没有真正使用 sqrtValue 来影响颜色  
+  // 但在实际应用中，可能会根据 sqrtValue 来修改颜色或其他属性  
+  // 假设我们有一个纹理，但我们想根据 uValue 的平方根来调整纹理的亮度  
   vec4 texColor = texture(texture1, TexCoords);  
-  texColor.rgb *= sqrtValue; // 假设我们希望亮度与sqrtValue成正比  
+  texColor.rgb *= sqrtValue; // 假设我们希望亮度与 sqrtValue 成正比  
   FragColor = texColor;  
 }
 ```
 
 ## step
 
-float step(float edge, float x)根据两个数值生成阶梯函数，如果 x<edge 则返回 0.0，否则返回1.0。   
-例如：float res = step(0.5, x)，如果x = 0.1，res = 0.0， 如果x = 0.6，res = 1.0。
+float step(float edge, float x) 根据两个数值生成阶梯函数，如果 x<edge 则返回 0.0，否则返回 1.0。   
+例如：float res = step(0.5, x)，如果 x = 0.1，res = 0.0，如果 x = 0.6，res = 1.0。
 
 ## texture
 
 genType texture(sampler2D sampler, vec2 coord, [float bias]);
-sampler：一个类型为sampler2D的uniform变量，指定了要采样的二维纹理。  
+sampler：一个类型为 sampler2D 的 uniform 变量，指定了要采样的二维纹理。  
 coord：一个二维向量（vec2），指定了纹理坐标（u, v），用于确定采样点。     
-bias（可选）：一个浮点数，用于在纹理查找过程中应用偏移量。这个参数在大多数情况下不是必需的，且其效果可能依赖于具体的GPU和驱动程序实现。     
-genType通常会是vec4，因为纹理采样通常返回RGBA颜色值。但是，如果你正在使用采样器类型为sampler2DShadow的阴影纹理，或者你的纹理数据不是颜色数据（例如，深度图或法线图），那么genType可能会是float或其他类型。     
+bias（可选）：一个浮点数，用于在纹理查找过程中应用偏移量。这个参数在大多数情况下不是必需的，且其效果可能依赖于具体的 GPU 和驱动程序实现。     
+genType 通常会是 vec4，因为纹理采样通常返回 RGBA 颜色值。但是，如果你正在使用采样器类型为 sampler2DShadow 的阴影纹理，或者你的纹理数据不是颜色数据（例如，深度图或法线图），那么 genType 可能会是 float 或其他类型。     
 ```javascript
 #version 330 core  
 out vec4 FragColor;  
 in vec2 TexCoords; // 从顶点着色器传递过来的纹理坐标  
-uniform sampler2D texture1; // 指向二维纹理的uniform变量  
+uniform sampler2D texture1; // 指向二维纹理的 uniform 变量  
 void main() {  
-  // 使用texture函数从二维纹理中采样颜色  
+  // 使用 texture 函数从二维纹理中采样颜色  
   vec4 color = texture(texture1, TexCoords);  
   // 将采样到的颜色输出到片段颜色  
   FragColor = color;  

@@ -80,7 +80,7 @@ box.physicsImpostor.applyForce(new BABYLON.Vector3(0, 10, 0), null);
 
 ```javascript
 // 创建一个盒子
-const box = BABYLON.MeshBuilder.CreateBox("box", { size: 1 }, scene);
+const box = BABYLON.MeshBuilder.CreateBox('box', { size: 1 }, scene);
 box.position = new BABYLON.Vector3(0, 5, 0); // 放置在空中
  
 // 为盒子添加物理模拟

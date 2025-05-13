@@ -67,7 +67,7 @@ const onStart = () => {
         return sphereDist;
       }
 
-      // 计算一个点 p 到一个立方体的（最近的）距离，要考虑p在内部和外部的情况，二者都要计算得出结果，外部返回正值，内部返回负值
+      // 计算一个点 p 到一个立方体的（最近的）距离，要考虑 p 在内部和外部的情况，二者都要计算得出结果，外部返回正值，内部返回负值
       // 假设立方体的半尺寸为 cubeSize = vec3(1.0, 1.0, 1.0)，表示立方体在 x、y、z 轴上的半长度都为 1.0，立方体的中心位于原点 (0, 0, 0)
       // 如果点 p = vec3(1.5, 1.5, 1.5)，则 p 在立方体外部
       // 如果点 p = vec3(0.5, 0.5, 0.5)，则 p 在立方体内部
@@ -80,7 +80,7 @@ const onStart = () => {
         // 最后减去立方体的半尺寸 cubeSize，得到 tempDist
         // tempDist 的每个分量表示点在对应方向上超出立方体边界的距离
         // 点在立方体内部，所有值是负值
-        // 点在立方体边界，至少一个是0
+        // 点在立方体边界，至少一个是 0
         // 点在立方体外，至少一个是正值
         vec3 tempDist = abs(p - cubePos) - cubeSize;
 
@@ -88,7 +88,7 @@ const onStart = () => {
         // max(tempDist, 0.0) 将 tempDist 的所有负分量设置为 0，只保留正分量，表示点到立方体外部的距离（假如其中有一个是负值，则 p 是在立方体内）
         // length(max(tempDist, 0.0)) 计算这个向量的长度，即点到立方体外部的最短距离
         // -----------------------------------------------------------------------
-        // min(max(tempDist.x, max(tempDist.y, tempDist.z)), 0.0)这部分的作用是处理点在立方体内部的情况
+        // min(max(tempDist.x, max(tempDist.y, tempDist.z)), 0.0) 这部分的作用是处理点在立方体内部的情况
         // max(tempDist.x, max(tempDist.y, tempDist.z)) 找出 tempDist 中最大的分量，表示点在立方体内部最深的轴向距离
         // min(..., 0.0) 确保这个值不会超过 0，因为点在立方体内部时，tempDist 的所有分量都是负值
         // min(max(tempDist.x, tempDist.y, tempDist.z), 0.0) 将这个最大值与 0 比较，取较小值，表示点距离立方体在某个轴上最近的面的距离为（x）个单位
@@ -101,7 +101,7 @@ const onStart = () => {
         return cubeDist;
       }
 
-      // 多个物体的合并的dist取min，即物体距离相机最近的dist
+      // 多个物体的合并的 dist 取 min，即物体距离相机最近的 dist
       float getDist(vec3 pos) {
         vec3 SPHERE_POS = vec3(0.5, 1.0, 6.0);
         float SPHERE_RADIUS = 1.0;
@@ -124,18 +124,18 @@ const onStart = () => {
 
       // 左手坐标系
       // ro：相机的位置（Ray Origin），即相机在三维空间中的坐标。这个点是所有视线（或光线）的起点
-      // target：相机的目标点，即相机“看”向的点。这个点决定了相机的前进方向（Forward向量）
-      // up：相机的向上方向（Up向量），通常与相机的前进方向垂直，这个向量用于确定相机的右侧方向（Right向量）和确保相机的坐标系是正交的
+      // target：相机的目标点，即相机“看”向的点。这个点决定了相机的前进方向（Forward 向量）
+      // up：相机的向上方向（Up 向量），通常与相机的前进方向垂直，这个向量用于确定相机的右侧方向（Right 向量）和确保相机的坐标系是正交的
       // 相机源点、目标、向上方向
-      // R、U、F分别是Right、Up和Forward向量
+      // R、U、F 分别是 Right、Up 和 Forward 向量
       mat3 getCameraMat(vec3 ro, vec3 target, vec3 up) {
-        vec3 f = normalize(target - ro); // 计算Forward向量（F）
+        vec3 f = normalize(target - ro); // 计算 Forward 向量（F）
 
         // 叉积 cross(a, b) 的结果是一个垂直于向量 a 和 b 的向量
         // 注意：由于使用的是左手坐标系，所以是使用 up 叉乘 f，而不是反过来进行叉乘，进行叉乘运算时一定要注意其方向性！
-        vec3 r = cross(up, f); // Right向量（R）是Forward向量和Up向量的叉积，表示相机的右侧方向
+        vec3 r = cross(up, f); // Right 向量（R）是 Forward 向量和 Up 向量的叉积，表示相机的右侧方向
 
-        vec3 u = normalize(cross(f, r)); // 为了确保Up向量垂直于Forward向量，需要重新计算Up向量为Right向量和Forward向量的叉积
+        vec3 u = normalize(cross(f, r)); // 为了确保 Up 向量垂直于 Forward 向量，需要重新计算 Up 向量为 Right 向量和 Forward 向量的叉积
 
         return mat3(r, u, f);
       }
@@ -158,7 +158,7 @@ const onStart = () => {
           float dS = getDist(pos);
           d0 += dS;
           // 如果从当前位置到球面的距离 dS 小于某个阈值 SURFACE_DIST，则可能表示光线已经“击中”了表面，因此退出循环
-          // 因为点p可能在物体内，float dS = getDist(pos)中的dS会返回负值
+          // 因为点 p 可能在物体内，float dS = getDist(pos) 中的 dS 会返回负值
           // 如果光线行进的距离 d0 大于某个最大距离 MAX_DIST，则退出循环，可能是因为光线已经行进得太远而没有“击中”任何物体
           if (dS < SURFACE_DIST || d0 > MAX_DIST) {
             break;
@@ -187,51 +187,51 @@ const onStart = () => {
       // 距离场是一种标量场，其中每个点的值表示该点到最近表面的距离
       // 由于距离场本身是一个标量函数，而法线是一个向量，因此需要通过某种方式从标量场中提取出向量信息
       // 有限差分法（Finite Difference Method）是一种自然且有效的方法，用于从标量场中近似计算梯度，进而得到法线
-      // 对于x方向
+      // 对于 x 方向
       // grad_x ≈ [f(p + eps_x) - f(p - eps_x)] / (2 * eps) * ex
-      // 具体查看（自定义效果-两个物体的合并-1.png）、（自定义效果-两个物体的合并-2.png）、（自定义效果-两个物体的合并-3.png）
+      // 具体查看（自定义效果 - 两个物体的合并 -1.png）、（自定义效果 - 两个物体的合并 -2.png）、（自定义效果 - 两个物体的合并 -3.png）
       vec3 getNormal(vec3 p) {
         float e = 0.001;
 
-        // vec3(..., 0.0, 0.0)：构造一个三维向量，只有x分量有效
-        // 通过对点p在x方向上加上和减去e，然后计算距离差，这个差值反映了距离场在x方向上的变化率，可以得到x方向上的梯度
-        // 结果是一个三维向量，但只有x分量是非零的，表示梯度在x方向上的分量
+        // vec3(..., 0.0, 0.0)：构造一个三维向量，只有 x 分量有效
+        // 通过对点 p 在 x 方向上加上和减去 e，然后计算距离差，这个差值反映了距离场在 x 方向上的变化率，可以得到 x 方向上的梯度
+        // 结果是一个三维向量，但只有 x 分量是非零的，表示梯度在 x 方向上的分量
         vec3 grad_x = vec3((getDist(p + vec3(e, 0.0, 0.0)) - getDist(p - vec3(e, 0.0, 0.0))) / (2.0 * e), 0.0, 0.0);
         
-        // vec3(0.0, ..., 0.0)：构造一个三维向量，只有y分量有效
-        // 通过对点p在y方向上加上和减去e，然后计算距离差，这个差值反映了距离场在y方向上的变化率，可以得到y方向上的梯度
-        // 结果是一个三维向量，但只有y分量是非零的，表示梯度在y方向上的分量
+        // vec3(0.0, ..., 0.0)：构造一个三维向量，只有 y 分量有效
+        // 通过对点 p 在 y 方向上加上和减去 e，然后计算距离差，这个差值反映了距离场在 y 方向上的变化率，可以得到 y 方向上的梯度
+        // 结果是一个三维向量，但只有 y 分量是非零的，表示梯度在 y 方向上的分量
         vec3 grad_y = vec3(0.0, (getDist(p + vec3(0.0, e, 0.0)) - getDist(p - vec3(0.0, e, 0.0))) / (2.0 * e), 0.0);
       
-        // vec3(0.0, 0.0, ...)：构造一个三维向量，只有z分量有效
-        // 通过对点p在z方向上加上和减去e，然后计算距离差，这个差值反映了距离场在z方向上的变化率，可以得到z方向上的梯度
-        // 结果是一个三维向量，但只有z分量是非零的，表示梯度在z方向上的分量
+        // vec3(0.0, 0.0, ...)：构造一个三维向量，只有 z 分量有效
+        // 通过对点 p 在 z 方向上加上和减去 e，然后计算距离差，这个差值反映了距离场在 z 方向上的变化率，可以得到 z 方向上的梯度
+        // 结果是一个三维向量，但只有 z 分量是非零的，表示梯度在 z 方向上的分量
         vec3 grad_z = vec3(0.0, 0.0, (getDist(p + vec3(0.0, 0.0, e)) - getDist(p - vec3(0.0, 0.0, e))) / (2.0 * e));
 
         // 将三个方向上的梯度向量相加，得到该点的总梯度向量
-        // 然后使用normalize函数将其标准化（即长度变为1），得到法向量
+        // 然后使用 normalize 函数将其标准化（即长度变为 1），得到法向量
         // 因为梯度向量指向函数值增长最快的方向，而对于表示表面的函数，其法向量与梯度向量方向相反（或相同，取决于表面函数的定义，但通常通过取梯度来近似法向量，并可能需要根据具体情况调整方向）
         // 标准化确保了返回的法向量是一个单位向量
         return normalize(grad_x + grad_y + grad_z);
       }
 
-      // 计算一个3D点p与光源之间的漫反射光照强度
+      // 计算一个 3D 点 p 与光源之间的漫反射光照强度
       vec3 getLight(vec3 lightPos, vec3 p) {
         float SHADOW = 0.1;
 
-        // 计算从点p到光源的方向，方向的箭头指向lightPos
-        // 首先计算从点p到光源lightPos的向量
-        // 然后，使用normalize函数将这个向量标准化（或归一化），使其长度为1
-        // 标准化后的向量l表示，从点p指向光源的方向
+        // 计算从点 p 到光源的方向，方向的箭头指向 lightPos
+        // 首先计算从点 p 到光源 lightPos 的向量
+        // 然后，使用 normalize 函数将这个向量标准化（或归一化），使其长度为 1
+        // 标准化后的向量 l 表示，从点 p 指向光源的方向
         vec3 l = normalize(lightPos - p);
 
         vec3 n = getNormal(p);
 
         // 计算漫反射光照强度
-        // 使用点积（dot函数）来计算法线向量n和光源方向向量l之间的角度的余弦值
+        // 使用点积（dot 函数）来计算法线向量 n 和光源方向向量 l 之间的角度的余弦值
         // 这个余弦值表示了光源方向和表面法线之间的“对齐”程度，从而决定了光照的强度
-        // 由于余弦值可能是负的（当光源在表面的背面时），使用max函数确保结果始终是非负的
-        // 因此，dif变量存储了漫反射光照的强度
+        // 由于余弦值可能是负的（当光源在表面的背面时），使用 max 函数确保结果始终是非负的
+        // 因此，dif 变量存储了漫反射光照的强度
         float dif = max(dot(n, l), 0.0);
 
         // 如果不需要阴影
@@ -245,8 +245,8 @@ const onStart = () => {
         }
 
         // 地面的黑白格子
-        // 由于getDist中有planeDist，所以p点包含了地面
-        // 修改不同的groundY，会看到最远处的变化
+        // 由于 getDist 中有 planeDist，所以 p 点包含了地面
+        // 修改不同的 groundY，会看到最远处的变化
         float groundY = 0.05;
         if(p.y < groundY) {
           return groundGrid(p) * dif;
@@ -268,17 +268,17 @@ const onStart = () => {
         vec3 cameraUp = vec3(0.0, 1.0, 0.0);
         vec3 cameraTarget = vec3(0.0, 1.0, 6.0);
         
-        // rayDirection 是光线的方向向量，表示光线沿着哪个方向行进
+        // rayDirection 是视线（或光线）的方向向量，表示视线（或光线）沿着哪个方向行进
         // 之所以 * vec3(uv, 1.0)，uv.x 表示水平方向的偏移，uv.y 表示垂直方向的偏移，1.0 表示沿着相机的前进方向（即深度方向）的偏移
         // 1.0 表示沿着相机的前进方向（即深度方向）的偏移
         // vec3(uv, 1.0) 将二维的 uv 坐标扩展为一个三维向量，其中 z 分量为 1.0
         vec3 rayDirection = getCameraMat(cameraPos, cameraTarget, cameraUp) * vec3(uv, 1.0);
 
-        // 光线步进行进了多少距离
+        // 视线（或光线）步进行进了多少距离
         float rayDist = rayMarching(cameraPos, rayDirection);
 
-        // 光线的当前位置 p （从相机发出一条射线，一直延伸到接触了物体表面，这之间的距离）
-        // rayDirection * rayDist 计算光线在方向 rayDirection 上行进距离 rayDist 后的向量，然后将这个向量加到源点 cameraTarget 上，得到新的位置 p。
+        // 视线（或光线）当前位置 p（从相机发出一条射线，一直延伸到接触了物体表面，这之间的距离）
+        // rayDirection * rayDist 计算视线（或光线在方向 rayDirection 上行进距离 rayDist 后的向量，然后将这个向量加到源点 cameraTarget 上，得到新的位置 p。
         vec3 cameraToThingFace = cameraPos + rayDirection * rayDist;
 
         vec3 curLightColor = getLight(lightPos, cameraToThingFace);

@@ -99,7 +99,7 @@ varying 类型变量主要是为了完成顶点着色器和片元着色器之间
 
 ```javascript
 <!-- 顶点着色器源码 -->
-<script id="vertexShader" type="x-shader/x-vertex">
+<script id='vertexShader' type='x-shader/x-vertex'>
   //attribute声明vec4类型变量apos
   attribute vec4 apos;
   // attribute声明顶点颜色变量
@@ -115,7 +115,7 @@ varying 类型变量主要是为了完成顶点着色器和片元着色器之间
 
 </script>
 <!-- 片元着色器源码 -->
-<script id="fragmentShader" type="x-shader/x-fragment">
+<script id='fragmentShader' type='x-shader/x-fragment'>
   // 所有float类型数据的精度是lowp
   precision lowp float;
   // 接收顶点着色器中v_color数据

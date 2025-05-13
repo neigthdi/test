@@ -1,5 +1,5 @@
 着色器材质提供材料作为输出。可以将此材质应用于任何网格。它基本上将数据从场景传递到顶点和片段着色器。  
-要获取着色器材质，下面的类称为:
+要获取着色器材质，下面的类称为：
 
 ```javascript
 const myShaderMaterial = new BABYLON.ShaderMaterial(name, scene, route, options)
@@ -10,19 +10,19 @@ const myShaderMaterial = new BABYLON.ShaderMaterial(name, scene, route, options)
 // 场景 : 要使用着色器的场景。
 // 路线 : 以三种方式之一的着色器代码的路径 :
 object - {
-   vertex: "custom",
-   fragment: "custom"
+   vertex: 'custom',
+   fragment: 'custom'
 }, used with
-BABYLON.Effect.ShadersStore["customVertexShader"] and
-BABYLON.Effect.ShadersStore["customFragmentShader"]
+BABYLON.Effect.ShadersStore['customVertexShader'] and
+BABYLON.Effect.ShadersStore['customFragmentShader']
 // --------------------------------------------
 object - {
-   vertexElement: "vertexShaderCode",
-   fragmentElement: "fragmentShaderCode"
+   vertexElement: 'vertexShaderCode',
+   fragmentElement: 'fragmentShaderCode'
 },
 used with shader code in <script> tags
 // --------------------------------------------
-string - "./COMMON_NAME",
+string - './COMMON_NAME',
 
 // 选项 : 包含属性和制服数组的对象，其名称为字符串。
 ```
@@ -33,8 +33,8 @@ string - "./COMMON_NAME",
 
 ```javascript
 // 注意名字的拼写
-// ShadersStore的xxxVertexShader，那么ShaderMaterial的vertex就是叫xxx
-// ShadersStore的kxkaFragmentShader，那么ShaderMaterial的fragment就是叫kxka
+// ShadersStore 的 xxxVertexShader，那么 ShaderMaterial 的 vertex 就是叫 xxx
+// ShadersStore 的 kxkaFragmentShader，那么 ShaderMaterial 的 fragment 就是叫 kxka
 BABYLON.Effect.ShadersStore['xxxVertexShader'] = `
   precision highp float;
   attribute vec3 position;
@@ -55,10 +55,10 @@ BABYLON.Effect.ShadersStore['customssFragmentShader'] = `
   }`
 
 //----------------------------------------------------------------------
-// attributes: ["position", "normal", "uv"]
+// attributes: ['position', 'normal', 'uv']
 // position   ---> 位置
 // normal     ---> 法线
-// uv         ---> uv（因为xy被占用了，所以用uv表示xy）
+// uv         ---> uv（因为 xy 被占用了，所以用 uv 表示 xy）
 // projection ---> 投影
 const shaderMaterial = new BABYLON.ShaderMaterial(
   'shader',
@@ -111,15 +111,15 @@ const material = new BABYLON.ShaderMaterial('particle', scene, './js/particle', 
     'uTranslation',
     'axis',
     'alpha',
-    /*"resolution",*/ 'pointSize',
+    /*'resolution',*/ 'pointSize',
     'baseColor',
-    /*"rebuilding",*/ 'status',
+    /*'rebuilding',*/ 'status',
     'scatter',
     'uvMode',
     'mobile'
   ],
   attributes: ['position', 'uv', 'aRotation', 'aAnimation', 'raxis'],
-  needAlphaBlending: true //通过material.alphaMode = true/false 来设置混合模式
+  needAlphaBlending: true //通过 material.alphaMode = true/false 来设置混合模式
 })
 material.fillMode = 2
 material.setFloat('uTime', 0)

@@ -58,7 +58,7 @@ torus.position = new BABYLON.Vector3(0, 2, 0)
 此方法是 promise，有 then 回调，用 async/await。
 
 ```javascript
-// Model name: 可以是两种类型：“”或者["1","2"…]
+// Model name: 可以是两种类型：“”或者['1','2'…]
 // Folder path: 文件路径
 // File name: 文件名
 // Scene: 可以指定场景，不填写就是默认场景
@@ -160,10 +160,10 @@ BABYLON.SceneLoader.Append('./', 'xxxx.gltf', scene).then((scene) => {})
 let assetsManager = new BABYLON.AssetsManager(scene)
 // 通过管理器的addMeshTask方法添加任务
 let meshTask = assetsManager.addMeshTask(
-  'Model name("bunny")',
+  'Model name('bunny')',
   '',
-  'Folder path("/uploads/161101/")',
-  'File name("bunny.obj")'
+  'Folder path('/uploads/161101/')',
+  'File name('bunny.obj')'
 )
 // 每个任务都有一个成功回调和错误回调
 meshTask.onSuccess = function (task) {

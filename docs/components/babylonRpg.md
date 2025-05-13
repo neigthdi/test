@@ -1,4 +1,4 @@
-## 多视角移动+跳跃
+## 多视角移动 + 跳跃
 <preview path="../demo/babylon/rpg/rpgCamera.vue"></preview>
 
 ## 多物体选择
