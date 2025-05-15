@@ -43,7 +43,9 @@ const onStart = () => {
       uniform float u_time;
       uniform vec2 u_mouse;
 
-       const float MAX_DIST = 1000.0;
+      const float MAX_DIST = 1000.0;
+      const float JUMP_SPEED = 0.0;
+      const float MOVE_SPEED = 0.0;
 
 
       // sky
@@ -96,8 +98,8 @@ const onStart = () => {
       // 计算一个点 p 到一个球体的距离
       // 球体的中心由 sphere 表示，半径由 radius 表示
       float getSphereDist(vec3 p) {
-        float y = sin(u_time * 5.0) + 2.0;
-        float z = 0.0 - u_time * 2.5;
+        float y = sin(u_time * JUMP_SPEED) + 2.0;
+        float z = 0.0 - u_time * MOVE_SPEED;
         vec3 spherePos = vec3(0.0, y , z);
         float radius = 1.0;
 
@@ -118,16 +120,18 @@ const onStart = () => {
       // 如果点 p = vec3(1.0, 1.0, 1.0)，则 p 在立方体边界上
       // 通过 getCubeDist 函数，可以计算出点 p 到立方体的最短距离
       float getCubeDist(vec3 p) {
-        float jumpSpeed = 5.0;
-
-        float y = sin(u_time * jumpSpeed) + 2.0;
-        float z = 0.0 - u_time * 2.5;
+        float y = sin(u_time * JUMP_SPEED) + 2.0;
+        float z = 0.0 - u_time * MOVE_SPEED;
         vec3 cubePos = vec3(0.0, y, z);
-        vec3 cubeSize = vec3(0.8, 0.8, 0.8);
+
+        // 改变高度，0.8->0.7->0.8......
+        float h = 0.7 + 0.1 * step(2.0, y);
+
+        vec3 cubeSize = vec3(0.8, h, 0.8);
 
         // 旋转矩阵，围绕 y 轴旋转
-        // 将 u_time 映射到 -45 到 45 度
-        float angle = sin(u_time * jumpSpeed / 2.0) * 45.0;
+        // 将 u_time 映射到 -30 到 30 度
+        float angle = sin(u_time * JUMP_SPEED / 2.0) * 30.0;
         angle = radians(angle); // 将角度转换为弧度
         // x            y      z    
         mat3 rotationMatrix = mat3(
@@ -179,6 +183,7 @@ const onStart = () => {
         float groundDist = getGroundDist(pos);
 
         return min(groundDist, min(cubeDist, sphereDist));
+        // return min(groundDist, cubeDist);
       }
 
 
@@ -292,13 +297,14 @@ const onStart = () => {
 
         // 地面的黑白格子
         // 由于 getDist 中有 planeDist，所以 p 点包含了地面
-        // 修改不同的 groundY，会看到最远处的变化
-        float groundY = 0.5;
-        if(p.y < groundY) {
+        float groundY = 0.001;
+        if (p.y < groundY) {
+          // 如果在地面上，返回地面的黑白格子光照
           return groundGrid(p) * dif;
+        } else {
+          // 如果不在地面上，返回普通的漫反射光照
+          return vec3(dif);
         }
-
-        return vec3(dif);
       }
       
 
@@ -306,12 +312,15 @@ const onStart = () => {
         vec2 fragCoord = gl_FragCoord.xy;
 
         // 归一化 uv 的坐标范围到 [-1, 1]
-        // [0, 1] -> [-0.5, 0.5]<* 0.5> -> [-1, 1]<*2.0>
-        vec2 uv = (fragCoord.xy - u_resolution.xy * 0.5) / min(u_resolution.y, u_resolution.x) * 2.0; 
+        // [0, 1] -> [-0.5, 0.5]<* 0.5>
+        vec2 uv = (fragCoord.xy - u_resolution.xy * 0.5) / min(u_resolution.y, u_resolution.x);
+
+        // 这行会导致样式错乱
+        // uv *= 5.0;
 
         vec3 color = vec3(0.0);
 
-        float t = u_time * 2.5;
+        float t = u_time * MOVE_SPEED;
 
         vec3 lightPos = vec3(3.0, 8.0, -2.0 - t);
 
@@ -331,16 +340,12 @@ const onStart = () => {
 
         // 视线（或光线）的当前位置 p（从相机发出一条射线，一直延伸到接触了物体表面，这之间的距离）
         // rayDirection * rayDist 计算视线（或光线在方向 rayDirection 上行进距离 rayDist 后的向量，然后将这个向量加到源点 cameraTarget 上，得到新的位置 p。
-        vec3 cameraToThingFace = cameraPos + rayDirection * rayDist;
+        vec3 pointOfCameraTouchObject = cameraPos + rayDirection * rayDist;
 
-        vec3 exceptSkyColor = getLight(lightPos, cameraToThingFace);
-
-        // color = exceptSkyColor;
+        vec3 exceptSkyColor = getLight(lightPos, pointOfCameraTouchObject);
 
         // 天空颜色
         vec3 skyColor = getSkyColor(rayDirection);
-
-        // color = mix(skyColor, exceptSkyColor, pow(smoothstep(0.0, -0.02, rayDirection.y), 0.5));
 
 
         if (rayDist < MAX_DIST) {

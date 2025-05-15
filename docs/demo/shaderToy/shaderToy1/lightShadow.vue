@@ -247,7 +247,7 @@ const onStart = () => {
         // 地面的黑白格子
         // 由于 getDist 中有 planeDist，所以 p 点包含了地面
         // 修改不同的 groundY，会看到最远处的变化
-        float groundY = 0.05;
+        float groundY = 0.001;
         if(p.y < groundY) {
           return groundGrid(p) * dif;
         }
