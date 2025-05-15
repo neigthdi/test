@@ -111,13 +111,74 @@ const onStart = () => {
       }
 
 
+      // 计算一个点 p 到一个立方体的（最近的）距离，要考虑 p 在内部和外部的情况，二者都要计算得出结果，外部返回正值，内部返回负值
+      // 假设立方体的半尺寸为 cubeSize = vec3(1.0, 1.0, 1.0)，表示立方体在 x、y、z 轴上的半长度都为 1.0，立方体的中心位于原点 (0, 0, 0)
+      // 如果点 p = vec3(1.5, 1.5, 1.5)，则 p 在立方体外部
+      // 如果点 p = vec3(0.5, 0.5, 0.5)，则 p 在立方体内部
+      // 如果点 p = vec3(1.0, 1.0, 1.0)，则 p 在立方体边界上
+      // 通过 getCubeDist 函数，可以计算出点 p 到立方体的最短距离
+      float getCubeDist(vec3 p) {
+        float jumpSpeed = 5.0;
+
+        float y = sin(u_time * jumpSpeed) + 2.0;
+        float z = 0.0 - u_time * 2.5;
+        vec3 cubePos = vec3(0.0, y, z);
+        vec3 cubeSize = vec3(0.8, 0.8, 0.8);
+
+        // 旋转矩阵，围绕 y 轴旋转
+        // 将 u_time 映射到 -45 到 45 度
+        float angle = sin(u_time * jumpSpeed / 2.0) * 45.0;
+        angle = radians(angle); // 将角度转换为弧度
+        // x            y      z    
+        mat3 rotationMatrix = mat3(
+          cos(angle),  0.0,   sin(angle),
+          0.0,         1.0,   0.0,
+          -sin(angle), 0.0,   cos(angle)
+        );
+
+        // 应用旋转
+        vec3 rotatedP = rotationMatrix * (p - cubePos) + cubePos;
+
+        // 应用旋转
+        vec3 tempDist = abs(rotatedP - cubePos) - cubeSize;
+
+        // abs(p - cubePos) - cubeSize 计算点 p 相对于立方体中心 cubePos 的距离
+        // 首先计算点 p 与立方体中心 c 之间的差值 p − cubePos
+        // 然后取绝对值 abs(p − cubePos)，表示点 p 相对于立方体中心的水平、垂直和深度方向的距离
+        // 最后减去立方体的半尺寸 cubeSize，得到 tempDist
+        // tempDist 的每个分量表示点在对应方向上超出立方体边界的距离
+        // 点在立方体内部，所有值是负值
+        // 点在立方体边界，至少一个是 0
+        // 点在立方体外，至少一个是正值
+        // vec3 tempDist = abs(p - cubePos) - cubeSize;
+
+
+        // max(tempDist, 0.0) 将 tempDist 的所有负分量设置为 0，只保留正分量，表示点到立方体外部的距离（假如其中有一个是负值，则 p 是在立方体内）
+        // length(max(tempDist, 0.0)) 计算这个向量的长度，即点到立方体外部的最短距离
+        // -----------------------------------------------------------------------
+        // min(max(tempDist.x, max(tempDist.y, tempDist.z)), 0.0) 这部分的作用是处理点在立方体内部的情况
+        // max(tempDist.x, max(tempDist.y, tempDist.z)) 找出 tempDist 中最大的分量，表示点在立方体内部最深的轴向距离
+        // min(..., 0.0) 确保这个值不会超过 0，因为点在立方体内部时，tempDist 的所有分量都是负值
+        // min(max(tempDist.x, tempDist.y, tempDist.z), 0.0) 将这个最大值与 0 比较，取较小值，表示点距离立方体在某个轴上最近的面的距离为（x）个单位
+        // -----------------------------------------------------------------------
+        // 最后合并距离，将点到立方体外部的距离和点到立方体内部的距离相加，得到点到立方体的最短距离
+        // -----------------------------------------------------------------------
+        // 假如点在外部，则会使用 length(max(tempDist, 0.0))
+        // 假如点在内部，则会使用 min(max(tempDist.x, max(tempDist.y, tempDist.z)), 0.0)
+        float cubeDist = length(max(tempDist, 0.0)) + min(max(tempDist.x, max(tempDist.y, tempDist.z)), 0.0);
+        return cubeDist;
+      }
+
+
       // 取物体距离相机最近的 dist
       float getDist(vec3 pos) {
         float sphereDist = getSphereDist(pos);
+
+        float cubeDist = getCubeDist(pos);
        
         float groundDist = getGroundDist(pos);
 
-        return min(groundDist, sphereDist);
+        return min(groundDist, min(cubeDist, sphereDist));
       }
 
 
