@@ -44,8 +44,8 @@ const onStart = () => {
       uniform vec2 u_mouse;
 
       const float MAX_DIST = 1000.0;
-      const float JUMP_SPEED = 0.0;
-      const float MOVE_SPEED = 0.0;
+      const float JUMP_SPEED = 5.0;
+      const float MOVE_SPEED = 2.5;
 
 
       // sky
