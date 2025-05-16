@@ -1,9 +1,8 @@
 <template>
   <div>
-    <div class="flex space-between">
-      <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
-      <div style="opacity: 0;">https://juejin.cn/post/7393533296242114598</div>
-    </div>
+    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
+    <div>getObjectY要使用fract是为了和heightWave的时间一致</div>
+    <div style="opacity: 0;">https://juejin.cn/post/7393533296242114598</div>
     <canvas v-if="isRunning" id="animalJump" class="stage"></canvas>
   </div>
 </template>
@@ -15,9 +14,9 @@ const isRunning = ref(false)
 
 const onTrigger = async () => {
   if (!isRunning.value) {
-    isRunning.value = true
-    await nextTick()
-    onStart()
+    // isRunning.value = true
+    // await nextTick()
+    // onStart()
   } else {
     isRunning.value = false
   }
@@ -25,9 +24,9 @@ const onTrigger = async () => {
 
 onMounted(async () => {
   await nextTick()
-  // isRunning.value = true
-  // await nextTick()
-  // onStart()
+  isRunning.value = true
+  await nextTick()
+  onStart()
 })
 
 const onStart = () => {
@@ -44,8 +43,17 @@ const onStart = () => {
       uniform vec2 u_mouse;
 
       const float MAX_DIST = 1000.0;
-      const float JUMP_SPEED = 5.0;
-      const float MOVE_SPEED = 2.5;
+      const float JUMP_SPEED = 4.0;
+      const float MOVE_SPEED = 0.0;
+      const float PI = 3.1415926;
+      const float IS_LESS_THAN_GROUND_Y = 0.1;
+
+      
+      // 物体跳动时候的y值
+      float getObjectY() {
+        float t = fract(u_time);
+        return sin(t * JUMP_SPEED);
+      }
 
 
       // sky
@@ -63,7 +71,7 @@ const onStart = () => {
         // vec3(pow(1.0 - e.y, 2.0), 1.0 - e.y, 0.6 + (1.0 - e.y) * 0.4) * 1.1：将颜色向量乘以 1.1，增加颜色的亮度
         return vec3(pow(1.0 - e.y, 2.0), 1.0 - e.y, 0.6 + (1.0 - e.y) * 0.4) * 1.1;
       }
-      
+
 
       // 黑白网格
       vec3 groundGrid(vec3 p) {
@@ -83,7 +91,9 @@ const onStart = () => {
         // mix(c1, c2, s) 根据 s 的值在 c1 和 c2 之间进行插值
         // 当 s 为 0 时，返回 c1（白色）
         // 当 s 为 1 时，返回 c2（黑色）
-        return mix(c1, c2, s);
+        vec3 groundColor = mix(c1, c2, s);
+
+        return groundColor;
       }
 
 
@@ -91,6 +101,7 @@ const onStart = () => {
       // 这个平面通常被定义为 y=0 的平面，即地面位于 y 轴的零点
       float getGroundDist(vec3 p) {
         float groundY = p.y;
+
         return groundY;
       }
 
@@ -120,14 +131,15 @@ const onStart = () => {
       // 如果点 p = vec3(1.0, 1.0, 1.0)，则 p 在立方体边界上
       // 通过 getCubeDist 函数，可以计算出点 p 到立方体的最短距离
       float getCubeDist(vec3 p) {
-        float y = sin(u_time * JUMP_SPEED) + 2.0;
+        float size = 0.8;
+        float y = getObjectY() + 1.0 + size;
         float z = 0.0 - u_time * MOVE_SPEED;
         vec3 cubePos = vec3(0.0, y, z);
 
-        // 改变高度，0.8->0.7->0.8......
-        float h = 0.7 + 0.1 * step(2.0, y);
+        // 改变高度，0.8->0.5->0.8......
+        float h = 0.5 + 0.3 * step(0.8, y);
 
-        vec3 cubeSize = vec3(0.8, h, 0.8);
+        vec3 cubeSize = vec3(size, size, size);
 
         // 旋转矩阵，围绕 y 轴旋转
         // 将 u_time 映射到 -30 到 30 度
@@ -174,6 +186,19 @@ const onStart = () => {
       }
 
 
+      // 扩散波，控制产生扩散波的周期
+      float heightWave(vec3 pos) {
+        float groundWave = 0.0;
+
+        float time = fract(u_time + 0.1);
+        float len = length(pos.xz);
+        float tt = time * 15.0 - PI * 2.0 - len * 3.0;
+        groundWave = 0.1 * exp(-len * len) * sin(tt) * exp(-max(tt, 0.0) / 2.0) * smoothstep(0.0, 0.01, time);
+
+        return groundWave;
+      }
+
+
       // 取物体距离相机最近的 dist
       float getDist(vec3 pos) {
         float sphereDist = getSphereDist(pos);
@@ -182,8 +207,12 @@ const onStart = () => {
        
         float groundDist = getGroundDist(pos);
 
-        return min(groundDist, min(cubeDist, sphereDist));
-        // return min(groundDist, cubeDist);
+        // 扩散波
+        float wave = heightWave(pos);
+        groundDist = groundDist - wave;
+
+        // return min(groundDist, min(cubeDist, sphereDist));
+        return min(groundDist, cubeDist);
       }
 
 
@@ -267,7 +296,7 @@ const onStart = () => {
 
 
       // 计算一个 3D 点 p 与光源之间的漫反射光照强度
-      vec3 getLight(vec3 lightPos, vec3 p) {
+      float getLightDif(vec3 lightPos, vec3 p) {
         float SHADOW = 0.1;
 
         // 计算从点 p 到光源的方向，方向的箭头指向 lightPos
@@ -295,16 +324,7 @@ const onStart = () => {
           dif *= SHADOW;
         }
 
-        // 地面的黑白格子
-        // 由于 getDist 中有 planeDist，所以 p 点包含了地面
-        float groundY = 0.001;
-        if (p.y < groundY) {
-          // 如果在地面上，返回地面的黑白格子光照
-          return groundGrid(p) * dif;
-        } else {
-          // 如果不在地面上，返回普通的漫反射光照
-          return vec3(dif);
-        }
+        return dif;
       }
       
 
@@ -322,7 +342,7 @@ const onStart = () => {
 
         float t = u_time * MOVE_SPEED;
 
-        vec3 lightPos = vec3(3.0, 8.0, -2.0 - t);
+        vec3 lightPos = vec3(3.0, 8.0, -5.0 - t);
 
         // 相机信息
         vec3 cameraPos = vec3(0.0, 3.0, -8.0 - t);
@@ -342,23 +362,30 @@ const onStart = () => {
         // rayDirection * rayDist 计算视线（或光线在方向 rayDirection 上行进距离 rayDist 后的向量，然后将这个向量加到源点 cameraTarget 上，得到新的位置 p。
         vec3 pointOfCameraTouchObject = cameraPos + rayDirection * rayDist;
 
-        vec3 exceptSkyColor = getLight(lightPos, pointOfCameraTouchObject);
+        float lightDif = getLightDif(lightPos, pointOfCameraTouchObject);
 
         // 天空颜色
         vec3 skyColor = getSkyColor(rayDirection);
 
+        // 除天空外的颜色
+        vec3 exceptSkyColor = vec3(0.0);
+        if (pointOfCameraTouchObject.y < IS_LESS_THAN_GROUND_Y) { // 如果在地面上，返回地面的黑白格子光照
+          exceptSkyColor = groundGrid(pointOfCameraTouchObject) * lightDif;
+        } else { // 如果不在地面上，返回普通的漫反射光照
+          exceptSkyColor = vec3(lightDif);
+        }
 
-        if (rayDist < MAX_DIST) {
-          // 击中物体，直接使用物体颜色
+
+        if (rayDist < MAX_DIST) { // 击中物体，直接使用物体颜色
           color = exceptSkyColor;
-        } else {
-          // 未击中物体，混合天空颜色
+        } else { // 未击中物体，混合天空颜色
           float mixFactor = pow(smoothstep(0.0, -0.02, rayDirection.y), 0.1);
           color = mix(skyColor, exceptSkyColor, mixFactor);
         }
 
         gl_FragColor = vec4(color, 1.0);
-      }`)
+      }
+    `)
   })
 }
 </script>
