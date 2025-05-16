@@ -14,9 +14,9 @@ const isRunning = ref(false)
 
 const onTrigger = async () => {
   if (!isRunning.value) {
-    // isRunning.value = true
-    // await nextTick()
-    // onStart()
+    isRunning.value = true
+    await nextTick()
+    onStart()
   } else {
     isRunning.value = false
   }
@@ -24,9 +24,9 @@ const onTrigger = async () => {
 
 onMounted(async () => {
   await nextTick()
-  isRunning.value = true
-  await nextTick()
-  onStart()
+  // isRunning.value = true
+  // await nextTick()
+  // onStart()
 })
 
 const onStart = () => {
