@@ -120,9 +120,9 @@ mesh.actionManager.registerAction(
 
 可用于场景的触发器有：  
 BABYLON.ActionManager.（<---前缀）  
-&emsp;BABYLON.ActionManager.OnEveryFrameTrigger：每帧触发一次。  
-&emsp;BABYLON.ActionManager.OnKeyDownTrigger：按下某个键时触发。  
-&emsp;BABYLON.ActionManager.OnKeyUpTrigger：抬起某个键时触发。  
+&emsp;&emsp;&emsp;BABYLON.ActionManager.OnEveryFrameTrigger：每帧触发一次。  
+&emsp;&emsp;&emsp;BABYLON.ActionManager.OnKeyDownTrigger：按下某个键时触发。  
+&emsp;&emsp;&emsp;BABYLON.ActionManager.OnKeyUpTrigger：抬起某个键时触发。  
 OnKeyUpTrigger 和 OnKeyDownTrigger 触发器都接受一个字符串参数值，事件触发会判断该值是否与 sourceEvent.key 值是否相同。  
 这允许创建仅在某些键位才会触发的事件，如下所示：
 
@@ -168,7 +168,7 @@ BABYLON.（<---前缀）
 
 &emsp;StopSoundAction(trigger, sound, condition)：停止给定的声音。
 
-&emsp;InterpolateValueActiontrigger, target, propertyPath, value, duration, condition, stopOtherAnimations)：创建动画以将属性的当前值插入给定目标。支持以下类型：  
+&emsp;InterpolateValueAction(trigger, target, propertyPath, value, duration, condition, stopOtherAnimations)：创建动画以将属性的当前值插入给定目标。支持以下类型：  
 &emsp;&emsp; ● number  
 &emsp;&emsp; ● BABYLON.Color3  
 &emsp;&emsp; ● BABYLON.Vector3  

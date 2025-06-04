@@ -31,6 +31,12 @@ body {
   }
 }
 
+.shader-toy-stage {
+  width: 642px;
+  height: 322px;
+  border: 1px solid orange;
+}
+
 h1,
 h2,
 h3,

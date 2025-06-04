@@ -105,15 +105,15 @@ applyImpulse(box.physicsImpostor, impulseVector);
 
 物理形状检测的基准类型可以是以下之一，    
 BABYLON.PhysicsImpostor.（<---前缀）    
-&emsp;SphereImpostor：以球型为基准，进行检测    
-&emsp;BoxImpostor：以盒子为基准，进行检测    
-&emsp;MeshImpostor：以物体网格为基准，进行检测    
-&emsp;PlaneImpostor：以平面为基准进行检测的。它通常用于模拟地面、墙壁或其他平面物体。这种检测器在处理与平面的碰撞时非常高效，因为它将物体视为一个无限大的平面         
-&emsp;CylinderImpostor：是以圆柱体为基准进行检测的。它适用于模拟圆柱形物体，如柱子、管道等。这种检测器将物体视为一个圆柱体，能够准确地处理与圆柱体的碰撞   
-&emsp;ParticleImpostor：是用于模拟粒子系统的碰撞检测。它通常用于处理大量的小物体（如粒子），这些物体的运动和碰撞需要高效处理。ParticleImpostor 通常会使用简化的碰撞模型，以提高性能   
-&emsp;HeightmapImpostor：是以高度图（Heightmap）为基准进行检测的。高度图是一种二维数组，每个点的高度值定义了地形的形状。这种检测器通常用于模拟复杂的地形，如山脉、山谷等。它会根据高度图数据来计算碰撞点和碰撞响应   
-&emsp;ConvexHullImpostor：是以凸包（Convex Hull）为基准进行检测的。凸包是包含物体所有点的最小凸多边形。这种检测器适用于复杂形状的物体，通过将物体的网格简化为凸包来提高碰撞检测的效率    
-&emsp;CompoundImpostor：是以组合形状为基准进行检测的。它允许将多个简单的碰撞检测器组合在一起，形成一个复杂的碰撞模型。例如，你可以将一个 BoxImpostor 和一个 SphereImpostor 组合在一起，形成一个更复杂的碰撞形状    
+&emsp;`SphereImpostor`：以球型为基准，进行检测    
+&emsp;`BoxImpostor`：以盒子为基准，进行检测    
+&emsp;`MeshImpostor`：以物体网格为基准，进行检测    
+&emsp;`PlaneImpostor`：以平面为基准进行检测的。它通常用于模拟地面、墙壁或其他平面物体。这种检测器在处理与平面的碰撞时非常高效，因为它将物体视为一个无限大的平面         
+&emsp;`CylinderImpostor`：是以圆柱体为基准进行检测的。它适用于模拟圆柱形物体，如柱子、管道等。这种检测器将物体视为一个圆柱体，能够准确地处理与圆柱体的碰撞   
+&emsp;`ParticleImpostor`：是用于模拟粒子系统的碰撞检测。它通常用于处理大量的小物体（如粒子），这些物体的运动和碰撞需要高效处理。ParticleImpostor 通常会使用简化的碰撞模型，以提高性能   
+&emsp;`HeightmapImpostor`：是以高度图（Heightmap）为基准进行检测的。高度图是一种二维数组，每个点的高度值定义了地形的形状。这种检测器通常用于模拟复杂的地形，如山脉、山谷等。它会根据高度图数据来计算碰撞点和碰撞响应   
+&emsp;`ConvexHullImpostor`：是以凸包（Convex Hull）为基准进行检测的。凸包是包含物体所有点的最小凸多边形。这种检测器适用于复杂形状的物体，通过将物体的网格简化为凸包来提高碰撞检测的效率    
+&emsp;`CompoundImpostor`：是以组合形状为基准进行检测的。它允许将多个简单的碰撞检测器组合在一起，形成一个复杂的碰撞模型。例如，你可以将一个 BoxImpostor 和一个 SphereImpostor 组合在一起，形成一个更复杂的碰撞形状    
 
 ### 质量
 

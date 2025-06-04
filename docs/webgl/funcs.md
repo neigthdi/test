@@ -90,14 +90,29 @@ float dot(float x, float y)
 当向量被归一化以后，即长度变为 1，则：a⋅b=cos(θ)，此时，点积就直接等于两个向量之间夹角的余弦值。       
 例如 a 向量为 (x1, y1),b 向量 (x2, y2) 那么 dot(a, b) 就会返回 x1*x2+y1*y2。  
 
-余弦距离 = 1 - 余弦相似度    
+##### 余弦距离 = 1 - 余弦相似度    
+余弦相似度是通过计算两个向量的夹角的余弦值来衡量它们之间的相似程度的，取值范围是 [−1,1]。    
+&emsp;&emsp;当两个向量完全相同或方向完全相同时，余弦相似度为 1。    
+&emsp;&emsp;当两个向量完全相反或方向完全相反时，余弦相似度为 -1。   
+&emsp;&emsp;当两个向量正交（即夹角为 90 度）时，余弦相似度为 0。          
+余弦距离是余弦相似度的补数，取值范围是 [0,2]。     
+&emsp;&emsp;当两个向量完全相同或方向完全相同时，余弦距离为 0。    
+&emsp;&emsp;当两个向量完全相反或方向完全相反时，余弦距离为 2。    
+&emsp;&emsp;当两个向量正交（即夹角为 90 度）时，余弦距离为 1。    
 
 应用场景：       
 1、方向判断：点积的符号（正、负或零）可以判断两个向量的相对方向。如果点积为正，则两向量夹角小于 90 度；如果为负，则夹角大于 90 度；如果为零，则两向量垂直。       
 2、计算投影：点积也可以用来计算一个向量在另一个向量上的投影长度。     
 3、光照计算：在图形渲染中，点积常用于光照模型中，以计算光源方向与表面法线之间的夹角，从而确定光照的强度和方向。        
 4、归一化验证：通过比较向量与其自身的点积（即长度的平方），可以验证向量是否已被归一化（即长度为 1）。      
-5、dot 可以被用来间接地实现画圆的功能。虽然 dot 方法本身不直接用于画圆，但它是绘制点的基本工具，而这些点可以用来近似表示一个圆。（距离场原理）       
+5、dot 可以被用来间接地实现画圆的功能。虽然 dot 方法本身不直接用于画圆，但它是绘制点的基本工具，而这些点可以用来近似表示一个圆。（距离场原理）    
+
+#### 为什么计算投影长度，就可以确定每个顶点处的相位偏移量？
+
+这个投影长度表示了顶点处的相位偏移量，因为相位偏移量与传播方向和顶点位置之间的相对关系成正比。       
+具体来说，如果传播方向与顶点位置之间的角度越小，投影长度越长，相位偏移量越大；如果角度越大，投影长度越短，相位偏移量越小。    
+
+##### 计算光照强度（点积） 
 ```javascript
 #version 330 core  
 out vec4 FragColor;  
@@ -109,6 +124,8 @@ void main() {
   FragColor = vec4(intensity, intensity, intensity, 1.0); // 将光照强度作为颜色输出  
 }
 ```
+
+##### 画圆
 ```javascript
 // 画圆
 #ifdef GL_ES
@@ -125,6 +142,40 @@ void main(){
 	vec2 st = gl_FragCoord.xy / u_resolution.xy;
 	vec3 color = vec3(circle(st, 1.0));
 	gl_FragColor = vec4(color, 1.0);
+}
+```
+
+##### 利用投影长度，确定波的相位（确定某种比例，比如此案例的相位比例）---gerstner wave
+```javascript
+// dot(direction, vertex.xz) 是为了计算方向向量 direction 与顶点的 x 和 z 坐标组成的向量 vertex.xz 的点积（内积）。
+// 作用是计算波的方向与顶点位置之间的相对关系，用于确定波在该顶点处的相位。
+// 这个投影长度乘以波长 wavelength 后，给出了波在该顶点处的相位偏移量。
+// vertex (类型：vec3)
+//    含义：顶点的初始位置 (x, y, z)。
+//    作用：用于计算波的偏移量。
+// direction (类型：vec2)
+//    含义：波的传播方向 (x, y)。
+//    作用：用于确定波的传播方向，计算相位偏移。
+// time (类型：float)
+//    含义：当前时间。
+//    作用：用于模拟波的动态变化。
+// speed (类型：float)
+//    含义：波的传播速度。
+//    作用：影响波随时间的移动速度。
+// steepness (类型：float)
+//    含义：波的陡峭度。
+//    作用：影响波的水平偏移量。
+// amplitude (类型：float)
+//    含义：波的振幅。
+//    作用：影响波的垂直偏移量。
+// wavelength (类型：float)
+//    含义：波的波长。
+//    作用：影响波的周期性。
+vec3 gerstner(vec3 vertex, vec2 direction, float time, float speed, float steepness, float amplitude, float wavelength) {
+	float displaced_x = vertex.x + (steepness / wavelength) * direction.x * cos(wavelength * dot(direction, vertex.xz) + speed * time);
+	float displaced_z = vertex.z + (steepness / wavelength) * direction.y * cos(wavelength * dot(direction, vertex.xz) + speed * time);
+	float displaced_y = vertex.y + amplitude * sin(wavelength * dot(direction, vertex.xz) + speed * time);
+	return vec3(displaced_x, displaced_y, displaced_z);
 }
 ```
 
@@ -564,7 +615,10 @@ void main() {
 
 ## smoothstep
 
-float smoothstep(float edge0, float edge1, float x) 如果 x<=edge0 则返回 0.0，如果 x>=edge1 则返回 1.0。  
+float smoothstep(float edge0, float edge1, float x) {
+  float t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+  return t * t * (3.0 - 2.0 * t);
+}
 SmoothStep 用来生成：指定范围内 0 到 1 的平滑过渡值。  
 也叫作平滑阶梯/过度函数。 
 

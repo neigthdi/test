@@ -2,7 +2,7 @@
 <template>
   <div>
     <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
-    <canvas v-if="isRunning" id="sinCos" class="stage"></canvas>
+    <canvas v-if="isRunning" id="sinCos" class="shader-toy-stage bg-black"></canvas>
   </div>
 </template>
 
@@ -32,12 +32,12 @@ const onStart = () => {
       uniform float u_time;
       uniform vec2 u_resolution;
 
-      const int AA = 2; // 抗锯齿级别，可以根据需要调整
+      const int AA = 8; // 抗锯齿级别，可以根据需要调整
 
       void main() {
         vec2 fragCoord = gl_FragCoord.xy;
         vec2 uv = (fragCoord - 0.5 * u_resolution.xy) / min(u_resolution.y, u_resolution.x);
-        uv *= 10.0;
+        uv *= 1.0;
 
         float amplitude = 1.0;
         float frequency = 1.0;
@@ -54,17 +54,18 @@ const onStart = () => {
         // 对每个像素进行多次采样
         for (int i = 0; i < AA; ++i) {
           for (int j = 0; j < AA; ++j) {
-            // 计算当前采样点的偏移量，范围是 [-0.5, 0.5]，但经过除以 AA 后，范围会缩小到 [-(1/2AA), (1/2AA)]
-            vec2 offset = vec2(float(i), float(j)) / float(AA) - 0.5;
+            // 计算当前采样点的偏移量，使用随机偏移量或更均匀的分布方式
+            vec2 offset = (vec2(float(i), float(j)) + vec2(0.5)) / float(AA) - 0.5;
 
             // 根据偏移量和原始 UV 坐标计算采样点的 UV 坐标。这里再次考虑了分辨率的纵横比，以确保采样均匀
             vec2 sampleUV = uv + offset / min(u_resolution.y, u_resolution.x);
 
             // 根据采样点的 UV 坐标和时间计算波形的高度
-            float y = amplitude * sin(u_time) * cos(sampleUV.x * frequency + u_time);
+            float y = amplitude * sin(u_time * 0.4) * cos(sampleUV.x * frequency + u_time * 0.4);
  
             // 使用 step 函数判断采样点的 y 坐标是否小于波形的 y 坐标。如果是，则返回 1；否则返回 0
-            float sample = step(sampleUV.y, y); // step 函数返回 0 或 1
+            // float sample = step(sampleUV.y, y); // step 函数返回 0 或 1
+            float sample = smoothstep(sampleUV.y - 0.01, sampleUV.y + 0.01, y);
 
             // 将判断结果累加到 totalSampled 中
             totalSampled += sample;

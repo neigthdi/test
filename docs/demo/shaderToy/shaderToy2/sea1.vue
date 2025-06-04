@@ -2,7 +2,7 @@
 <template>
   <div>
     <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
-    <canvas v-if="isRunning" id="sea1" class="stage"></canvas>
+    <canvas v-if="isRunning" id="sea1" class="shader-toy-stage bg-black"></canvas>
   </div>
 </template>
 
@@ -108,6 +108,7 @@ const onStart = () => {
         // max(e.y, 0.0) * 0.8 + 0.2：在乘以 0.8 的基础上加上 0.2，确保地平线处的颜色不会太暗
         // (max(e.y, 0.0) * 0.8 + 0.2) * 0.8：再次乘以 0.8，进一步调整颜色的亮度
         e.y = (max(e.y, 0.0) * 0.8 + 0.2) * 0.8;
+        
         // pow(1.0 - e.y, 2.0)：计算 1.0 - e.y 的平方，用于模拟天空颜色的非线性变化这个值将用于红色分量，使天空在地平线处更红
         // 1.0 - e.y：直接使用 1.0 - e.y 作为绿色分量，使天空在地平线处更绿
         // 0.6 + (1.0 - e.y) * 0.4：计算蓝色分量，使天空在地平线处更蓝 0.6 是基础蓝色，(1.0 - e.y) * 0.4 根据 e.y 的值增加蓝色

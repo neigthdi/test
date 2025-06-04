@@ -14,7 +14,7 @@
       <p>&nbsp;&nbsp;2.1---光线行进算法是一种用于渲染复杂场景（如体积效果、SDF 等）的算法。它通过沿着光线方向逐步前进，计算光线与场景的交点。</p>
       <p>&nbsp;&nbsp;2.2---这种方法非常适合渲染火焰，因为它可以处理火焰的不规则形状和动态变化。</p>
     </div>
-    <canvas v-if="isRunning" id="fire1" class="stage bg-black"></canvas>
+    <canvas v-if="isRunning" id="fire1" class="shader-toy-stage bg-black"></canvas>
   </div>
 </template>
 

@@ -11,7 +11,7 @@
 ### Vec4
 
 用于保存颜色数据。  
-gl_Positon 是用 vec4，因为是齐次坐标。
+gl_Position 是用 vec4，因为是齐次坐标。
 
 ## 取样器
 

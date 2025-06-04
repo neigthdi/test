@@ -1,8 +1,7 @@
-
 <template>
   <div>
     <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
-    <canvas v-if="isRunning" id="lightShadow" class="stage"></canvas>
+    <canvas v-if="isRunning" id="lightShadow" class="shader-toy-stage bg-black"></canvas>
   </div>
 </template>
 
@@ -33,15 +32,16 @@ const onStart = () => {
       uniform float u_time;
       uniform vec2 u_resolution;
 
+
       // minVec2 比较两个 vec2 类型的向量 a 和 b，返回其中第一个分量（x）较小的那个向量
       // 假设一个函数
       // vec2 tempFun(vec3 p) {
-      //   vec2 a = vec2(sdSphere(p - vec3(0., 1., 0.), 1.), 2.0);
-      //   vec2 b = vec2(sdPlane(p), 1.);
+      //   vec2 a = vec2(sdSphere(p - vec3(0.0, 1.0, 0.0), 1.0, 2.0);
+      //   vec2 b = vec2(sdPlane(p), 1.0);
       //   return minVec2(a, b);
       // }
       // 光线的当前位置 p 为 (0.5, 0.5, 0.5)
-      // 球体的距离：sdSphere(p - vec3(0., 1., 0.), 1.) = length(vec3(0.5, -0.5, 0.5)) - 1.0 ≈ 0.3536
+      // 球体的距离：sdSphere(p - vec3(0.0, 1.0, 0.0), 1.0) = length(vec3(0.5, -0.5, 0.5)) - 1.0 ≈ 0.3536
       // 平面的距离：sdPlane(p) = 0.5
       // 比较两个距离：min(vec2(0.3536, 2.0), vec2(0.5, 1.0))，返回 vec2(0.3536, 2.0)，表示最近的物体是球体
       // 通过这种方式，tempFun 函数可以有效地组合多个物体，并在光线行进算法中正确地处理它们
@@ -146,9 +146,9 @@ const onStart = () => {
         // d0 是光线从 rayOrigin 出发后行进的总距离
         float d0 = 0.0;
 
-        const float MAX_STEPS = 100.0;
-        float SURFACE_DIST = 0.0001;
-        float MAX_DIST = 1000.0;
+        const float MAX_STEPS = 256.0;
+        float SURFACE_DIST = 0.001;
+        float MAX_DIST = 100.0;
         
         for (float i = 0.0; i < MAX_STEPS; i += 1.0) {
           // 光线的当前位置 pos
@@ -173,9 +173,8 @@ const onStart = () => {
         vec3 c2 = vec3(0.0);
 
         // floor(p.x) 和 floor(p.z) 分别取 p.x 和 p.z 的整数部分
-        // p.x + floor(p.z) 将 x 坐标和 z 坐标的整数部分相加
         // mod(..., 2.0) 取上述和对 2 的模，结果为 0 或 1
-        float s = mod(floor(p.x + floor(p.z)), 2.0);
+        float s = mod(floor(p.x) + floor(p.z), 2.0);
 
         // mix(c1, c2, s) 根据 s 的值在 c1 和 c2 之间进行插值
         // 当 s 为 0 时，返回 c1（白色）
@@ -214,6 +213,7 @@ const onStart = () => {
         // 标准化确保了返回的法向量是一个单位向量
         return normalize(grad_x + grad_y + grad_z);
       }
+
 
       // 计算一个 3D 点 p 与光源之间的漫反射光照强度
       vec3 getLight(vec3 lightPos, vec3 p) {
@@ -260,33 +260,49 @@ const onStart = () => {
         vec2 uv = (fragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.y, u_resolution.x);
 
         vec3 color = vec3(0.0, 0.0, 0.0);
-        vec3 lightPos = vec3(2.0, 5.0, 2.0);
-        lightPos.xz += vec2(sin(u_time) + 2.0, cos(u_time)) * 2.0;
 
-        // 相机信息
-        vec3 cameraPos = vec3(0.0, 3.0, 0.0);
-        vec3 cameraUp = vec3(0.0, 1.0, 0.0);
-        vec3 cameraTarget = vec3(0.0, 1.0, 6.0);
-        
-        // rayDirection 是视线（或光线）的方向向量，表示视线（或光线）沿着哪个方向行进
-        // 之所以 * vec3(uv, 1.0)，uv.x 表示水平方向的偏移，uv.y 表示垂直方向的偏移，1.0 表示沿着相机的前进方向（即深度方向）的偏移
-        // 1.0 表示沿着相机的前进方向（即深度方向）的偏移
-        // vec3(uv, 1.0) 将二维的 uv 坐标扩展为一个三维向量，其中 z 分量为 1.0
-        vec3 rayDirection = getCameraMat(cameraPos, cameraTarget, cameraUp) * vec3(uv, 1.0);
 
-        // 视线（或光线）步进行进了多少距离
-        float rayDist = rayMarching(cameraPos, rayDirection);
+        // SuperSampling（超级采样）。对每个像素进行多次采样并取平均值：
+        const int samples = 2;
+        for (int i = 0; i < samples; ++i) {
+          for (int j = 0; j < samples; ++j) {
+            vec2 offset = vec2(float(i), float(j)) / float(samples) - 0.5;
+            vec2 uvSample = uv + offset / min(u_resolution.y, u_resolution.x);
 
-        // 视线（或光线）当前位置 p（从相机发出一条射线，一直延伸到接触了物体表面，这之间的距离）
-        // rayDirection * rayDist 计算视线（或光线在方向 rayDirection 上行进距离 rayDist 后的向量，然后将这个向量加到源点 cameraTarget 上，得到新的位置 p。
-        vec3 cameraToThingFace = cameraPos + rayDirection * rayDist;
+            // 计算每个子样本的颜色
+            vec3 sampleColor = vec3(0.0);
 
-        vec3 curLightColor = getLight(lightPos, cameraToThingFace);
+            vec3 lightPos = vec3(2.0, 5.0, 2.0);
+            lightPos.xz += vec2(sin(u_time) + 2.0, cos(u_time)) * 2.0;
 
-        // 没有光照
-        // color = vec3(rayDist / 6.0);
+            // 相机信息
+            vec3 cameraPos = vec3(0.0, 3.0, 0.0);
+            vec3 cameraUp = vec3(0.0, 1.0, 0.0);
+            vec3 cameraTarget = vec3(0.0, 1.0, 6.0);
 
-        color = curLightColor;
+            // rayDirection 是视线（或光线）的方向向量，表示视线（或光线）沿着哪个方向行进
+            // 之所以 * vec3(uv, 1.0)，uv.x 表示水平方向的偏移，uv.y 表示垂直方向的偏移，1.0 表示沿着相机的前进方向（即深度方向）的偏移
+            // 1.0 表示沿着相机的前进方向（即深度方向）的偏移
+            // vec3(uv, 1.0) 将二维的 uv 坐标扩展为一个三维向量，其中 z 分量为 1.0
+            vec3 rayDirection = getCameraMat(cameraPos, cameraTarget, cameraUp) * vec3(uv, 1.0);
+
+            // 视线（或光线）步进行进了多少距离
+            float rayDist = rayMarching(cameraPos, rayDirection);
+
+            // 视线（或光线）当前位置 p（从相机发出一条射线，一直延伸到接触了物体表面，这之间的距离）
+            // rayDirection * rayDist 计算视线（或光线在方向 rayDirection 上行进距离 rayDist 后的向量，然后将这个向量加到源点 cameraTarget 上，得到新的位置 p。
+            vec3 pointOfCameraTouchObject = cameraPos + rayDirection * rayDist;
+
+            vec3 sampleLightColor = getLight(lightPos, pointOfCameraTouchObject);
+            sampleColor = sampleLightColor;
+
+            // 累加颜色
+            color += sampleColor;
+          }
+        }
+        // 计算平均颜色
+        color /= float(samples * samples);
+
 
         gl_FragColor = vec4(color, 1.0);
       }`)
