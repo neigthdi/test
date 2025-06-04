@@ -114,11 +114,6 @@ const onStart = () => {
 
     const getDist = `
       // 取物体距离相机最近的 dist
-      // 定义物体类型枚举
-      #define GROUND 0
-      #define SPHERE1 1
-      #define SPHERE2 2
-      #define CUBE 3
       vec2 getDist(vec3 pos) {
         float groundDist = getGroundDist(pos);
 
@@ -176,7 +171,7 @@ const onStart = () => {
         } else if (objectType == 3) {
           return vec3(0.2, 0.7, 0.6);
         } else {
-          return vec3(0.0); // 默认颜色
+          return vec3(1.0); // 默认颜色
         }
 
         // 在 WebGL 1.0 (GLSL ES 1.00) 中，数组的索引必须是常量表达式，不能使用变量作为索引。这是因为 GLSL ES 1.00 的限制，它不支持动态索引。
@@ -280,7 +275,11 @@ const onStart = () => {
             break;
           }
         }
-        return vec2(disTotal, objectType);
+
+        // 返回是否命中的标志，未命中的，则是天空色
+        bool hit = disTotal < MAX_DIST;
+
+        return vec2(disTotal, hit ? objectType : -1.0);
       }
     `
 
@@ -321,6 +320,7 @@ const onStart = () => {
     const getSkyColor = `
       // 根据给定的方向向量 eye 计算天空的颜色这个函数模拟了天空的渐变效果，从地平线到天顶的颜色变化
       vec3 getSkyColor(vec3 eye) {
+        // 方案1   -------------------------------------------------------------------
         // max(e.y, 0.0)：确保 e.y 的值不小于 0，因为天空的颜色通常在地平线以上
         // max(e.y, 0.0) * 0.8：将 e.y 的值乘以 0.8，使颜色变化更加平缓
         // max(e.y, 0.0) * 0.8 + 0.2：在乘以 0.8 的基础上加上 0.2，确保地平线处的颜色不会太暗
@@ -333,6 +333,15 @@ const onStart = () => {
         // vec3(pow(1.0 - eye.y, 2.0), 1.0 - eye.y, 0.6 + (1.0 - eye.y) * 0.4)：将计算得到的红、绿、蓝分量组合成一个颜色向量
         // vec3(pow(1.0 - eye.y, 2.0), 1.0 - eye.y, 0.6 + (1.0 - eye.y) * 0.4) * 1.1：将颜色向量乘以 1.1，增加颜色的亮度
         return vec3(pow(1.0 - eye.y, 2.0), 1.0 - eye.y, 0.6 + (1.0 - eye.y) * 0.4) * 1.1;
+
+        // 方案2   -------------------------------------------------------------------
+        // // 更自然的天空渐变
+        // float t = clamp(eye.y * 0.5 + 0.5, 0.0, 1.0);
+        // vec3 skyTop = vec3(0.2, 0.5, 1.0) * 1.2;    // 天顶颜色（亮蓝色）
+        // vec3 skyHorizon = vec3(0.8, 0.8, 0.9) * 1.0; // 地平线颜色（亮白色）
+
+        // // 使用平滑过渡
+        // return mix(skyHorizon, skyTop, pow(t, 0.5));
       }
     `
 
@@ -345,6 +354,12 @@ const onStart = () => {
       uniform vec2 u_mouse;
 
       const float MAX_DIST = 1000.0;
+
+      // 定义物体类型枚举
+      #define GROUND 0
+      #define SPHERE1 1
+      #define SPHERE2 2
+      #define CUBE 3
 
 
       ${groundGrid}
@@ -397,9 +412,9 @@ const onStart = () => {
 
 
         // 相机信息
-        vec3 cameraPos = vec3(0.0, 3.0, -8.0);
+        vec3 cameraPos = vec3(0.0, 1.0, -8.0);
         vec3 cameraUp = vec3(0.0, 1.0, 0.0);
-        vec3 cameraTarget = vec3(0.0, 2.0, 0.0);
+        vec3 cameraTarget = vec3(0.0, 1.0, 0.0);
 
 
         // 光源的位置
@@ -414,6 +429,10 @@ const onStart = () => {
         vec3 rayDirection = getCameraMat(cameraPos, cameraTarget, cameraUp) * vec3(uv, 1.0);
    
 
+        // 天空颜色
+        vec3 skyColor = getSkyColor(normalize(rayDirection));
+
+
         vec2 rayResult = rayMarching(cameraPos, rayDirection);
 
 
@@ -423,42 +442,52 @@ const onStart = () => {
         
         // 射中的当前的物体
         float objectType = rayResult.y;
+
+
         // 获取物体颜色
         vec3 objectColor = getObjectColor(int(objectType));
 
 
-        // 视线（或光线）的当前位置 p（从相机发出一条射线，一直延伸到接触了物体表面，这之间的距离）
-        // rayDirection * rayDist 计算视线（或光线在方向 rayDirection 上行进距离 rayDist 后的向量，然后将这个向量加到源点 cameraTarget 上，得到新的位置 p。
-        vec3 pointOfCameraTouchObject = cameraPos + rayDirection * rayDist;
+        if(int(objectType) == -1) { // 未命中任何物体
+
+          // float fog = smoothstep(0.0, 50.0, rayDist); // 根据距离添加大气效果
+          // finalColor = mix(skyColor, vec3(0.7, 0.8, 0.9), fog); // 根据距离添加大气效果
+
+          finalColor = skyColor; // 直接使用天空色
+
+        } else { // 命中物体，计算光照和颜色
+
+          // 视线（或光线）的当前位置 p（从相机发出一条射线，一直延伸到接触了物体表面，这之间的距离）
+          // rayDirection * rayDist 计算视线（或光线在方向 rayDirection 上行进距离 rayDist 后的向量，然后将这个向量加到源点 cameraTarget 上，得到新的位置 p。
+          vec3 pointOfCameraTouchObject = cameraPos + rayDirection * rayDist;
 
 
-        // 点 p 与光源之间的漫反射光照强度
-        float lightDif = getLightDif(lightPos, pointOfCameraTouchObject);
+          // 点 p 与光源之间的漫反射光照强度
+          float lightDif = getLightDif(lightPos, pointOfCameraTouchObject);
 
 
-        // 计算最终颜色（物体颜色 * 光照颜色 * 光照强度）
-        vec3 litColor = objectColor * lightColor * lightDif;
+          // 计算最终颜色（物体颜色 * 光照颜色 * 光照强度）
+          vec3 litColor = objectColor * lightColor * lightDif;
 
 
-        vec3 materialColor = vec3(0.0);
-        if (int(objectType) == GROUND) {
-          materialColor = groundGrid(pointOfCameraTouchObject) * litColor;
-        } else {
-          materialColor = litColor; // 对于非地面物体，直接使用 litColor
+          vec3 materialColor = vec3(0.0);
+
+
+          if (int(objectType) == GROUND) {
+            materialColor = groundGrid(pointOfCameraTouchObject) * litColor;
+          } else {
+            materialColor = litColor; // 对于非地面物体，直接使用 litColor
+          }
+
+
+          // 当 rayDirection.y > 10.0 则会返回0的，pow(0, 0.2)等于0，则mix结果是 skyColor
+          // 当 rayDirection.y < 0 则会返回1，结果是返回 materialColor
+          finalColor = mix(
+            skyColor,
+            materialColor,
+            pow(smoothstep(10.0, 0.0, rayDirection.y), 1.0)
+          );
         }
-
-        
-        vec3 skyColor = getSkyColor(rayDirection);
-
-
-        // 当 rayDirection.y > 0.0001 则会返回0的，pow(0, 0.2)等于0，则mix结果是 skyColor
-        // 当 rayDirection.y < 0 则会返回1，结果是返回 materialColor
-        finalColor = mix(
-          skyColor,
-          materialColor,
-          pow(smoothstep(0.00001, 0.0, rayDirection.y), 0.2)
-        );
-
 
         gl_FragColor = vec4(finalColor, 1.0);
       }
