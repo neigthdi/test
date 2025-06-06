@@ -1,8 +1,7 @@
 <template>
   <div>
     <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
-    <div>使用struct优化</div>
-    <canvas v-if="isRunning" id="moreGeoWithColor" class="shader-toy-stage bg-black"></canvas>
+    <canvas v-if="isRunning" id="waterReflection" class="shader-toy-stage bg-black"></canvas>
   </div>
 </template>
 
@@ -23,44 +22,34 @@ const onTrigger = async () => {
 
 onMounted(async () => {
   await nextTick()
-  // isRunning.value = true
-  // await nextTick()
-  // onStart()
+  isRunning.value = true
+  await nextTick()
+  onStart()
 })
 
 const onStart = () => {
   import('glslCanvas').then(module => {
-    const canvas = document.getElementById('moreGeoWithColor')
+    const canvas = document.getElementById('waterReflection')
     const glslCanvas: any = new module.default(canvas)
 
+    const getWaterPlaneColor = `
+      vec3 getWaterPlaneColor(vec3 p) {
+        vec3 color = vec3(0.2815, 0.8549, 1.0);
 
-    const groundGrid = `
-      // 黑白网格
-      vec3 groundGrid(vec3 p) {
-        vec3 black = vec3(1.0);
-        vec3 white = vec3(0.0);
+        // 使用噪音来模拟水面波纹
+        // to do ...
 
-        // 远处的格子会变形
-        // floor(p.x) 和 floor(p.z) 分别取 p.x 和 p.z 的整数部分
-        // mod(..., 2.0) 取上述和对 2 的模，结果为 0 或 1
-        float m = mod(floor(p.x) + floor(p.z), 2.0);
-
-        // mix(black, white, m) 根据 m 的值在 black 和 white 之间进行插值
-        // 当 m 为 0 时，返回 white（白色）
-        // 当 m 为 1 时，返回 black（黑色）
-        vec3 groundColor = mix(black, white, m);
-
-        return groundColor;
+        return color;
       }
     `
 
-    const getGroundDist = `
+    const getWaterPlaneDist = `
       // 计算一个点 p 到一个无限大水平平面（地面）的距离
       // 这个平面通常被定义为 y=0 的平面，即地面位于 y 轴的零点
-      float getGroundDist(vec3 p) {
-        float groundY = p.y;
+      float getWaterPlaneDist(vec3 p) {
+        float planeY = p.y;
 
-        return groundY;
+        return planeY;
       }
     `
 
@@ -115,7 +104,7 @@ const onStart = () => {
     const getDist = `
       // 取物体距离相机最近的 dist
       vec2 getDist(vec3 pos) {
-        float groundDist = getGroundDist(pos);
+        float waterPlaneDist = getWaterPlaneDist(pos);
 
         vec3 SPHERE_POS_1 = vec3(0.5, 1.0, 6.0);
         vec3 SPHERE_POS_2 = vec3(2.0, 1.0, 3.0);
@@ -129,20 +118,21 @@ const onStart = () => {
 
         // 使用数组和循环找到最小距离
         float distances[4];
-        distances[0] = groundDist;
+        distances[0] = waterPlaneDist;
         distances[1] = sphereDist1;
         distances[2] = sphereDist2;
         distances[3] = cubeDist;
 
         // 使用数组和循环找到对应的物体类型
         int objectTypes[4];
-        objectTypes[0] = GROUND;
+        objectTypes[0] = WATER_PLANE;
         objectTypes[1] = SPHERE1;
         objectTypes[2] = SPHERE2;
         objectTypes[3] = CUBE;
 
-        // float distances[4] = float[4](groundDist, sphereDist1, sphereDist2, cubeDist);
-        // int objectTypes[4] = int[4](GROUND, SPHERE1, SPHERE2, CUBE);
+        // 旧版不能用这个方法
+        // float distances[4] = float[4](waterPlaneDist, sphereDist1, sphereDist2, cubeDist);
+        // int objectTypes[4] = int[4](WATER_PLANE, SPHERE1, SPHERE2, CUBE);
 
         float minDist = distances[0];
         int objectType = objectTypes[0];
@@ -162,9 +152,7 @@ const onStart = () => {
       // 新增函数：根据物体类型返回基础颜色
       vec3 getObjectColor(int objectType) {
         // 使用 if-else 语句定义颜色映射
-        if (objectType == 0) {
-          return vec3(0.8);
-        } else if (objectType == 1) {
+        if (objectType == 1) {
           return vec3(0.63, 0.2, 0.2);
         } else if (objectType == 2) {
           return vec3(1.0, 0.8, 0.2);
@@ -356,44 +344,32 @@ const onStart = () => {
       const float MAX_DIST = 1000.0;
 
       // 定义物体类型枚举
-      #define GROUND 0
+      #define WATER_PLANE 0
       #define SPHERE1 1
       #define SPHERE2 2
       #define CUBE 3
 
+      ${getWaterPlaneColor}
 
-      ${groundGrid}
-
-
-      ${getGroundDist}
-
+      ${getWaterPlaneDist}
 
       ${getCubeDist}
 
-
       ${getSphereDis}
-
 
       ${getDist}
 
-
       ${getObjectColor}
 
-
       ${getNormal}
-
-
+      
       ${getCameraMat}
-
 
       ${rayMarching}
 
-
       ${getLightDif}
 
-
       ${getSkyColor}
-      
 
       void main() {
         vec2 fragCoord = gl_FragCoord.xy;
@@ -412,13 +388,13 @@ const onStart = () => {
 
 
         // 相机信息
-        vec3 cameraPos = vec3(0.0, 1.0, -8.0);
+        vec3 cameraPos = vec3(0.0 - sin(u_time), 2.0, -8.0 - cos(u_time));
         vec3 cameraUp = vec3(0.0, 1.0, 0.0);
-        vec3 cameraTarget = vec3(0.0, 1.0, 0.0);
+        vec3 cameraTarget = vec3(0.0, 0.0, 0.0);
 
 
         // 光源的位置
-        vec3 lightPos = vec3(3.0 * cos(u_time), 8.0, -5.0 * sin(u_time));
+        vec3 lightPos = vec3(3.0 + sin(u_time), 8.0, -5.0 + cos(u_time));
         vec3 lightColor = vec3(1.0, 1.0, 1.0);
 
 
@@ -427,12 +403,8 @@ const onStart = () => {
         // 1.0 表示沿着相机的前进方向（即深度方向）的偏移
         // vec3(uv, 1.0) 将二维的 uv 坐标扩展为一个三维向量，其中 z 分量为 1.0
         vec3 rayDirection = getCameraMat(cameraPos, cameraTarget, cameraUp) * vec3(uv, 1.0);
-   
 
-        // 天空颜色
-        vec3 skyColor = getSkyColor(normalize(rayDirection));
 
-        
         // 射中物体的结果
         vec2 rayResult = rayMarching(cameraPos, rayDirection);
 
@@ -440,56 +412,88 @@ const onStart = () => {
         // 视线（或光线）步进行进了多少距离
         float rayDist = rayResult.x;
 
-        
+
         // 射中的当前的物体
         float objectType = rayResult.y;
 
 
+        // 视线（或光线）的当前位置 p（从相机发出一条射线，一直延伸到接触了物体表面，这之间的距离）
+        // rayDirection * rayDist 计算视线（或光线在方向 rayDirection 上行进距离 rayDist 后的向量，然后将这个向量加到源点 cameraTarget 上，得到新的位置 p。
+        vec3 pointOfCameraTouchObject = cameraPos + rayDirection * rayDist;
+
+
+        // 点 p 与光源之间的漫反射光照强度
+        float lightDif = getLightDif(lightPos, pointOfCameraTouchObject);
+
+
+        vec3 waterPlaneColor = getWaterPlaneColor(pointOfCameraTouchObject);
+
+
         // 获取物体颜色
-        vec3 objectColor = getObjectColor(int(objectType));
+        vec3 objectColor = vec3(0.0);
+        if(int(objectType) == -1) {
 
+          finalColor = getSkyColor(normalize(rayDirection)); // 直接使用天空色
 
-        if(int(objectType) == -1) { // 未命中任何物体
+        } else if(int(objectType) == 0) { // 对水面进行反射计算
 
-          // float fog = smoothstep(0.0, 50.0, rayDist); // 根据距离添加大气效果
-          // finalColor = mix(skyColor, vec3(0.7, 0.8, 0.9), fog); // 根据距离添加大气效果
-
-          finalColor = skyColor; // 直接使用天空色
-
-        } else { // 命中物体，计算光照和颜色
-
-          // 视线（或光线）的当前位置 p（从相机发出一条射线，一直延伸到接触了物体表面，这之间的距离）
-          // rayDirection * rayDist 计算视线（或光线在方向 rayDirection 上行进距离 rayDist 后的向量，然后将这个向量加到源点 cameraTarget 上，得到新的位置 p。
-          vec3 pointOfCameraTouchObject = cameraPos + rayDirection * rayDist;
-
-
-          // 点 p 与光源之间的漫反射光照强度
-          float lightDif = getLightDif(lightPos, pointOfCameraTouchObject);
-
-
-          // 计算最终颜色（物体颜色 * 光照颜色 * 光照强度）
-          vec3 litColor = objectColor * lightColor * lightDif;
-
-
-          vec3 materialColor = vec3(0.0);
-
-
-          if (int(objectType) == GROUND) {
-            materialColor = groundGrid(pointOfCameraTouchObject) * litColor;
+          // 动态水面法线（这里可以添加你的波纹噪声计算）
+          vec3 waterNormal = normalize(getNormal(pointOfCameraTouchObject));
+          
+          // 调整水面法线以创建波纹效果
+          float waveHeight = 0.05; // 波纹高度
+          float waveFreq = 2.0;   // 波纹频率
+          waterNormal.y += sin(pointOfCameraTouchObject.x * waveFreq + u_time) * waveHeight;
+          waterNormal.y += sin(pointOfCameraTouchObject.z * waveFreq * 0.5 + u_time) * waveHeight;
+          waterNormal = normalize(waterNormal);
+          
+          // 反射光线方向
+          vec3 reflectDir = reflect(rayDirection, waterNormal);
+          
+          // 反射光线的追踪
+          vec2 reflectResult = rayMarching(pointOfCameraTouchObject + waterNormal * 0.01, reflectDir);
+          
+          // 反射点的颜色
+          vec3 reflectColor = vec3(0.0);
+          if(reflectResult.y > -1.0) {
+            // 反射物体颜色
+            vec3 reflectObjColor = getObjectColor(int(reflectResult.y));
+            // 反射光照计算
+            float reflectLightDif = getLightDif(lightPos, pointOfCameraTouchObject + reflectDir * reflectResult.x);
+            reflectColor = reflectObjColor * lightColor * reflectLightDif;
           } else {
-            materialColor = litColor; // 对于非地面物体，直接使用 litColor
+            // 天空反射
+            reflectColor = getSkyColor(reflectDir);
           }
+          
 
+          // 水面基础颜色
+          vec3 waterColor = getWaterPlaneColor(pointOfCameraTouchObject);
+          
 
-          // 当 rayDirection.y > 10.0 则会返回0的，pow(0, 0.2)等于0，则mix结果是 skyColor
-          // 当 rayDirection.y < 0 则会返回1，结果是返回 materialColor
-          // 其余则是混合两者的颜色
-          finalColor = mix(
-            skyColor,
-            materialColor,
-            pow(smoothstep(10.0, 0.0, rayDirection.y), 1.0)
-          );
+          // 菲涅尔效应（根据视角调整反射强度）
+          float fresnel = pow(1.0 - abs(dot(rayDirection, waterNormal)), 2.0);
+          fresnel = clamp(fresnel, 0.3, 0.9); // 限制反射强度范围
+          
+
+          // 混合反射颜色和水面颜色
+          vec3 finalReflectColor = mix(waterColor, reflectColor, fresnel);
+          
+
+          // 添加环境光
+          float ambient = 0.2;
+          objectColor = finalReflectColor * (lightDif + ambient);
+
+        } else {
+
+          objectColor = getObjectColor(int(objectType));
+
         }
+
+
+        // 计算最终颜色（物体颜色 * 光照颜色 * 光照强度）
+        finalColor = objectColor * lightColor * lightDif;
+   
 
         gl_FragColor = vec4(finalColor, 1.0);
       }
