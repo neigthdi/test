@@ -34,7 +34,8 @@ const onStart = () => {
 
     const getWaterPlaneColor = `
       vec3 getWaterPlaneColor(vec3 p) {
-        vec3 color = vec3(0.2815, 0.8549, 1.0);
+        // vec3 color = vec3(0.2815, 0.8549, 1.0);
+        vec3 color = vec3(1.0, 0.0, 0.0); // 红色的水面
 
         // 使用噪音来模拟水面波纹
         // to do ...
@@ -49,7 +50,11 @@ const onStart = () => {
       float getWaterPlaneDist(vec3 p) {
         float planeY = p.y;
 
-        return planeY;
+        // 添加一个小的偏移量防止除零
+        float epsilon = 0.0001;
+
+        // 使用更稳定的水面距离计算
+        return p.y + epsilon;  // 保持简单但稳定的计算
       }
     `
 
@@ -323,10 +328,13 @@ const onStart = () => {
         return vec3(pow(1.0 - eye.y, 2.0), 1.0 - eye.y, 0.6 + (1.0 - eye.y) * 0.4) * 1.1;
 
         // 方案2   -------------------------------------------------------------------
-        // // 更自然的天空渐变
+        // // 归一化 eye.y 到 [0, 1] 范围
+        // eye.y = (eye.y + 1.0) * 0.5;
+
+        // // 使用更平滑的渐变公式
         // float t = clamp(eye.y * 0.5 + 0.5, 0.0, 1.0);
-        // vec3 skyTop = vec3(0.2, 0.5, 1.0) * 1.2;    // 天顶颜色（亮蓝色）
-        // vec3 skyHorizon = vec3(0.8, 0.8, 0.9) * 1.0; // 地平线颜色（亮白色）
+        // vec3 skyTop = vec3(0.2, 0.5, 1.0);    // 天顶颜色（亮蓝色）
+        // vec3 skyHorizon = vec3(0.8, 0.8, 0.9); // 地平线颜色（亮白色）
 
         // // 使用平滑过渡
         // return mix(skyHorizon, skyTop, pow(t, 0.5));
@@ -431,45 +439,86 @@ const onStart = () => {
 
         // 获取物体颜色
         vec3 objectColor = vec3(0.0);
-        if(int(objectType) == -1) {
+
+
+        if(int(objectType) == -1) { // 如果没有碰到物体或者水面,使用天空颜色
+
 
           finalColor = getSkyColor(normalize(rayDirection)); // 直接使用天空色
+        } else if(int(objectType) == 0) { // 碰撞到水面，对水面进行反射计算
 
-        } else if(int(objectType) == 0) { // 对水面进行反射计算
+          // 1、水面的法线
+          // 水面法线的计算基于距离场的梯度，使用有限差分法近似计算
+          // ∇f(p) ≈ (f(p + ϵ) - f(p - ϵ)) / 2ϵ  f(p) 是距离场函数，表示点 p 到最近表面的距离。ϵ 是一个小的偏移量，用于数值计算
+
+          // 2、反射光线方向
+          // 反射定律描述了光线在光滑表面上的反射行为，即入射角等于反射角
+          // 公式是 reflectDir = rayDirection - 2 * (rayDirection ⋅ waterNormal) * waterNormal
+
+          // 3、反射光线的追踪
+
+          // 4、菲涅尔效应
+          // 菲涅尔效应描述了光线在不同入射角下的反射强度变化
+          // 公式是 R(θ)=R0 + (1 - R0) * (1 - cosθ)^5
+          // R(θ) 是反射率
+          // R0是法线方向上的反射率，通常为((n1 - n2) / (n1 + n2))^2，其中 n1和 n2分别是两种介质的折射率
+          // θ 是入射角
+          // 改案例简化了菲涅尔公式，使用了 (1 - cosθ)^2来近似反射率的变化，并通过 clamp 函数限制了反射强度的范围
+
+          // 5、光照模型
+
 
           // 动态水面法线（这里可以添加波纹噪声计算）
           vec3 waterNormal = normalize(getNormal(pointOfCameraTouchObject));
+
           
           // 调整水面法线以创建波纹效果
           float waveHeight = 0.05; // 波纹高度
-          float waveFreq = 2.0;   // 波纹频率
-          waterNormal.y += sin(pointOfCameraTouchObject.x * waveFreq + u_time) * waveHeight;
-          waterNormal.y += sin(pointOfCameraTouchObject.z * waveFreq * 0.5 + u_time) * waveHeight;
+          float waveFreq = 1.0;   // 波纹频率
+          waterNormal.y += sin(pointOfCameraTouchObject.x * waveFreq + u_time * 0.5) * waveHeight * 0.5;
+          waterNormal.y += sin(pointOfCameraTouchObject.z * waveFreq * 0.5 + u_time * 0.5) * waveHeight * 0.5;
           waterNormal = normalize(waterNormal);
           
+
+          // 增加反射距离限制
+          float reflectMaxDist = 100.0;
+
+
           // 反射光线方向
           vec3 reflectDir = reflect(rayDirection, waterNormal);
-          
+
+
           // 反射光线的追踪
           vec2 reflectResult = rayMarching(pointOfCameraTouchObject + waterNormal * 0.01, reflectDir);
           
+
           // 反射点的颜色
           vec3 reflectColor = vec3(0.0);
-          if(reflectResult.y > -1.0) {
+
+
+          if(reflectResult.y > -1.0 && reflectResult.x < reflectMaxDist) {
+
+
             // 反射物体颜色
             vec3 reflectObjColor = getObjectColor(int(reflectResult.y));
+
+
             // 反射光照计算
             float reflectLightDif = getLightDif(lightPos, pointOfCameraTouchObject + reflectDir * reflectResult.x);
+
+            
             reflectColor = reflectObjColor * lightColor * reflectLightDif;
           } else {
+
+
             // 天空反射
-            reflectColor = getSkyColor(reflectDir);
+            reflectColor = getSkyColor(normalize(reflectDir));
           }
           
 
           // 水面基础颜色
           vec3 waterColor = getWaterPlaneColor(pointOfCameraTouchObject);
-          
+
 
           // 菲涅尔效应（根据视角调整反射强度）
           float fresnel = pow(1.0 - abs(dot(rayDirection, waterNormal)), 2.0);
@@ -484,16 +533,18 @@ const onStart = () => {
           float ambient = 0.2;
           objectColor = finalReflectColor * (lightDif + ambient);
 
-        } else {
+
+          finalColor = objectColor * lightColor * max(lightDif, 0.1); // 确保最小光照强度;
+        } else { // 碰撞到物体
+
 
           objectColor = getObjectColor(int(objectType));
 
+
+          // 计算最终颜色（物体颜色 * 光照颜色 * 光照强度）
+          finalColor = objectColor * lightColor * lightDif;
         }
 
-
-        // 计算最终颜色（物体颜色 * 光照颜色 * 光照强度）
-        finalColor = objectColor * lightColor * lightDif;
-   
 
         gl_FragColor = vec4(finalColor, 1.0);
       }
