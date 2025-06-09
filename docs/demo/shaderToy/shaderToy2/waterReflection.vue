@@ -22,9 +22,9 @@ const onTrigger = async () => {
 
 onMounted(async () => {
   await nextTick()
-  isRunning.value = true
-  await nextTick()
-  onStart()
+  // isRunning.value = true
+  // await nextTick()
+  // onStart()
 })
 
 const onStart = () => {
@@ -437,7 +437,7 @@ const onStart = () => {
 
         } else if(int(objectType) == 0) { // 对水面进行反射计算
 
-          // 动态水面法线（这里可以添加你的波纹噪声计算）
+          // 动态水面法线（这里可以添加波纹噪声计算）
           vec3 waterNormal = normalize(getNormal(pointOfCameraTouchObject));
           
           // 调整水面法线以创建波纹效果
