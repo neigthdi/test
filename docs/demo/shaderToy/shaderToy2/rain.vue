@@ -1,17 +1,13 @@
 <template>
   <div>
-    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
-    <canvas v-if="isRunning" id="waterReflection" class="shader-toy-stage bg-black"></canvas>
+    <div class="flex space-between">
+      <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
+    </div>
+    <canvas v-if="isRunning" id="rain" class="shader-toy-stage bg-black"></canvas>
   </div>
 </template>
 
 <script lang="ts" setup>
-// 整个水面倒影的实现过程，从物理场景的角度来看，主要包括以下几个关键步骤：
-//   1、光线与水面的相交检测：确定光线是否与水面相交，以及交点位置。
-//   2、水面法线的计算与波纹效果的添加：模拟水面的动态变化，为后续的反射计算提供基础。
-//   3、反射光线的计算与行进：根据反射定律计算反射光线的方向，并检测反射光线与场景物体的交点。
-//   4、菲涅尔效应的模拟：根据视角和水面法线，调整反射强度，模拟真实物理场景中的反射效果。
-//   5、最终颜色的合成与输出：结合反射颜色、水面颜色、光照强度等，计算最终的水面颜色，并渲染到屏幕上。
 import { ref, nextTick, onMounted } from 'vue'
 
 const isRunning = ref(false)
@@ -32,18 +28,27 @@ onMounted(async () => {
 
 const onStart = () => {
   import('glslCanvas').then(module => {
-    const canvas = document.getElementById('waterReflection')
+    const canvas = document.getElementById('rain')
     const glslCanvas: any = new module.default(canvas)
 
-    const getWaterPlaneColor = `
+    glslCanvas.load(`
+      #extension GL_OES_standard_derivatives: enable
+      precision highp float;
+
+      uniform vec2 u_resolution;
+      uniform float u_time;
+      uniform vec2 u_mouse;
+
+      #define WATER_PLANE 0;
+
+      const float MAX_DIST = 1000.0;
+
       vec3 getWaterPlaneColor(vec3 p) {
-        vec3 color = vec3(1.0, 0.0, 0.0); // 红色的水面
+        vec3 color = vec3(0.0, 0.0, 0.0);
 
         return color;
       }
-    `
 
-    const getWaterPlaneDist = `
       // 计算一个点 p 到一个无限大水平平面（地面）的距离
       // 这个平面通常被定义为 y=0 的平面，即地面位于 y 轴的零点
       float getWaterPlaneDist(vec3 p) {
@@ -55,128 +60,26 @@ const onStart = () => {
         // 使用更稳定的水面距离计算
         return p.y + epsilon;  // 保持简单但稳定的计算
       }
-    `
-
-    const getCubeDist = `
-      // 计算一个点 p 到一个立方体的（最近的）距离，要考虑 p 在内部和外部的情况，二者都要计算得出结果，外部返回正值，内部返回负值
-      // 假设立方体的半尺寸为 cubeSize = vec3(1.0, 1.0, 1.0)，表示立方体在 x、y、z 轴上的半长度都为 1.0，立方体的中心位于原点 (0, 0, 0)
-      // 如果点 p = vec3(1.5, 1.5, 1.5)，则 p 在立方体外部
-      // 如果点 p = vec3(0.5, 0.5, 0.5)，则 p 在立方体内部
-      // 如果点 p = vec3(1.0, 1.0, 1.0)，则 p 在立方体边界上
-      // 通过 getCubeDist 函数，可以计算出点 p 到立方体的最短距离
-      float getCubeDist(vec3 p, vec3 cubePos, vec3 cubeSize) {
-        // abs(p - cubePos) - cubeSize 计算点 p 相对于立方体中心 cubePos 的距离
-        // 首先计算点 p 与立方体中心 c 之间的差值 p − cubePos
-        // 然后取绝对值 abs(p − cubePos)，表示点 p 相对于立方体中心的水平、垂直和深度方向的距离
-        // 最后减去立方体的半尺寸 cubeSize，得到 tempDist
-        // tempDist 的每个分量表示点在对应方向上超出立方体边界的距离
-        // 点在立方体内部，所有值是负值
-        // 点在立方体边界，至少一个是 0
-        // 点在立方体外，至少一个是正值
-        vec3 tempDist = abs(p - cubePos) - cubeSize;
 
 
-        // max(tempDist, 0.0) 将 tempDist 的所有负分量设置为 0，只保留正分量，表示点到立方体外部的距离（假如其中有一个是负值，则 p 是在立方体内）
-        // length(max(tempDist, 0.0)) 计算这个向量的长度，即点到立方体外部的最短距离
-        // -----------------------------------------------------------------------
-        // min(max(tempDist.x, max(tempDist.y, tempDist.z)), 0.0) 这部分的作用是处理点在立方体内部的情况
-        // max(tempDist.x, max(tempDist.y, tempDist.z)) 找出 tempDist 中最大的分量，表示点在立方体内部最深的轴向距离
-        // min(..., 0.0) 确保这个值不会超过 0，因为点在立方体内部时，tempDist 的所有分量都是负值
-        // min(max(tempDist.x, tempDist.y, tempDist.z), 0.0) 将这个最大值与 0 比较，取较小值，表示点距离立方体在某个轴上最近的面的距离为（x）个单位
-        // -----------------------------------------------------------------------
-        // 最后合并距离，将点到立方体外部的距离和点到立方体内部的距离相加，得到点到立方体的最短距离
-        // -----------------------------------------------------------------------
-        // 假如点在外部，则会使用 length(max(tempDist, 0.0))
-        // 假如点在内部，则会使用 min(max(tempDist.x, max(tempDist.y, tempDist.z)), 0.0)
-        float cubeDist = length(max(tempDist, 0.0)) + min(max(tempDist.x, max(tempDist.y, tempDist.z)), 0.0);
-        return cubeDist;
-      }
-    `
-
-    const getSphereDis = `
-      // 计算一个点 p 到一个球体的距离，球体的中心由 sphere 表示，半径由 radius 表示
-      float getSphereDist(vec3 p, vec3 spherePos, float radius) {
-        // 从当前点的位置 p 到球体中心的距离中减去球体的半径，得到点 p 到球体表面的最短距离
-        // 如果点 p 在球体内部，sphereDist 为负值
-        // 如果点 p 在球体表面，sphereDist 为零
-        // 如果点 p 在球体外部，sphereDist 为正值
-        float sphereDist = length(p - spherePos) - radius;
-        return sphereDist;
-      }
-    `
-
-    const getDist = `
       // 取物体距离相机最近的 dist
       vec2 getDist(vec3 pos) {
         float waterPlaneDist = getWaterPlaneDist(pos);
 
-        vec3 SPHERE_POS_1 = vec3(0.5, 1.0, 6.0);
-        vec3 SPHERE_POS_2 = vec3(2.0, 1.0, 3.0);
-        float SPHERE_RADIUS = 1.0;
-        float sphereDist1 = getSphereDist(pos, SPHERE_POS_1, SPHERE_RADIUS);
-        float sphereDist2 = getSphereDist(pos, SPHERE_POS_2, SPHERE_RADIUS);
-
-        vec3 CUBE_POS = vec3(0.0, 0.0, 6.0);
-        vec3 CUBE_SIZE = vec3(1.0, 1.0, 1.0);
-        float cubeDist = getCubeDist(pos, CUBE_POS, CUBE_SIZE);
-
         // 使用数组和循环找到最小距离
-        float distances[4];
+        float distances[1];
         distances[0] = waterPlaneDist;
-        distances[1] = sphereDist1;
-        distances[2] = sphereDist2;
-        distances[3] = cubeDist;
 
         // 使用数组和循环找到对应的物体类型
-        int objectTypes[4];
+        int objectTypes[1];
         objectTypes[0] = WATER_PLANE;
-        objectTypes[1] = SPHERE1;
-        objectTypes[2] = SPHERE2;
-        objectTypes[3] = CUBE;
-
-        // 旧版不能用这个方法
-        // float distances[4] = float[4](waterPlaneDist, sphereDist1, sphereDist2, cubeDist);
-        // int objectTypes[4] = int[4](WATER_PLANE, SPHERE1, SPHERE2, CUBE);
 
         float minDist = distances[0];
         int objectType = objectTypes[0];
 
-        for (int i = 1; i < 4; i++) {
-          if (distances[i] < minDist) {
-            minDist = distances[i];
-            objectType = objectTypes[i];
-          }
-        }
-        
         return vec2(minDist, float(objectType));
       }
-    `
 
-    const getObjectColor = `
-      // 新增函数：根据物体类型返回基础颜色
-      vec3 getObjectColor(int objectType) {
-        // 使用 if-else 语句定义颜色映射
-        if (objectType == 1) {
-          return vec3(0.63, 0.2, 0.2);
-        } else if (objectType == 2) {
-          return vec3(1.0, 0.8, 0.2);
-        } else if (objectType == 3) {
-          return vec3(0.2, 0.7, 0.6);
-        } else {
-          return vec3(1.0); // 默认颜色
-        }
-
-        // 在 WebGL 1.0 (GLSL ES 1.00) 中，数组的索引必须是常量表达式，不能使用变量作为索引。这是因为 GLSL ES 1.00 的限制，它不支持动态索引。
-        // vec3 colors[4];
-        // colors[0] = vec3(0.8);
-        // colors[1] = vec3(1.0, 0.2, 0.2);
-        // colors[2] = vec3(0.2, 0.2, 1.0);
-        // colors[3] = vec3(0.2, 1.0, 0.2);
-        // return colors[objectType];
-      }
-    `
-
-    const getNormal = `
       // 在基于距离场（Distance Field）的渲染中，法线（Normal）的计算是一个关键步骤
       // 距离场是一种标量场，其中每个点的值表示该点到最近表面的距离
       // 由于距离场本身是一个标量函数，而法线是一个向量，因此需要通过某种方式从标量场中提取出向量信息
@@ -218,9 +121,7 @@ const onStart = () => {
 
         return normal;
       }
-    `
 
-    const getCameraMat = `
       // 左手坐标系
       // ro：相机的位置（Ray Origin），即相机在三维空间中的坐标。这个点是所有视线（或光线）的起点
       // target：相机的目标点，即相机“看”向的点。这个点决定了相机的前进方向（Forward 向量）
@@ -238,9 +139,7 @@ const onStart = () => {
 
         return mat3(r, u, f);
       }
-    `
 
-    const rayMarching = `
       // rayOrigin 代表视线（或光线）的起点
       // rayDirection 代表视线（或光线）的方向
       vec2 rayMarching(vec3 rayOrigin, vec3 rayDirection) {
@@ -277,9 +176,7 @@ const onStart = () => {
 
         return vec2(disTotal, hit ? objectType : -1.0);
       }
-    `
 
-    const getLightDif = `
        // 计算一个 3D 点 p 与光源之间的漫反射光照强度
       float getLightDif(vec3 lightPos, vec3 p) {
         float SHADOW = 0.1;
@@ -311,9 +208,7 @@ const onStart = () => {
 
         return dif;
       }
-    `
 
-    const getSkyColor = `
       // 根据给定的方向向量 eye 计算天空的颜色这个函数模拟了天空的渐变效果，从地平线到天顶的颜色变化
       vec3 getSkyColor(vec3 eye) {
         // 方案1   -------------------------------------------------------------------
@@ -342,45 +237,6 @@ const onStart = () => {
         // // 使用平滑过渡
         // return mix(skyHorizon, skyTop, pow(t, 0.5));
       }
-    `
-
-    glslCanvas.load(`
-      #extension GL_OES_standard_derivatives: enable
-      precision highp float;
-
-      uniform vec2 u_resolution;
-      uniform float u_time;
-      uniform vec2 u_mouse;
-
-      const float MAX_DIST = 1000.0;
-
-      // 定义物体类型枚举
-      #define WATER_PLANE 0
-      #define SPHERE1 1
-      #define SPHERE2 2
-      #define CUBE 3
-
-      ${getWaterPlaneColor}
-
-      ${getWaterPlaneDist}
-
-      ${getCubeDist}
-
-      ${getSphereDis}
-
-      ${getDist}
-
-      ${getObjectColor}
-
-      ${getNormal}
-      
-      ${getCameraMat}
-
-      ${rayMarching}
-
-      ${getLightDif}
-
-      ${getSkyColor}
 
       void main() {
         vec2 fragCoord = gl_FragCoord.xy;
@@ -389,10 +245,6 @@ const onStart = () => {
         // 归一化 uv 的坐标范围到 [-1, 1]
         // [0, 1] -> [-0.5, 0.5]<* 0.5>
         vec2 uv = (fragCoord.xy - u_resolution.xy * 0.5) / min(u_resolution.y, u_resolution.x);
-
-
-        // 这行会导致格子样式错乱
-        // uv *= 5.0;
 
 
         vec3 finalColor = vec3(0.0);
@@ -435,6 +287,9 @@ const onStart = () => {
 
         // 点 p 与光源之间的漫反射光照强度
         float lightDif = getLightDif(lightPos, pointOfCameraTouchObject);
+
+
+        vec3 waterPlaneColor = getWaterPlaneColor(pointOfCameraTouchObject);
 
 
         // 获取物体颜色
@@ -480,10 +335,6 @@ const onStart = () => {
           waterNormal = normalize(waterNormal);
           
 
-          // 增加反射距离限制
-          float reflectMaxDist = 100.0;
-
-
           // 反射光线方向
           vec3 reflectDir = reflect(rayDirection, waterNormal);
 
@@ -496,24 +347,8 @@ const onStart = () => {
           vec3 reflectColor = vec3(0.0);
 
 
-          if(reflectResult.y > -1.0 && reflectResult.x < reflectMaxDist) {
-
-
-            // 反射物体颜色
-            vec3 reflectObjColor = getObjectColor(int(reflectResult.y));
-
-
-            // 反射光照计算
-            float reflectLightDif = getLightDif(lightPos, pointOfCameraTouchObject + reflectDir * reflectResult.x);
-
-            
-            reflectColor = reflectObjColor * lightColor * reflectLightDif;
-          } else {
-
-
-            // 天空反射
-            reflectColor = getSkyColor(normalize(reflectDir));
-          }
+          // 天空反射
+          reflectColor = getSkyColor(normalize(reflectDir));
           
 
           // 水面基础颜色
@@ -538,11 +373,11 @@ const onStart = () => {
         } else { // 碰撞到物体
 
 
-          objectColor = getObjectColor(int(objectType));
+          // objectColor = getObjectColor(int(objectType));
 
 
           // 计算最终颜色（物体颜色 * 光照颜色 * 光照强度）
-          finalColor = objectColor * lightColor * lightDif;
+          // finalColor = objectColor * lightColor * lightDif;
         }
 
 

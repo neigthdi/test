@@ -16,5 +16,8 @@
 ## 物体赋予各自颜色
 <preview path="../demo/shaderToy/shaderToy2/moreGeoWithColor.vue"></preview>
 
+## 下雨的雨水波纹 (未完成，参考自定义效果-模拟下雪.glsl)  { style="color: red;"}
+<preview path="../demo/shaderToy/shaderToy2/rain.vue"></preview>
+
 ## 物体跳动、天空云朵、山 (未完成)  { style="color: red;"}
 <preview path="../demo/shaderToy/shaderToy2/animalJump.vue"></preview>

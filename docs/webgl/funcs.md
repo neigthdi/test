@@ -429,8 +429,9 @@ void main() {
 ## mod
 
 float mod(float x, float y)返回 x 除以 y 的余数。    
-这个函数在处理周期性变化、纹理坐标映射、渐变效果等场景中非常有用。  
-
+这个函数在处理周期性变化、纹理坐标映射、渐变效果等场景中非常有用。   
+mod(x, y)函数是周期性的，其周期为y。mod(x, y)函数表示x除以y的余数，因此值总是在0到y-1之间       
+​      
 应用场景：     
 1、周期性变化：在需要实现周期性变化的效果时，如波浪、旋转动画等，可以使用mod函数来计算当前时间或位置与周期长度的余数，从而得到循环的索引或偏移量。   
 2、纹理坐标映射：在处理纹理时，可以使用mod函数对纹理坐标进行映射，以实现纹理的重复、镜像等效果。例如，通过将纹理坐标与某个值进行mod运算，可以使纹理在特定方向上循环显示。    
@@ -457,7 +458,7 @@ void main() {
 ```
 ```javascript
 #define TAU 6.28318530718
-vec2 p = mod(uv*TAU, TAU)-150.0;
+vec2 p = mod(uv * TAU, TAU) - 150.0;
 
 // uv 被乘以 TAU（圆周率的两倍，代表一个完整的圆）
 // 将纹理坐标 (u, v) 扩展到 (0, 2 * PI) 的范围。意味着纹理坐标被拉伸，每个分量都乘以 TAU
@@ -663,9 +664,9 @@ void main() {
   float sqrtValue = sqrt(uValue);  
   // 仅为演示：这里并没有真正使用 sqrtValue 来影响颜色  
   // 但在实际应用中，可能会根据 sqrtValue 来修改颜色或其他属性  
-  // 假设我们有一个纹理，但我们想根据 uValue 的平方根来调整纹理的亮度  
+  // 假设有一个纹理，但想根据 uValue 的平方根来调整纹理的亮度  
   vec4 texColor = texture(texture1, TexCoords);  
-  texColor.rgb *= sqrtValue; // 假设我们希望亮度与 sqrtValue 成正比  
+  texColor.rgb *= sqrtValue; // 假设希望亮度与 sqrtValue 成正比  
   FragColor = texColor;  
 }
 ```
@@ -681,7 +682,7 @@ genType texture(sampler2D sampler, vec2 coord, [float bias]);
 sampler：一个类型为 sampler2D 的 uniform 变量，指定了要采样的二维纹理。  
 coord：一个二维向量（vec2），指定了纹理坐标（u, v），用于确定采样点。     
 bias（可选）：一个浮点数，用于在纹理查找过程中应用偏移量。这个参数在大多数情况下不是必需的，且其效果可能依赖于具体的 GPU 和驱动程序实现。     
-genType 通常会是 vec4，因为纹理采样通常返回 RGBA 颜色值。但是，如果你正在使用采样器类型为 sampler2DShadow 的阴影纹理，或者你的纹理数据不是颜色数据（例如，深度图或法线图），那么 genType 可能会是 float 或其他类型。     
+genType 通常会是 vec4，因为纹理采样通常返回 RGBA 颜色值。但是，如果正在使用采样器类型为 sampler2DShadow 的阴影纹理，或者纹理数据不是颜色数据（例如，深度图或法线图），那么 genType 可能会是 float 或其他类型。     
 ```javascript
 #version 330 core  
 out vec4 FragColor;  
