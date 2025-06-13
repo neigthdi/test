@@ -1,8 +1,7 @@
 <template>
   <div>
-    <div class="flex space-between">
-      <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
-    </div>
+    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
+    <div>https://webgl-shaders.com/rain-example.html</div>
     <canvas v-if="isRunning" id="rain" class="shader-toy-stage bg-black"></canvas>
   </div>
 </template>

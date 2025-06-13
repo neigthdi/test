@@ -48,6 +48,10 @@ export default {
         text: 'shader案例网站-2',
         link: 'https://glslsandbox.com/'
       },
+      {
+        text: 'shader案例网站-3',
+        link: 'https://webgl-shaders.com/'
+      },
     ],
     sidebar: {
       '/': sidebarBase()
