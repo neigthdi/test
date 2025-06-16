@@ -1,7 +1,6 @@
 <template>
   <div>
     <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
-    <div>https://webgl-shaders.com/rain-example.html</div>
     <canvas v-if="isRunning" id="rain" class="shader-toy-stage bg-black"></canvas>
   </div>
 </template>
@@ -39,8 +38,168 @@ const onStart = () => {
       uniform vec2 u_mouse;
 
       #define WATER_PLANE 0;
+      #define PI 3.1415926
 
       const float MAX_DIST = 1000.0;
+      const float rainNum = 20.0;
+
+      float random1d(float dt) {
+        float c = 43758.5453;
+        float sn = mod(dt, 3.14);
+        return fract(sin(sn) * c);
+      }
+
+      // pos与屏幕的分辨率相关
+      vec2 randomRainPos(float val, vec2 u_resolution, vec2 velocity) {
+        // 计算雨滴在水平方向上可能的最大偏移量 maxX
+        // velocity.x 是雨滴水平方向上的速度分量
+        // abs(u_resolution.y / velocity.y) 计算的是雨滴从屏幕顶部下落到屏幕底部的过程中，水平方向上可能移动的最大距离的比例因子
+        // maxX 表示雨滴在水平方向上可能的最大偏移量，这个偏移量取决于雨滴的速度和屏幕的高度
+        float maxX = velocity.x * abs(u_resolution.y / velocity.y);
+
+        // 计算雨滴的水平位置 x
+        // step(0.0, maxX) 是一个阶跃函数，当 maxX 大于 0.0 时返回 1.0，否则返回 0.0。这里的作用是确保 maxX 是一个正数
+        // -maxX * step(0.0, maxX) 用于确定雨滴水平位置的最小值，即 -maxX
+        // u_resolution.x + abs(maxX) 是雨滴水平位置的最大值，即屏幕宽度加上雨滴可能的最大水平偏移量
+        // random1d(val) 是一个随机数生成函数，根据输入的种子值 val 生成一个 [0, 1) 范围内的随机数
+        // x 的值是通过将随机数缩放到 [-maxX, u_resolution.x + abs(maxX)] 的范围内得到的，这样可以确保雨滴的水平位置是随机的，并且在屏幕范围内
+        float x = -maxX * step(0.0, maxX) + (u_resolution.x + abs(maxX)) * random1d(val);
+
+        // 计算雨滴的垂直位置 y
+        // random1d(1.234 * val) 是一个随机数生成函数，根据输入的种子值 1.234 * val 生成一个 [0, 1) 范围内的随机数
+        // 0.05 * random1d(1.234 * val) 将随机数缩放到 [0, 0.05) 的范围内
+        // 1.0 + 0.05 * random1d(1.234 * val) 将随机数偏移 1.0，得到一个 [1.0, 1.05) 范围内的随机数
+        // y 的值是通过将这个随机数乘以屏幕高度 u_resolution.y 得到的，这样可以确保雨滴的垂直位置在屏幕高度的 [u_resolution.y, 1.05 * u_resolution.y] 范围内
+        // 这意味着雨滴的起始位置会略高于屏幕顶部，这样可以避免雨滴从屏幕边缘出现时看起来不自然
+        float y = (1.0 + 0.05 * random1d(1.234 * val)) * u_resolution.y;
+
+        return vec2(x, y);
+      }
+
+      // rainSize
+      // rainLen
+      // currentPos：当前的屏幕像素，经过 elapsedTime 秒后，所在的位置
+      // fragCoord：当前的屏幕像素
+      // velocityDir：雨滴运动方向的单位向量
+      vec3 drawRain(float rainSize, float rainLen, vec2 currentPos, vec2 fragCoord, vec2 velocityDir) {
+        // 这两行的计算原理如下：
+        // 1、gpu的并行计算的，所以是 fragCoord 中所有的xy都需要计算得出 currentPosToFragCoordDir ，从而计算当前的 projectedDist
+        // 2、通过计算 currentPosToFragCoordDir 在 -velocityDir 的投影长度，得到 >0 和 <= 0 两个结果
+        // 如果是 >0 ，即夹角小于90°，则表明了当前的像素在雨滴后方（轨迹线区域），此时雨滴已经经过了
+        // 如果是 <=0 ，即夹角小于等于90°，则表明了当前的像素在雨滴前方或与雨滴位置重合（不显示轨迹线），此时雨滴还没有进入
+        // 投影的长度，值越大，像素距离雨滴越远，轨迹线透明度越高（可以通过 smoothstep 实现淡出效果）
+        // ------------------------------------------------------------------------------------------------------------------
+        // |         这条虚线是 velocityDir ，方向是斜向右下
+        // |         \       · 像素A的 fragCoord.xy           计算 A 的投影长度，首先 velocityDir 反方向，得到斜向左上
+        // |          \                                                        然后 fragCoord - currentPos 得到从 pos 指向 A 的向量
+        // |           \                                                       最后计算dot，此时可以看到 结果 >0 ，因为夹角是小于90°
+        // |            * 这个是当前的 pos.xy
+        // |             \       · 像素B的 fragCoord.xy       计算 B 的投影长度，首先 velocityDir 反方向，得到斜向左上   
+        // |              \                                                    然后 fragCoord - currentPos 得到从 pos 指向 B 的向量
+        // |               \                                                   最后计算dot，此时可以看到 结果 <0 ，因为夹角是大于90°
+        // |____________________________
+        // ------------------------------------------------------------------------------------------------------------------
+        // 计算当前像素位置与雨滴位置之间的向量差。这个向量表示从雨滴位置指向当前像素的方向
+        vec2 currentPosToFragCoordDir = fragCoord - currentPos;
+        // 计算当前像素在雨滴运动方向上的投影距离
+        // dot 函数计算两个向量的点积，结果是一个标量，表示当前像素在雨滴运动方向上的投影长度。
+        // -velocityDir 是雨滴运动方向的反方向，因为雨滴是从上方落下，所需要的投影方向是从雨滴位置指向像素位置
+        float projectedDist = dot(currentPosToFragCoordDir, -velocityDir);
+
+        // 通过上面两行，计算 fragCoord.xy 在雨滴后方，还是前方
+        // 接下来，开始计算切向距离的平方（tanjential distance squared）
+        // 切向距离的平方，是描述一个点到一条直线的垂直距离的平方
+        // 为什么要计算切向距离的平方？1、判断点是否在轨迹宽度内；2、用于生成虚线效果；3、用于生成渐变效果
+        // 计算步骤：
+        // 1、计算从点 pos 到点 fragCoord 的向量 currentPosToFragCoordDir（currentPosToFragCoordDir = fragCoord - currentPos）
+        // 2、计算 currentPosToFragCoordDir 在 velocity_dir 方向上的投影距离 projectedDist（dot(currentPosToFragCoordDir, -velocityDir)）
+        // 3、计算 currentPosToFragCoordDir 的模的平方（dot(currentPosToFragCoordDir, currentPosToFragCoordDir)）
+        // 4、利用勾股定理，计算切向距离的平方
+        float tanjentialDistanceSquared = dot(currentPosToFragCoordDir, currentPosToFragCoordDir) - pow(projectedDist, 2.0);
+
+        // 由于是平方，所以size也要平方
+        float sizeSquared = pow(rainSize, 2.0);
+
+        // 两个计算步骤
+        // 使用 step 和 smoothstep 函数来确定点 fragCoord.xy 是否在直线的 size 范围内
+        // -----------------------------------------------------------------------------
+        // 1、
+        // 当 projectedDist < 0.0，返回0，否则返回1
+        // 作用：判断点是否在轨迹的投影方向上
+        // -----------------------------------------------------------------------------
+        // 2、
+        // 由于 edge0 < edge1，当 tanjentialDistanceSquared < sizeSquared / 2.0，返回0；当 tanjentialDistanceSquared > sizeSquared，返回1
+        // 作用：生成一个从轨迹中心向外逐渐衰减的效果
+        // 如果 tanjentialDistanceSquared 接近轨迹中心（即较小的值）， smoothstep 返回接近 0 的值
+        // 如果 tanjentialDistanceSquared 接近轨迹的边缘（即较大的值）， smoothstep 返回接近 1 的值
+        // 使用 1.0 - smoothstep(...) 的原因是为了反转 smoothstep 的效果
+        float line = step(0.0, projectedDist) * (1.0 - smoothstep(sizeSquared / 2.0, sizeSquared, tanjentialDistanceSquared));
+
+        // 计算原理是通过结合直线的宽度范围和周期性的余弦函数来创建一个虚线效果
+        // cos(0.3 * projectedDist - PI / 3.0)：计算一个周期性的余弦函数，其周期由 0.3 决定，相位由 -PI / 3.0 决定
+        // 这个余弦函数的值在 -1 到 1 之间变化
+        // step(0.5, cos(0.3 * projectedDist - PI / 3.0))：使用 step 函数将余弦函数的值转换为二值
+        // 当余弦函数的值大于 0.5 时为 1，否则为 0。这创建了一个虚线的模式，其中 1 表示虚线的实线部分，0 表示虚线的空隙部分
+        // <<< 可以使用sin，不使用cos >>>
+        // 将 line 与虚线模式相乘，得到最终的虚线效果
+        // 只有当点 fragCoord.xy 在直线的 size 范围内且在虚线的实线部分时， dashedLine 才为 1，否则为 0
+        float dashedLine = line * step(0.5, cos(0.3 * projectedDist - PI / 3.0));
+
+        // 目的是为虚线添加一个渐隐效果，使其在远离起点 pos 的方向上逐渐变淡
+        // projectedDist：这是点 fragCoord.xy 在 -velocityDir 方向上（即沿着虚线的方向）的投影距离
+        // rainLen / 5.0 和 rainLen：这两个值定义了一个渐变范围。rainLen / 5.0 是渐变的起始点，rainLen 是渐变的结束点。
+        // smoothstep 函数：是一个平滑的阶梯函数，用于在两个值之间进行平滑过渡。其定义如下：
+        // 因此，smoothstep(rainLen / 5.0, rainLen, projected_dist) 的作用是：
+        // 当点 fragCoord.xy 靠近起点 pos（即 projected_dist 小于 rainLen / 5.0）时，返回接近 0 的值
+        // 当点 fragCoord.xy 远离起点 pos（即 projected_dist 大于 rainLen）时，返回接近 1 的值
+        // 在中间区域，返回一个平滑过渡的值
+        float fadingDashedLine = dashedLine * (1.0 - smoothstep(rainLen / 5.0, rainLen, projectedDist));
+
+        return vec3(fadingDashedLine);
+      }
+
+      vec3 drawDiffusionWave(vec2 endPos, vec2 fragCoord, float time) {
+        // waveSize 扩散波由小变大得更加明显
+        float waveSize = 10.0;
+        float innerRadius = (0.05 + 0.8 * time) * waveSize;
+        float outerRadius = innerRadius + 0.25;
+
+
+        // 这两行这样计算的原因
+        // 在上面设置了内圈和外圈，那么接下来就需要知道整个屏幕中所有 fragCoord.xy 和 endPos 的距离
+        // 只有符合的距离（即下面的 ring 的计算），才能渲染到屏幕中
+        // ------------------------------------------------------------------------------------------------------------------
+        // |         这条虚线是 velocityDir ，方向是斜向右下
+        // |         \  
+        // |          \  · 像素A的 fragCoord.xy 
+        // |           \  
+        // |            \    · 像素B的 fragCoord.xy 
+        // |             \      
+        // |              \    · 像素C的 fragCoord.xy 
+        // |               \    
+        // |                * 这个是结束的 pos.xy
+        // |           ( (------)·)像素D的 fragCoord.xy     此时只有像素D符合 ring 的计算范围内
+        // |         这里是 wave 有内圈和外圈
+        // |____________________________
+        // ------------------------------------------------------------------------------------------------------------------
+        vec2 endPosToFragCoordDir = fragCoord - endPos;
+        // 进行 * vec2(1.0, 3.0) 操作，是为了把Y轴给压扁
+        // 比如期望得到的结果是1.0，此时y的值只需要是0.5即可
+        float distortedDist = length(endPosToFragCoordDir * vec2(1.0, 3.0));
+
+        // 假设 innerRadius 是0.5，那么 outerRadius 是0.75
+        // smoothstep(0.5, 0.5 + 5.0, distortedDist) 小于0.5的位置都0.0（消失），0.5 ~ 5.5之间的渐变，大于5.5的位置都是1.0
+        // smoothstep(0.75, 0.75 + 5.0, distortedDist) 小于0.75的位置都0.0（消失），0.75 ~ 5.75之间的渐变，大于5.75的位置都是1.0
+        // 有个 1-，所以大于5.75的位置都是0.0（消失），小于0.75的位置都是1.0
+        // 两个相乘，0 ~ 0.5，是0.0；0.5 ~ 0.75是渐变A，0.75 ~ 5.5是渐变B，5.0 ~ 5.75是渐变C，大于5.75是0.0
+        float ring = smoothstep(innerRadius, innerRadius + 5.0, distortedDist) * (1.0 - smoothstep(outerRadius, outerRadius + 5.0, distortedDist));
+
+        // elapsedTime - fallTime 是正数或者0，所以smoothstep的范围是 0 ~ 1
+        // 1- 的作用就是让 ring 逐渐消失
+        float fadingRing = ring * (1.0 - smoothstep(0.0, 0.7, time));
+
+        return vec3(fadingRing);
+      }
 
       vec3 getWaterPlaneColor(vec3 p) {
         vec3 color = vec3(0.0, 0.0, 0.0);
@@ -377,6 +536,38 @@ const onStart = () => {
 
           // 计算最终颜色（物体颜色 * 光照颜色 * 光照强度）
           // finalColor = objectColor * lightColor * lightDif;
+        }
+
+
+
+        float rainSize = 1.0;
+        float rainLen = 70.0;
+        float fallTime = 0.7; // 所有雨滴最多可以存在的时间，固定为0.7或者其他正数。
+        float lifeTime = fallTime * 2.0;
+        // 必须要乘以 u_resolution.y
+        // 如果不乘以 u_resolution.y，雨滴的垂直速度将是一个固定的值（例如 -0.9），而与屏幕高度无关
+        // 在高分辨率屏幕上（例如 1920x1080），雨滴的垂直速度会显得非常小，因为屏幕高度较大，雨滴需要很长时间才能从屏幕顶部移动到底部。这会导致雨滴看起来几乎不动，或者移动得非常缓慢，无法产生明显的下落效果
+        // 在低分辨率屏幕上（例如 320x240），雨滴的垂直速度会显得过大，因为屏幕高度较小，雨滴会瞬间从屏幕顶部移动到底部，导致雨滴看起来像是瞬间消失，而不是自然地下落
+        // 通过将速度与屏幕高度成比例（即乘以 u_resolution.y），可以确保雨滴在不同分辨率的屏幕上都能以类似的时间从顶部移动到底部
+        // -0.5 * u_resolution.x ，表示雨滴在水平方向上的速度分量
+        // -0.8 * u_resolution.y ，表示雨滴在垂直方向上的速度分量
+        vec2 velocity = vec2(-0.5 * u_resolution.x, -0.8 * u_resolution.y) / fallTime;
+        vec2 velocityDir = normalize(velocity);
+
+        for(float i = 0.0; i < rainNum; i+= 1.0) {
+          float time = u_time + lifeTime * (i + i / rainNum); // time需要逐渐增大
+          float elapsedTime = mod(time, lifeTime); // 当前已过的时间，范围是 0 ~ fallTime
+
+          float val = i + floor(time / lifeTime - i) * rainNum;
+          vec2 pos = randomRainPos(val, u_resolution.xy, velocity);
+          
+          if(elapsedTime < fallTime) { // 如果还没到地面（消失）的时刻
+            vec2 currentPos = pos + velocity * elapsedTime;
+            finalColor += drawRain(rainSize, rainLen, currentPos, fragCoord, velocityDir);
+          } else {
+            vec2 endPos = pos + velocity * fallTime;
+            finalColor += drawDiffusionWave(endPos, fragCoord, elapsedTime - fallTime);
+          }
         }
 
 
