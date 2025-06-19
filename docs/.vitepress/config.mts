@@ -160,6 +160,7 @@ function sidebarBase() {
       text: '案例-shaderToy',
       collapsible: true,
       items: [
+        { text: '杂录', link: '/components/shaderToyMemo.md' },
         { text: 'shaderToy1', link: '/components/shaderToy1.md' },
         { text: 'shaderToy2', link: '/components/shaderToy2.md' },
       ]

@@ -1,6 +1,7 @@
 <template>
   <div>
     <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
+    <div class="color-red">注意：这里雨点滴下来中的“减法”，和fire2中的 “float finalFbm = fbm(vec2(uv.x, uv.y - u_time * 1.2) * 1.74588 + vec2(0.2155, 0.5654));” 的“减法”的区别。</div>
     <canvas v-if="isRunning" id="rain" class="shader-toy-stage bg-black"></canvas>
   </div>
 </template>
