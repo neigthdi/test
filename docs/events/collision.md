@@ -14,8 +14,8 @@ Babylon.js 具有物理引擎插件系统，有助于向场景中添加交互。
 可以使用的物理插件 -  
 &emsp;&emsp;Cannon  
 &emsp;&emsp;Oimo  
-&emsp;&emsp;Energy
-&emsp;&emsp;Havok
+&emsp;&emsp;Energy     
+&emsp;&emsp;Havok      
 
 要为场景添加物理引擎
 

@@ -433,7 +433,7 @@ const onStart = () => {
         vec3 pointOfCameraTouchObject = cameraPos + rayDirection * rayDist;
 
 
-        // 点 p 与光源之间的漫反射光照强度
+        // 点 pointOfCameraTouchObject 与光源之间的漫反射光照强度
         float lightDif = getLightDif(lightPos, pointOfCameraTouchObject);
 
 

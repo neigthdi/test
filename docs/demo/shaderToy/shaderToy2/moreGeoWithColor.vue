@@ -261,12 +261,14 @@ const onStart = () => {
           // rayDirection * disTotal 计算视线（或光线）在方向 rayDirection 上行进距离 disTotal 后的向量，然后将这个向量加到源点 rayOrigin 上，得到新的位置 pos。
           vec3 pos = rayOrigin + disTotal * rayDirection;
 
+          vec2 res = getDist(pos);
+
           // dS 表示从当前视线（或光线）位置 p 到最近的场景物体表面的距离
-          float dS = getDist(pos).x;
+          float dS = res.x;
           disTotal += dS;
 
           // 射中的物体类型
-          objectType = getDist(pos).y;
+          objectType = res.y;
 
           // 如果从当前位置到球面的距离 dS 小于某个阈值 SURFACE_DIST，则可能表示视线（或光线）已经“击中”了表面，因此退出循环
           // 因为点 p 可能在物体内，float dS = getDist(pos).x 中的 dS 会返回负值
