@@ -178,6 +178,7 @@ const initScene = async () => {
 
       varying vec3 vColor;
 
+      // fract的返回值在 0 ~ 1
       float random(vec2 uv) {
         return fract(sin(dot(uv.xy, vec2(12.354121, 91.321))) * 452361.21321);
       }
@@ -292,13 +293,16 @@ const initScene = async () => {
 
 
         vec3 result = vec3(x, y, z);
+
         // 初始化法线为垂直向上的向量，法线的作用是光照，因为即使顶点改变了，但是法线不会改变
-        vec3 normal = vec3(0.0, 1.0, 0.0);
+        // X和Z也需要累加
+        // 每个波对表面的影响是独立的，但最终的表面状态是所有波的叠加结果
+        // 这意味着每个波对切线和副切线的贡献也需要逐波累加，而不是在所有波的位置影响计算完成后才统一计算
+        vec3 normalX = vec3(0.0); // 切线（Tangent，T）
+        vec3 normalZ = vec3(0.0); // 副切线（Binormal，B）
 
-        // vec4 direction = vec4(1, 1, 0, 0);
-        // vec2 dir = normalize(direction.xy);
 
-
+        // 这里是单个的波
         // float A = 0.8;
         // float speed = 10.0;
         // float waveLength = 6.0; // 波长影响波的叠加，比如0.2会多个波叠到一起，太大会呈现一条线，所以尽量找合适的数值
@@ -315,7 +319,7 @@ const initScene = async () => {
         for(int i = 0; i < wavesCount; i++) {
           float step = float(i) + 0.212;
 
-          // 随机方向分布
+          // 随机方向分布，都是正方向
           float angle = random(vec2(float(i), float(i) + 1.1234123)) * 6.28318530718; // 0 - 2π
           vec2 dir = vec2(cos(angle), sin(angle));
           
@@ -331,8 +335,22 @@ const initScene = async () => {
           result.x += A * dir.x * cos(value);
           result.y += A * sin(value);
           result.z += A * dir.y * cos(value);
+
+
+          normalX.x += dir.x * dir.x * k * A * -sin(value);
+          normalX.y += dir.x * k * A * cos(value);
+          normalX.z += dir.x * dir.y * k * A * -sin(value);
+
+          normalZ.x += dir.x * dir.y * k * A * -sin(value);
+          normalZ.y += dir.y * k * A * cos(value);
+          normalZ.z += dir.y * dir.y * k * A * -sin(value);
         }
-       
+
+
+        // 将所有波的切线和副切线贡献累加到初始的切线和副切线上，得到最终的切线和副切线
+        // 需要注意的是，这里对切线和副切线的x和z分量分别加了1，这是因为初始的切线和副切线是单位向量，分别指向x轴和z轴方向。
+        normalX = vec3(1.0 + normalX.x, normalX.y, normalX.z);
+        normalZ = vec3(normalZ.x, normalZ.y, 1.0 + normalZ.z);
 
         return result;
       }
@@ -505,9 +523,6 @@ const destroy = () => {
 
 onMounted(async() => {
   await nextTick()
-  isRunning.value = true
-  await nextTick()
-  sceneResources = await initScene()
 })
 
 onUnmounted(() => {
