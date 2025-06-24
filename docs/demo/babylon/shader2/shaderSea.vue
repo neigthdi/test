@@ -337,10 +337,38 @@ const initScene = async () => {
           result.z += A * dir.y * cos(value);
 
 
+          // T=dP/dx
+          // Tx=dPx/dx   --->   dx * k * a * (-sin(value))
+          // Ty=dPy/dx   --->   k * a * cos(value)
+          // Tz=dPz/dx   --->   dy * k * a * (-sin(value))
+          // ---------------------------------------------------------
+          // 为什么会得到 normalX.x += dir.x * dir.x * k * A * -sin(value); 这个方程
+          // 首先，Px的计算方式是 Px = x + dir.x * a * cos(value)
+          // 对x求偏导 dPx / dx = 1 + d(dir.x * a * cos(value)) / dx
+          // 由于 dir.x 和 a 是常数，且 value 是 x 的函数，可以进一步计算
+          // d(dir.x * a * cos(value)) / dx   --->    dir.x * a * d(cos(value)) / dx 
+          // 根据链式法则：
+          // d(cos(value)) / dx    --->    -sin(value) * d(value) / dx
+          // value 可以表示为：
+          // value = k * (dir.x * x + dir.y * z) - omega * t
+          // 其中，k 是波数，omega 是角频率，t 是时间
+          // 对 value 求 x 的偏导数：
+          // d(value) / dx = k * dir.x
+          // 将上面的式子带入前面的表达式，得到：
+          // d(cos(value)) / dx = -sin(value) * dir.x * k
+          // 因此：
+          // dPx / dx = 1 + dir.x * a * (-sin(value) * k * dir.x)   --->   dPx / dx = 1 - dir.x * a * sin(value) * k * dir.x
+          // 这里的 1 表示初始的切线方向在 x 轴上的分量。在没有波的影响时，切线方向是沿着 x 轴的
+          // normalX = vec3(1.0 + normalX.x, normalX.y, normalX.z);
+          // ---------------------------------------------------------
           normalX.x += dir.x * dir.x * k * A * -sin(value);
           normalX.y += dir.x * k * A * cos(value);
           normalX.z += dir.x * dir.y * k * A * -sin(value);
 
+          // T=dP/dz
+          // Tx=dPx/dz   --->   dx * k * a * (-sin(value))
+          // Ty=dPy/dz   --->   k * a * cos(value)
+          // Tz=dPz/dz   --->   dy * k * a * (-sin(value))
           normalZ.x += dir.x * dir.y * k * A * -sin(value);
           normalZ.y += dir.y * k * A * cos(value);
           normalZ.z += dir.y * dir.y * k * A * -sin(value);
@@ -351,6 +379,8 @@ const initScene = async () => {
         // 需要注意的是，这里对切线和副切线的x和z分量分别加了1，这是因为初始的切线和副切线是单位向量，分别指向x轴和z轴方向。
         normalX = vec3(1.0 + normalX.x, normalX.y, normalX.z);
         normalZ = vec3(normalZ.x, normalZ.y, 1.0 + normalZ.z);
+
+        vec3 finalNormal = normalize(cross(normalZ, normalX));
 
         return result;
       }
