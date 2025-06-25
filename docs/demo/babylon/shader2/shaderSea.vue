@@ -320,6 +320,8 @@ const initScene = async () => {
           float step = float(i) + 0.212;
 
           // 随机方向分布，都是正方向
+          // 这个的vec2的x和y分别对应了xyz轴的x和z，因为高度的y不用考虑方向
+          // x是切线，z是副切线
           float angle = random(vec2(float(i), float(i) + 1.1234123)) * 6.28318530718; // 0 - 2π
           vec2 dir = vec2(cos(angle), sin(angle));
           
