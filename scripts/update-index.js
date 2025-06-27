@@ -26,7 +26,7 @@ let found = false;
 lines = lines.map(line => {
   if (line.startsWith(timestampMarker)) {
     found = true;
-    return `${timestampMarker} ${formattedTime}`;
+    return `${timestampMarker}${formattedTime}`;
   }
   return line;
 });
