@@ -10,9 +10,13 @@ let content = fs.readFileSync(indexPath, 'utf-8');
 // 定义时间戳的标记
 const timestampMarker = '最后更新时间：';
 
-// 获取当前时间并格式化为 YYYY-MM-DD HH:MM
+// 获取当前本地时间并格式化为 YYYY-MM-DD HH:MM
 const currentTime = new Date();
-const formattedTime = currentTime.toISOString().replace('T', ' ').substring(0, 16);
+const formattedTime = currentTime.getFullYear() +
+  '-' + String(currentTime.getMonth() + 1).padStart(2, '0') +
+  '-' + String(currentTime.getDate()).padStart(2, '0') +
+  ' ' + String(currentTime.getHours()).padStart(2, '0') +
+  ':' + String(currentTime.getMinutes()).padStart(2, '0');
 
 // 检查是否已经存在时间戳行
 let lines = content.split('\n');
