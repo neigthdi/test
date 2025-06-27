@@ -1,0 +1,5 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# 调用 Node.js 脚本
+node scripts/update-index.js
