@@ -4,7 +4,7 @@
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     </div>
-    <canvas v-if="isRunning" id="shaderSea" class="stage"></canvas>
+    <canvas v-if="isRunning" id="shaderSea1" class="stage"></canvas>
   </div>
 </template>
 
@@ -50,7 +50,7 @@ const onTrigger = async () => {
 }
 
 const initScene = async () => {
-  const ele = document.getElementById("shaderSea") as any
+  const ele = document.getElementById("shaderSea1") as any
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动
@@ -124,7 +124,7 @@ const initScene = async () => {
     xPanel.addControl(x)
     xPanel.linkWithMesh(xBox)
 
-    const yBox = MeshBuilder.CreateBox('x', { size: 1 }, scene)
+    const yBox = MeshBuilder.CreateBox('y', { size: 1 }, scene)
     yBox.position = new Vector3(0, 80, 0)
     const yPanel = new StackPanel()
     yPanel.width = '20px'
@@ -138,7 +138,7 @@ const initScene = async () => {
     yPanel.addControl(y)
     yPanel.linkWithMesh(yBox)
 
-    const zBox = MeshBuilder.CreateBox('x', { size: 1 }, scene)
+    const zBox = MeshBuilder.CreateBox('z', { size: 1 }, scene)
     zBox.position = new Vector3(0, 0, 80)
     const zPanel = new StackPanel()
     zPanel.width = '20px'

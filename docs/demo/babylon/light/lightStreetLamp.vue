@@ -81,20 +81,10 @@ const initScene = async () => {
   }
 
   const createSkyBox = () => {
-    const skyBox = MeshBuilder.CreateBox(
-      'skyBox',
-      { size: 150 },
-      scene
-    )
-    const skyBoxMaterial = new StandardMaterial(
-      'skyBox',
-      scene
-    )
+    const skyBox = MeshBuilder.CreateBox('skyBox', { size: 150 }, scene)
+    const skyBoxMaterial = new StandardMaterial('skyBox', scene)
     skyBoxMaterial.backFaceCulling = false
-    skyBoxMaterial.reflectionTexture = new CubeTexture(
-      '/images/skybox',
-      scene
-    )
+    skyBoxMaterial.reflectionTexture = new CubeTexture('/images/skybox', scene)
     skyBoxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE
     skyBoxMaterial.diffuseColor = new Color3(0, 0, 0)
     skyBoxMaterial.specularColor = new Color3(0, 0, 0)
@@ -111,7 +101,7 @@ const initScene = async () => {
     adt.addControl(panel)
 
     const header = new TextBlock()
-    header.text = '←黑夜白天→'
+    header.text = '← 黑夜 白天 →'
     header.height = '30px'
     header.color = 'red'
     panel.addControl(header)

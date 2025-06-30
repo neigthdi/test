@@ -166,14 +166,7 @@ const initScene = async () => {
   }
 
   const createGround = () => {
-    const ground = MeshBuilder.CreateGround(
-      'ground',
-      {
-        width: 12,
-        height: 12
-      },
-      scene
-    )
+    const ground = MeshBuilder.CreateGround('ground', { width: 12, height: 12 }, scene)
     const grass = new CustomMaterial('grass', scene)
     grass.diffuseTexture = new Texture('/images/grass.png', scene)
     ground.material = grass

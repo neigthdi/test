@@ -44,7 +44,7 @@ const onStart = () => {
 
       const float MAX_DIST = 1000.0;
       const float JUMP_SPEED = 4.0;
-      const float MOVE_SPEED = 0.0;
+      const float MOVE_SPEED = 1.0;
       const float PI = 3.1415926;
       const float IS_LESS_THAN_GROUND_Y = 0.1;
 
@@ -146,7 +146,7 @@ const onStart = () => {
         vec3 cubeSize = vec3(size, size, size);
 
         // 旋转矩阵，围绕 y 轴旋转
-        // 将 u_time 映射到 -30 到 30 度
+        // 将 sin 映射到 -30 到 30 度
         float angle = sin(u_time * JUMP_SPEED / 2.0) * 30.0;
         angle = radians(angle); // 将角度转换为弧度
         // x 第一列     y 第二列   z 第三列    
@@ -195,8 +195,10 @@ const onStart = () => {
         float groundWave = 0.0;
 
         float time = sameTime();
-        float len = length(pos.xz);
+        float zOffset = u_time * MOVE_SPEED; // 根据时间计算 z 方向的偏移量
+        float len = length(vec2(pos.x, pos.z + zOffset)); // // 计算波形中心的偏移，在计算 len 时应用 zOffset
         float tt = time * 15.0 - PI * 2.0 - len * 3.0;
+
         groundWave = 0.1 * exp(-len * len) * sin(tt) * exp(-max(tt, 0.0) / 2.0) * smoothstep(0.0, 0.01, time);
 
         return groundWave;

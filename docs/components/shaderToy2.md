@@ -19,5 +19,5 @@
 ## 下雨的雨水波纹
 <preview path="../demo/shaderToy/shaderToy2/rain.vue"></preview>
 
-## 物体跳动、天空云朵、山 (未完成)  { style="color: red;"}
+## 物体跳动、扩散波
 <preview path="../demo/shaderToy/shaderToy2/animalJump.vue"></preview>
