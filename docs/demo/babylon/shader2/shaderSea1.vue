@@ -351,15 +351,15 @@ const initScene = async () => {
           float angle = random(vec2(float(i), float(i) + 1.1234123)) * 3.1415926 * 2.0; // 0 - 2π
           vec2 dir = vec2(cos(angle), sin(angle));
           
-          float A = random(vec2(step + 0.134, step + 0.42)) * 0.3 + 0.2;
-          float waveLength = random(vec2(step + 0.134, step + 0.442)) * 8.0 + 5.0;
-          float speed = random(vec2(step + 0.134, step + 0.2)) * 2.0 + 1.5;
+          float A = random(vec2(step + 0.134, step + 0.42)) * 0.2 + 0.2;
+          float waveLength = random(vec2(step + 0.134, step + 0.442)) * 15.0 + 10.0;
+          float speed = random(vec2(step + 0.134, step + 0.2)) * 2.0 + 1.2;
+
+          // 固定的计算公式和值
           float k = 2.0 * 3.14 / waveLength;
-          float f = speed / waveLength;
+          float f = speed / waveLength; // 频率
           float omega = 2.0 * 3.14 * f; // 等于 k * speed
-
           float value = dot(dir * k, vec2(x, z)) - omega * time;
-
           xyz.x += A * dir.x * cos(value);
           xyz.y += A * sin(value);
           xyz.z += A * dir.y * cos(value);
@@ -492,6 +492,14 @@ const initScene = async () => {
         vec3 xyz = waveResult.position;
 
 
+        
+        // 光照计算（包括漫反射、高光反射等）通常应该在片元着色器（Fragment Shader）中完成，而不是顶点着色器（Vertex Shader）。
+        // 精度问题：顶点着色器对每个顶点计算一次光照，而片元着色器对每个像素计算一次。对于复杂的表面细节（如波浪的泡沫、菲涅尔效应），顶点级别的插值会导致明显的锯齿或失真。
+        // 视觉效果：光照效果（如高光、反射）需要精细的逐像素计算，顶点着色器的插值无法准确捕捉这些细节。
+        // 性能权衡：虽然顶点着色器计算更快，但现代GPU的片元着色器性能足够处理复杂光照，且视觉效果提升显著。
+
+
+
         //------------------------------这个是通过normal计算，显示海水的颜色------------------------------
         // 变换法线到世界空间（需要世界矩阵）
         // 目的：从世界矩阵（world）中提取旋转部分，生成一个3x3的矩阵（normalMatrix），用于变换法线向量
@@ -525,8 +533,8 @@ const initScene = async () => {
 
 
         // 根据深度混合基础颜色
-        // 由于上面 Gerstner 的计算中，振幅的高度是[0, 1] * 0.3 + 0.2，然后循环4次，所以最大最小值是[-0.5 * 4 , 0.5 * 4]
-        float depthFactor = clamp(xyz.y, -2.0, 2.0);
+        // 由于上面 Gerstner 的计算中，振幅的高度是[0, 1] * 0.2 + 0.2，然后循环4次，所以最大最小值是[-0.4 * 4 , 0.4 * 4]
+        float depthFactor = clamp(xyz.y, -1.6, 1.6);
         vec3 waterColor = mix(deepWaterColor, shallowWaterColor, depthFactor);
 
 
@@ -589,6 +597,8 @@ const initScene = async () => {
 
         // 添加泡沫（使用屏幕空间混合）
         vColor = mix(baseColor, baseColor + foamColor, foamFactor);
+
+        vColor = waterColor + diffuseColor;
         //------------------------------这个是通过normal计算，显示海水的颜色------------------------------
 
 
@@ -597,7 +607,7 @@ const initScene = async () => {
         // vColor = mix(vec3(0.1, 0.56, 1.0), vec3(0.48, 0.75, 1.0), clamp(xyz.y, 0.0, 1.0)); // vec3(0.1, 0.56, 1.0) 蓝色  vec3(0.48, 0.75, 1.0) 蓝白色  由低到高.
         //------------------------------这个是通过y的高度来混合颜色，显示海水的颜色------------------------------
 
-        float waterY = xyz.y + 2.0;
+        float waterY = xyz.y + 1.6;
         gl_Position = worldViewProjection * vec4(vec3(xyz.x, waterY, xyz.z), 1.0);
         // -------------------------------------------------------使用 Gerstner 波-------------------------------------------------------
       }
