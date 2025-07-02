@@ -23,7 +23,9 @@ import {
   ShaderMaterial,
   Color4,
   ArcRotateCamera,
-  Vector3
+  Vector3,
+  Color3,
+  StandardMaterial
 } from 'babylonjs'
 import {
   AdvancedDynamicTexture,
@@ -69,13 +71,15 @@ const initScene = async () => {
 
   const camera = new ArcRotateCamera('camera', -Math.PI / 1.5, Math.PI / 2.2, 15, new Vector3(0, 0, 0), scene)
   camera.upperBetaLimit = Math.PI / 2.2
-  camera.wheelPrecision = 30
-  camera.panningSensibility = 200
+  camera.wheelPrecision = 2
+  camera.panningSensibility = 100
   camera.attachControl(ele, true)
-  camera.setPosition(new Vector3(50, 50, -50))
+  camera.setPosition(new Vector3(160, 160, -160))
 
   const createLight = () => {
-    const light = new HemisphericLight('light',new Vector3(0, 50, 0), scene)
+    const light = new HemisphericLight('light',new Vector3(40, 40, 40), scene)
+    light.direction = new Vector3(1.0, 0.0, 1.0)
+    light.diffuse = new Color3(1.0, 0.95, 0.8)
     return light
   }
 
@@ -157,7 +161,7 @@ const initScene = async () => {
     const ground = MeshBuilder.CreateGroundFromHeightMap(
       "heightMap", 
       "/images/heightMap.png", 
-      { width: 100, height: 100, subdivisions: 500, maxHeight: 30 }
+      { width: 150, height: 150, subdivisions: 500, maxHeight: 80 }
     )
     const mat = new CustomMaterial('grass', scene)
     mat.diffuseTexture = new Texture('/images/ground.jpg', scene)
@@ -165,16 +169,37 @@ const initScene = async () => {
     return ground
   }
 
+  const createSphere = () => {
+    const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 10 }, scene)
+    const sphereMat = new StandardMaterial('sphere')
+    sphereMat.diffuseColor = new Color3(1.0, 0.6, 0.2)
+    sphere.material = sphereMat
+    sphere.position.x = 70
+    sphere.position.y = 70
+    sphere.position.z = 70
+  }
+
   const createSphereShader = () => {
     Effect.ShadersStore['customShaderVertexShader'] = `
       precision highp float;
 
+      struct GerstnerResult {
+        vec3 position;
+        vec3 normal;
+      };
+
       attribute vec3 position;
       attribute vec2 uv;
 
-      uniform mat4 worldViewProjection;
+      uniform mat4 world; // 世界矩阵
+      uniform vec3 cameraPosition; // 相机位置
+      uniform mat4 worldViewProjection; // 投影
+
+
       uniform sampler2D textureSampler;
       uniform float uTime;
+      uniform vec3 uLightDirection; // 光照参数
+      uniform vec3 uLightColor; // 光照参数
 
       varying vec3 vColor;
 
@@ -212,7 +237,7 @@ const initScene = async () => {
         return value;
       }
 
-      vec3 getGerstner(float x, float y, float z, float time) {
+      GerstnerResult getGerstner(float x, float y, float z, float time) {
         // ---------------------------------------------------------
         // 法线相关的计算，用于光照。本案例使用y的高度来显示海面的白色和蓝色，没用到法线
         // ---------------------------------------------------------
@@ -292,7 +317,8 @@ const initScene = async () => {
 
 
 
-        vec3 result = vec3(x, y, z);
+        vec3 xyz = vec3(x, y, z);
+
 
         // 初始化法线为垂直向上的向量，法线的作用是光照，因为即使顶点改变了，但是法线不会改变
         // X和Z也需要累加
@@ -310,9 +336,9 @@ const initScene = async () => {
         // float f = speed / waveLength;
         // float omega = 2.0 * 3.14 / f;
         // float value = dot(dir * k, vec2(x, z)) - omega * time;
-        // result.x = x + A * dir.x * cos(value);
-        // result.y = A * sin(value);
-        // result.z = z + A * dir.y * cos(value);
+        // xyz.x = x + A * dir.x * cos(value);
+        // xyz.y = A * sin(value);
+        // xyz.z = z + A * dir.y * cos(value);
 
         const int wavesCount = 4;
 
@@ -322,21 +348,21 @@ const initScene = async () => {
           // 随机方向分布，都是正方向
           // 这个的vec2的x和y分别对应了xyz轴的x和z，因为高度的y不用考虑方向
           // x是切线，z是副切线
-          float angle = random(vec2(float(i), float(i) + 1.1234123)) * 6.28318530718; // 0 - 2π
+          float angle = random(vec2(float(i), float(i) + 1.1234123)) * 3.1415926 * 2.0; // 0 - 2π
           vec2 dir = vec2(cos(angle), sin(angle));
           
-          float A = random(vec2(step + 0.134, step + 0.442)) * 0.5 + 0.1;
-          float waveLength = random(vec2(step + 0.134, step + 0.442)) * 15.0 + 5.0;
-          float speed = random(vec2(step + 0.134, step + 0.2)) * 2.0 + 1.0;
+          float A = random(vec2(step + 0.134, step + 0.42)) * 0.3 + 0.2;
+          float waveLength = random(vec2(step + 0.134, step + 0.442)) * 8.0 + 5.0;
+          float speed = random(vec2(step + 0.134, step + 0.2)) * 2.0 + 1.5;
           float k = 2.0 * 3.14 / waveLength;
           float f = speed / waveLength;
           float omega = 2.0 * 3.14 * f; // 等于 k * speed
 
           float value = dot(dir * k, vec2(x, z)) - omega * time;
 
-          result.x += A * dir.x * cos(value);
-          result.y += A * sin(value);
-          result.z += A * dir.y * cos(value);
+          xyz.x += A * dir.x * cos(value);
+          xyz.y += A * sin(value);
+          xyz.z += A * dir.y * cos(value);
 
 
           // T=dP/dx
@@ -383,6 +409,10 @@ const initScene = async () => {
         normalZ = vec3(normalZ.x, normalZ.y, 1.0 + normalZ.z);
 
         vec3 finalNormal = normalize(cross(normalZ, normalX));
+
+        GerstnerResult result;
+        result.position = xyz;
+        result.normal = finalNormal;
 
         return result;
       }
@@ -458,12 +488,117 @@ const initScene = async () => {
         // vec3 color = vec3(0.0);
         // vColor = color;
 
-        vec3 xyz = getGerstner(x, y, z, uTime);
-        xyz.y *= 0.5;
-        xyz.y += 0.7;
-        vColor = mix(vec3(0.1, 0.56, 1.0), vec3(0.48, 0.75, 1.0), clamp(xyz.y, 0.0, 1.0)); // vec3(0.1, 0.56, 1.0) 蓝色  vec3(0.48, 0.75, 1.0) 蓝白色  由低到高
+        GerstnerResult waveResult = getGerstner(x, y, z, uTime);
+        vec3 xyz = waveResult.position;
 
-        gl_Position = worldViewProjection * vec4(vec3(xyz.x, xyz.y, xyz.z), 1.0);
+
+        //------------------------------这个是通过normal计算，显示海水的颜色------------------------------
+        // 变换法线到世界空间（需要世界矩阵）
+        // 目的：从世界矩阵（world）中提取旋转部分，生成一个3x3的矩阵（normalMatrix），用于变换法线向量
+        // 为什么需要单独提取旋转部分？
+        // 法线向量是方向向量（只有方向，没有位置），因此不应受平移影响（平移不会改变方向）
+        // 如果直接使用完整的世界矩阵（4x4），会错误地包含平移分量，导致法线方向错误
+        // 通过取mat3(world)，只保留旋转和缩放信息，忽略平移
+        mat3 normalMatrix = mat3(world); // world是世界矩阵
+
+
+
+        // 将模型空间的法线向量转换到世界空间，并确保转换后的法线仍然是单位向量
+        // 目的：将模型空间的法线向量（waveResult.normal）通过normalMatrix变换到世界空间，并归一化（normalize）
+        // 关键细节：
+        // 变换到世界空间：光照计算通常在世界空间进行，因此需要将法线从模型空间转换到世界空间
+        // 归一化：如果模型有非均匀缩放（例如x轴缩放2倍，y轴缩放1倍），直接变换法线会导致其长度不再为1。归一化确保法线方向正确，避免光照计算错误（如亮度异常）
+        vec3 waveNormal = normalize(normalMatrix * waveResult.normal);
+
+
+        
+        // 将模型空间中的顶点位置（xyz）通过世界矩阵（world）变换到世界空间
+        vec3 targetPosition = (world * vec4(xyz, 1.0)).xyz;
+
+
+
+        // 海水基础颜色
+        vec3 deepWaterColor = vec3(0.0, 0.5, 0.8); // 深蓝色
+        vec3 shallowWaterColor = vec3(0.3, 0.7, 1.0); // 浅天蓝色
+        vec3 foamColor = vec3(1.0, 1.0, 1.0); // 白色泡沫
+
+
+
+        // 根据深度混合基础颜色
+        // 由于上面 Gerstner 的计算中，振幅的高度是[0, 1] * 0.3 + 0.2，然后循环4次，所以最大最小值是[-0.5 * 4 , 0.5 * 4]
+        float depthFactor = clamp(xyz.y, -2.0, 2.0);
+        vec3 waterColor = mix(deepWaterColor, shallowWaterColor, depthFactor);
+
+
+
+        // 漫反射：模拟粗糙表面的均匀散射，决定物体的基础颜色和明暗
+        // 高光反射：模拟光滑表面的镜面反射，增强物体的立体感和反光效果
+        // 结合使用：通过叠加两者，可以创建更真实、更有层次的光照效果
+
+
+        
+        // 计算漫反射（Lambertian）
+        float diffuse = max(0.0, dot(waveNormal, uLightDirection));
+        vec3 diffuseColor = uLightColor * diffuse;
+
+
+        
+        // ------------------------计算高光反射（Blinn-Phong）：步骤 1 ~ 4------------------------
+        // 1、计算相机位置，指向 camera
+        vec3 viewDirection = normalize(cameraPosition - targetPosition); 
+
+        // 2、计算半程向量（Half Vector），即光线方向与视线方向的中间方向，用于简化高光计算
+        vec3 halfVector = normalize(uLightDirection + viewDirection);
+
+        // 3、计算高光强度
+        // dot(waveNormal, halfVector)：计算法线与半程向量的点积，得到余弦值（范围[-1, 1]）
+        // max(0.0, ...)：确保结果非负（避免负值导致高光错误）
+        // pow(..., 2.0)：对余弦值取2次幂（高光指数），控制高光的锐利度：
+        //      指数越大，高光越集中（如金属表面）
+        //      指数越小，高光越分散（如粗糙表面）
+        // 输出：specular是高光强度（范围[0, 1]），值越大表示高光越亮
+        float specular = pow(max(0.0, dot(waveNormal, halfVector)), 2.0); // 2 是高光指数
+
+        // 4、生成最终的高光颜色
+        vec3 specularColor = uLightColor * specular * 0.5;
+        // ------------------------计算高光反射（Blinn-Phong）：步骤 1 ~ 4------------------------
+
+
+        
+        // 菲涅尔效应（视角越倾斜，反射越强）
+        float fresnel = pow(1.0 - max(0.0, dot(viewDirection, waveNormal)), 2.0);
+        vec3 reflectionColor = mix(deepWaterColor, shallowWaterColor, fresnel);
+
+
+
+        // 添加波浪泡沫效果
+        // 计算泡沫因子 - 基于波浪高度和法线变化
+        float foamFactor = smoothstep(0.7, 1.0, xyz.y) * smoothstep(0.9, 1.0, dot(normalize(waveResult.normal), vec3(0.0, 1.0, 0.0)));
+        // 添加一些噪声使泡沫看起来更自然
+        float noise = fract(sin(dot(uv.xy, vec2(12.9898, 78.233))) * 43758.5453);
+        foamFactor *= mix(0.7, 1.0, noise);
+
+
+        
+        // 最终颜色合成
+        // 计算基础颜色（不含泡沫）
+        vec3 baseColor = mix(waterColor, reflectionColor, fresnel); // 基础水色与反射的混合
+        baseColor += diffuseColor + specularColor; // 添加光照效果
+        
+
+
+        // 添加泡沫（使用屏幕空间混合）
+        vColor = mix(baseColor, baseColor + foamColor, foamFactor);
+        //------------------------------这个是通过normal计算，显示海水的颜色------------------------------
+
+
+
+        //------------------------------这个是通过y的高度来混合颜色，显示海水的颜色------------------------------
+        // vColor = mix(vec3(0.1, 0.56, 1.0), vec3(0.48, 0.75, 1.0), clamp(xyz.y, 0.0, 1.0)); // vec3(0.1, 0.56, 1.0) 蓝色  vec3(0.48, 0.75, 1.0) 蓝白色  由低到高.
+        //------------------------------这个是通过y的高度来混合颜色，显示海水的颜色------------------------------
+
+        float waterY = xyz.y + 2.0;
+        gl_Position = worldViewProjection * vec4(vec3(xyz.x, waterY, xyz.z), 1.0);
         // -------------------------------------------------------使用 Gerstner 波-------------------------------------------------------
       }
     `
@@ -502,9 +637,9 @@ const initScene = async () => {
     const plane = MeshBuilder.CreateGround(
       'plane', 
       { 
-        width: 110, 
-        height: 110, 
-        subdivisions: 550 
+        width: 150, 
+        height: 150, 
+        subdivisions: 600 
       },
       scene
     )
@@ -525,11 +660,14 @@ const initScene = async () => {
     })
   }
 
-  createLight()
+  const light = createLight()
   createAxis()
   createGui()
   createGround()
+  createSphere()
   const material = createPlane()
+  material.setVector3('lightDirection', light.direction)
+  material.setColor3('lightColor', light.diffuse)
   runAnimate()
 
   scene.registerBeforeRender(function() {
