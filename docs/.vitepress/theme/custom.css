@@ -13,6 +13,14 @@ body {
   color: var(--vp-c-text-1);
 }
 
+a {
+  text-decoration: none!important;
+}
+
+a:hover {
+  opacity: 0.8;
+}
+
 /*手机*/
 @media screen and (max-width: 600px){
   .stage {

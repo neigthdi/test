@@ -1,5 +1,7 @@
 <template>
   <div>
+    <div><a href="https://zhuanlan.zhihu.com/p/623569022">GerstnerWave原理</a></div>
+    <div><a href="https://gameidea.org/2023/12/01/3d-ocean-shader-using-gerstner-waves/">Gerstner Waves</a></div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
@@ -492,7 +494,8 @@ const initScene = async () => {
         vec3 xyz = waveResult.position;
 
 
-        
+        // 要把光照的这些计算放入到片元着色器中计算
+        // --------------------------------------------------------------------------------------------
         // 光照计算（包括漫反射、高光反射等）通常应该在片元着色器（Fragment Shader）中完成，而不是顶点着色器（Vertex Shader）。
         // 精度问题：顶点着色器对每个顶点计算一次光照，而片元着色器对每个像素计算一次。对于复杂的表面细节（如波浪的泡沫、菲涅尔效应），顶点级别的插值会导致明显的锯齿或失真。
         // 视觉效果：光照效果（如高光、反射）需要精细的逐像素计算，顶点着色器的插值无法准确捕捉这些细节。
@@ -617,7 +620,7 @@ const initScene = async () => {
         fragment: 'customShader',
       }, {
         attributes: ['position', 'uv'],
-        uniforms: ['worldViewProjection', 'textureSampler', 'uTime'],
+        uniforms: ['worldViewProjection', 'cameraPosition', 'world', 'textureSampler', 'uLightDirection', 'uLightColor', 'uTime'],
         samplers: ['textureSampler'],
         needAlphaBlending: true,
       },
@@ -670,7 +673,6 @@ const initScene = async () => {
   scene.registerBeforeRender(function() {
     material.setFloat('uTime', uTime)
     uTime += 0.04
-
   })
 
   return {
