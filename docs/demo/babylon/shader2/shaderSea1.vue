@@ -526,9 +526,8 @@ const initScene = async () => {
 
 
         // 海水基础颜色
-        vec3 deepWaterColor = vec3(0.0, 0.5, 0.8); // 深蓝色
-        vec3 shallowWaterColor = vec3(0.3, 0.7, 1.0); // 浅天蓝色
-        vec3 foamColor = vec3(1.0, 1.0, 1.0); // 白色泡沫
+        vec3 deepWaterColor = vec3(0.0, 0.549, 0.996); // 海水的深蓝色
+        vec3 shallowWaterColor = vec3(0.3, 0.7, 1.0); // 天空的浅天蓝色
 
 
 
@@ -573,32 +572,20 @@ const initScene = async () => {
 
 
         
-        // 菲涅尔效应（视角越倾斜，反射越强）
-        float fresnel = pow(1.0 - max(0.0, dot(viewDirection, waveNormal)), 2.0);
+        // 菲涅尔效应（根据视角调整反射强度）
+        float fresnel = pow(1.0 - abs(dot(viewDirection, waveNormal)), 2.0);
+        fresnel = clamp(fresnel, 0.3, 0.9); // 限制反射强度范围
         vec3 reflectionColor = mix(deepWaterColor, shallowWaterColor, fresnel);
-
-
-
-        // 添加波浪泡沫效果
-        // 计算泡沫因子 - 基于波浪高度和法线变化
-        float foamFactor = smoothstep(0.7, 1.0, xyz.y) * smoothstep(0.9, 1.0, dot(normalize(waveResult.normal), vec3(0.0, 1.0, 0.0)));
-        // 添加一些噪声使泡沫看起来更自然
-        float noise = fract(sin(dot(uv.xy, vec2(12.9898, 78.233))) * 43758.5453);
-        foamFactor *= mix(0.7, 1.0, noise);
 
 
         
         // 最终颜色合成
-        // 计算基础颜色（不含泡沫）
         vec3 baseColor = mix(waterColor, reflectionColor, fresnel); // 基础水色与反射的混合
         baseColor += diffuseColor + specularColor; // 添加光照效果
         
 
 
-        // 添加泡沫（使用屏幕空间混合）
-        vColor = mix(baseColor, baseColor + foamColor, foamFactor);
-
-        vColor = waterColor + diffuseColor;
+        vColor = baseColor;
         //------------------------------这个是通过normal计算，显示海水的颜色------------------------------
 
 
