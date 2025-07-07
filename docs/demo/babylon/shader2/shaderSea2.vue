@@ -1,11 +1,12 @@
 <template>
   <div>
     <div><a href="https://zhuanlan.zhihu.com/p/41455378">傅里叶系列(只看第一和第三)</a></div>
-    <div><a href="https://zhuanlan.zhihu.com/p/1913515900235153904">傅里叶系列(作为上面的第二，里面的j是复数i)</a></div>
+    <div><a href="https://zhuanlan.zhihu.com/p/1913515900235153904">傅里叶系列(作为上面的第二节，j是复数i)</a></div>
     <div><a href="https://zhuanlan.zhihu.com/p/64414956">fft海面模拟(一)</a></div>
     <div><a href="https://zhuanlan.zhihu.com/p/64726720">fft海面模拟(二)</a></div>
     <div><a href="https://zhuanlan.zhihu.com/p/65156063">fft海面模拟(三)</a></div>
     <div><a href="https://zhuanlan.zhihu.com/p/208511211">详尽的快速傅里叶变换推导</a></div>
+    <div><a href="https://zhuanlan.zhihu.com/p/666833171">FFT算法——蝴蝶变换</a></div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
