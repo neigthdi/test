@@ -6,7 +6,7 @@
     <div><a href="https://zhuanlan.zhihu.com/p/64726720">fft海面模拟(二)</a></div>
     <div><a href="https://zhuanlan.zhihu.com/p/65156063">fft海面模拟(三)</a></div>
     <div><a href="https://zhuanlan.zhihu.com/p/208511211">详尽的快速傅里叶变换推导</a></div>
-    <div><a href="https://zhuanlan.zhihu.com/p/666833171">FFT算法——蝴蝶变换</a></div>
+    <div><a href="https://zhuanlan.zhihu.com/p/374489378">快速傅里叶变换--蝶形变换(直接看“举例”部分)</a></div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
