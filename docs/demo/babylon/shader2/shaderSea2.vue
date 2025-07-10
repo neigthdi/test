@@ -331,8 +331,8 @@ const initScene = async () => {
 
           // 这里取实数部分，不用虚数
           // 在数学和物理的多个领域（如波动理论、电磁学、量子力学等）中，当处理 dh/dx 和 dh/dz 等导数时，若函数 h 是复数形式，通常只取其实数部分
-          vec2 dHdx = complexMultiply(vec2(0, K.x), H);
-          vec2 dHdz = complexMultiply(vec2(0, K.y), H);
+          vec2 dHdx = complexMultiply(vec2(0, K.x), H_tail);
+          vec2 dHdz = complexMultiply(vec2(0, K.y), H_tail);
 
           // 为什么是负数？
           // 梯度是“上升最快的方向”
