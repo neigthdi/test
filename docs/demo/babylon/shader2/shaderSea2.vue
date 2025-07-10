@@ -7,6 +7,7 @@
     <div><a href="https://zhuanlan.zhihu.com/p/65156063">fft海面模拟(三)</a></div>
     <div><a href="https://zhuanlan.zhihu.com/p/208511211">详尽的快速傅里叶变换推导</a></div>
     <div><a href="https://zhuanlan.zhihu.com/p/374489378">快速傅里叶变换--蝶形变换(直接看“举例”部分)</a></div>
+    <div>剩下IFFT（FFT）的计算，尝试推导，写出伪代码</div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
@@ -18,12 +19,12 @@
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
 import { 
-  CustomMaterial 
+  CustomMaterial,
+  GridMaterial
 } from 'babylonjs-materials'
 import {
   Engine,
   Scene,
-  Texture,
   HemisphericLight,
   MeshBuilder,
   Effect,
@@ -31,6 +32,7 @@ import {
   Color4,
   ArcRotateCamera,
   Vector3,
+  Vector2,
   Color3,
   StandardMaterial
 } from 'babylonjs'
@@ -164,18 +166,6 @@ const initScene = async () => {
     zPanel.linkWithMesh(zBox)
   }
 
-  const createGround = () => {
-    const ground = MeshBuilder.CreateGroundFromHeightMap(
-      "heightMap", 
-      "/images/heightMap.png", 
-      { width: 150, height: 150, subdivisions: 500, maxHeight: 80 }
-    )
-    const mat = new CustomMaterial('grass', scene)
-    mat.diffuseTexture = new Texture('/images/ground.jpg', scene)
-    ground.material = mat
-    return ground
-  }
-
   const createSphere = () => {
     const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 10 }, scene)
     const sphereMat = new StandardMaterial('sphere')
@@ -190,51 +180,178 @@ const initScene = async () => {
     Effect.ShadersStore['customShaderVertexShader'] = `
       precision highp float;
 
-
-      struct GerstnerResult {
-        vec3 position;
-        vec3 normal;
-      };
-
+      const float PI = 3.14159265358979323846;
+      const float TWO_PI = 2.0 * PI;
+      const float HALF_SQRT_2 = 0.7071068;
+      const float G = 9.8;
 
       attribute vec3 position;
       attribute vec2 uv;
 
-
-      uniform mat4 world; // 世界矩阵
-      uniform vec3 cameraPosition; // 相机位置
       uniform mat4 worldViewProjection; // 投影
 
-
       uniform float uTime;
-      uniform vec3 uLightDirection; // 光照参数
-      uniform vec3 uLightColor; // 光照参数
+      uniform vec2 uResolution;
 
 
       varying vec3 vColor;
+      varying vec2 vResolution;
 
+      // 快速的伪随机
+      float randValueFast(vec2 uv, float magic) {
+        vec2 random2 = (1.0 / 4320.0) * uv + vec2(0.25, 0.0);
+        float random = fract(dot(random2 * random2, vec2(magic)));
+        random = fract(random * random * (2.0 * magic));
+
+        return random; 
+      }
+
+
+      // 复数乘法
+      vec2 complexMultiply(vec2 a, vec2 b){
+        return vec2(
+          a.x * b.x - a.y * b.y,  // 实部
+          a.x * b.y + a.y * b.x   // 虚部
+        );
+      }
+
+
+      // 色散关系函数
+      float dispersion(vec2 k){
+        return sqrt(G * length(k));
+      }
+
+
+      //计算两个相互独立的高斯随机数
+      vec2 gauss(vec2 uv) {
+        float u1 = randValueFast(uv, 1753.0);
+        float u2 = randValueFast(uv, 3571.0);
+        if(u1 < 1e-6) {
+          u1 = 1e-6;
+        }
+
+        float g1 = sqrt(-2.0 * log(u1)) * cos(TWO_PI * u2);
+        float g2 = sqrt(-2.0 * log(u1)) * sin(TWO_PI * u2);
+
+        return vec2(g1, g2);
+      }
+
+
+      // 菲利普计算，输入波数 K
+      float phillips1(vec2 K) {
+        // vec2 K = vec2(TWO_PI * n.x / 100.0, TWO_PI * n.y / 100.0); // 计算波数向量 K
+        
+        vec2 W = vec2(1.0, -1.0); // 定义一个方向向量（风）
+
+        float V = 10.0; // 定义一个速度变量 V
+
+        float A = 10.0; // 定义一个振幅变量 A。
+
+        float L = V * V / G; // 计算波长 L。
+        float L2 = L * L;
+        
+        float kLen = length(K); // 计算波数向量 K 的模长
+        kLen = max(0.0001, kLen);
+        float kLen2 = kLen * kLen;
+        float kLen4 = kLen2 * kLen2;
+
+        vec2 K_norm = normalize(K);
+        vec2 W_norm = normalize(W);
+        float dot_KW = dot(K_norm, W_norm);
+
+        // 基础 Phillips 谱
+        float phi = A * exp(-1.0 / (kLen2 * L2)) / kLen4;
+
+        // dot_KW * dot_KW（称为风向拓展函数）
+        // 风向对齐项（加强沿风向的波能）
+        phi *= dot_KW * dot_KW;
+
+        // 这一行的思想，必须要记住★★★★★★★★★★★★★★★★★★★★★★★★★★
+        // 只要与方向有关的，一律优先思考dot
+        // 这个是判断dot的方向是否与风的方向一致
+        // 没有这一行，则两个椭圆一样大
+        // 可以通过dot来---1：uv的增大缩小、2：光照强度、3：相似度 ......
+        if(dot_KW > 0.0) {
+          phi *= V;
+        }
+        // 这一行的思想，必须要记住★★★★★★★★★★★★★★★★★★★★★★★★★★
+
+        // 衰减因子
+        float l = 0.001 * L;
+        float kSqr = dot(K, K);
+        phi *= exp(l * l * -kSqr);
+
+        return phi;
+      }
 
       void main() {
         float x = position.x;
         float y = position.y;
         float z = position.z;
 
-
-        // 海水基础颜色
-        vec3 deepWaterColor = vec3(0.0, 0.549, 0.996); // 海水的深蓝色
-        vec3 shallowWaterColor = vec3(0.3, 0.7, 1.0); // 天空的浅天蓝色
-
-
-        // -------------------------------------------------------sin，y通过sin在上下周期运动，根本没有发生水平移动-------------------------------------------------------
         vec3 color = vec3(0.0);
+
+        // ★★★★★★★★★★★★★★ 必须要注意uResolution，和纯shader的用法不一样 ★★★★★★★★★★★★★★
+
+        // 如果没有 pixelCoord 则 color.xy = vec2(gaussValue2); 的高斯图会有谐波出现，而不是噪点图
+        vec2 pixelCoord = uv * uResolution; // 将归一化UV转换为像素坐标
+        vec2 gaussValue1 = gauss(pixelCoord + vec2(3.0, 5.0)); // 用于 h0k
+        vec2 gaussValue2 = gauss(pixelCoord + vec2(7.0, 11.0)); // 用于 h0kConj
+
+        
+        float nx = (uv.x - 0.5) * uResolution.x; // 还原到像素尺度
+        float ny = (uv.y - 0.5) * uResolution.y; // 还原到像素尺度
+        
+
+        // 这个控制色图的大小
+        float N = 64.0;
+        // 计算波数 K
+        vec2 K = vec2(TWO_PI * nx / N, TWO_PI * ny / N);
+        // 计算 h0(k) 和 h0*(-k)
+        // 这个使用风向拓展函数
+        vec2 h0k = gaussValue1 * sqrt(phillips1(K) * 0.5);  // 初始频谱（由菲利普频谱与高斯随机数生成）
+        vec2 h0kConj = gaussValue2 * sqrt(phillips1(-K) * 0.5); // 共轭复数
+        h0kConj.y *= -1.0; // 为什么 *-1.0 ， ax + i·b，其共轭复数是 ax - i·b
+
+        float omega = dispersion(K) * uTime;
+        float c = cos(omega);
+        float s = sin(omega);
+        vec2 h1 = complexMultiply(h0k, vec2(c, s));
+        vec2 h2 = complexMultiply(h0kConj, vec2(c, -s));
+
+        vec2 H_tail = h1 + h2; // H_tail 是数学公式中的写法
+
+        vec2 maxK = K / max(0.001, length(K));
+        vec2 xMove = complexMultiply(vec2(0, -maxK.x), H_tail);
+        vec2 zMove = complexMultiply(vec2(0, -maxK.y), H_tail);
+        color.xy = xMove;
+        color.xy = zMove;
+
+
+        // 默认法线向上，即没有波浪时候
+        vec3 normal = vec3(0.0, 1.0, 0.0);
+        if (length(K) > 0.001) {  // 跳过直流分量
+
+          // 这里取实数部分，不用虚数
+          // 在数学和物理的多个领域（如波动理论、电磁学、量子力学等）中，当处理 dh/dx 和 dh/dz 等导数时，若函数 h 是复数形式，通常只取其实数部分
+          vec2 dHdx = complexMultiply(vec2(0, K.x), H);
+          vec2 dHdz = complexMultiply(vec2(0, K.y), H);
+
+          // 为什么是负数？
+          // 梯度是“上升最快的方向”
+          // 法线是“垂直于表面”的方向
+          // 法线在水平面上的投影，正好是梯度的反方向
+          // 直观理解：
+          // 因为法线必须垂直于斜坡表面
+          // 如果斜坡向东倾斜（东高西低），那么法线必须向西倾斜（西高东低）才能垂直于斜坡
+          // 因此，法线在水平面上的投影指向西方（即梯度的反方向）
+          normal = normalize(vec3(-dHdx.x, 1.0, -dHdz.x));
+        }
+
+
         vColor = color;
-        float Amplitude = 0.2; // 波幅
-        float waveLength = 10.0; // 波长
-        float frequency = 2.0 * 3.14 / waveLength; // 频率
-        float speed = 1.0;
-        y = Amplitude * sin(frequency * (x - speed * uTime));
+
         gl_Position = worldViewProjection * vec4(vec3(x, y, z), 1.0);
-        // -------------------------------------------------------sin，y通过sin在上下周期运动，根本没有发生水平移动-------------------------------------------------------
       }
     `
 
@@ -242,7 +359,7 @@ const initScene = async () => {
       precision highp float;
 
       varying vec3 vColor;
-      
+
       void main(void) {
         gl_FragColor = vec4(vColor, 1.0);
       }
@@ -255,7 +372,7 @@ const initScene = async () => {
         fragment: 'customShader',
       }, {
         attributes: ['position', 'uv'],
-        uniforms: ['worldViewProjection', 'cameraPosition', 'world', 'uLightDirection', 'uLightColor', 'uTime'],
+        uniforms: ['worldViewProjection', 'uResolution', 'uTime'],
         needAlphaBlending: true,
       },
     )
@@ -270,9 +387,9 @@ const initScene = async () => {
     const plane = MeshBuilder.CreateGround(
       'plane', 
       { 
-        width: 150, 
-        height: 150, 
-        subdivisions: 600 
+        width: 256, 
+        height: 256, 
+        subdivisions: 512 
       },
       scene
     )
@@ -293,14 +410,12 @@ const initScene = async () => {
     })
   }
 
-  const light = createLight()
+  createLight()
   createAxis()
   createGui()
-  createGround()
   createSphere()
   const material = createPlane()
-  material.setVector3('lightDirection', light.direction)
-  material.setColor3('lightColor', light.diffuse)
+  material.setVector2('uResolution', new Vector2(256, 256))
   runAnimate()
 
   scene.registerBeforeRender(function() {
@@ -325,6 +440,9 @@ const destroy = () => {
 
 onMounted(async() => {
   await nextTick()
+  isRunning.value = true
+  await nextTick()
+  sceneResources = await initScene()
 })
 
 onUnmounted(() => {
