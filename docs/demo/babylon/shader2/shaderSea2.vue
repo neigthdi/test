@@ -18,10 +18,7 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
-import { 
-  CustomMaterial,
-  GridMaterial
-} from 'babylonjs-materials'
+
 import {
   Engine,
   Scene,
@@ -440,9 +437,6 @@ const destroy = () => {
 
 onMounted(async() => {
   await nextTick()
-  isRunning.value = true
-  await nextTick()
-  sceneResources = await initScene()
 })
 
 onUnmounted(() => {
