@@ -22,8 +22,6 @@ import {
   Color3,
   Color4,
   ProceduralTexture,
-  RenderTargetTexture,
-  Constants,
 } from 'babylonjs'
 import {
   AdvancedDynamicTexture,

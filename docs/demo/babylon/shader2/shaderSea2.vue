@@ -24,15 +24,16 @@ import {
   Scene,
   HemisphericLight,
   MeshBuilder,
-  // Effect,
-  // ShaderMaterial,
+  Effect,
+  ShaderMaterial,
   Color4,
   ArcRotateCamera,
   Vector3,
   Color3,
   StandardMaterial,
   RawTexture,
-  Constants
+  Constants,
+  ProceduralTexture,
 } from 'babylonjs'
 import {
   AdvancedDynamicTexture,
@@ -379,33 +380,126 @@ const initScene = async () => {
     }
   }
 
-  const createPlaneY = () => {
-    const plane = MeshBuilder.CreateGround('plane', { width: N, height: N, subdivisions: N }, scene)
-    plane.position = new Vector3(-N - 10, 0, N)
-    const material = new StandardMaterial("planeMaterial", scene)
-    const { rawTextureY } = createXyzTexture(scene)
-    material.diffuseTexture = rawTextureY
-    plane.material = material
+  const createXyzPlane = ({ rawTextureX, rawTextureY, rawTextureZ }) => {
+    const planeX = MeshBuilder.CreateGround('planeX', { width: N, height: N, subdivisions: N }, scene)
+    planeX.position = new Vector3(-N - 10, 0, N + 10)
+    const materialX = new StandardMaterial("planeMaterial", scene)
+    materialX.diffuseTexture = rawTextureX
+    planeX.material = materialX
+
+    const planeY = MeshBuilder.CreateGround('planeY', { width: N, height: N, subdivisions: N }, scene)
+    planeY.position = new Vector3(0, 0, N + 10)
+    const materialY = new StandardMaterial("planeMaterial", scene)
+    materialY.diffuseTexture = rawTextureY
+    planeY.material = materialY
+
+    const planeZ = MeshBuilder.CreateGround('planeZ', { width: N, height: N, subdivisions: N }, scene)
+    planeZ.position = new Vector3(N + 10, 0, N + 10)
+    const materialZ = new StandardMaterial("planeMaterial", scene)
+    materialZ.diffuseTexture = rawTextureZ
+    planeZ.material = materialZ
   }
 
-  const createPlaneX = () => {
-    const plane = MeshBuilder.CreateGround('plane', { width: N, height: N, subdivisions: N }, scene)
-    plane.position = new Vector3(0, 0, N)
-    const material = new StandardMaterial("planeMaterial", scene)
-    const { rawTextureX } = createXyzTexture(scene)
-    material.diffuseTexture = rawTextureX
-    plane.material = material
-  }
+  Effect.ShadersStore['firstTimeIfftVertexShader'] = `
+    precision highp float;
+    
+    attribute vec3 position;
+    attribute vec2 uv;
 
-  const createPlaneZ = () => {
-    const plane = MeshBuilder.CreateGround('plane', { width: N, height: N, subdivisions: N }, scene)
-    plane.position = new Vector3(N + 10, 0, N)
-    const material = new StandardMaterial("planeMaterial", scene)
-    const { rawTextureZ } = createXyzTexture(scene)
-    material.diffuseTexture = rawTextureZ
-    plane.material = material
-  }
+    uniform mat4 worldViewProjection;
 
+    uniform sampler2D uSampler;
+
+    varying vec2 vUV;
+
+    void main() {
+      // texture的参数含义
+      // 纹理采样器（sampler2D）：这是一个指向纹理的引用，包含了整个纹理的信息
+      // 纹理坐标（vec2）：这是一个二维向量，表示在纹理中要采样的位置。通常，纹理坐标（uv）的范围是 [0, 1]，其中 (0, 0) 表示纹理的左下角，(1, 1) 表示纹理的右上角  
+      vec4 baseColor = texture(uSampler, uv);
+
+      // 1 --------------------------------------------------------------------------
+      // float width = 512.0; // 假设纹理宽度为 512
+      // for (float x = -2.0; x <= 2.0; x++) { // 获取同一行的几个特定像素值
+      //   vec2 uv = vec2(vUV.x + x / width, vUV.y);
+      //   sumColor += texture2D(uSampler, uv);
+      // }
+      // 2 --------------------------------------------------------------------------
+      // stage 等于 log(N) 即 log(512) = 9
+      // 3 --------------------------------------------------------------------------
+      // 蝶式运算的旋转因子，在 cpu 处理，再传进来？
+
+      vUV = uv;
+      gl_Position = worldViewProjection * vec4(position, 1.0);
+    }
+  `
+
+  Effect.ShadersStore['firstTimeIfftFragmentShader'] = `
+    precision highp float;
+
+    uniform sampler2D uSampler;
+
+    varying vec2 vUV;
+
+    void main() {
+      vec4 baseColor = texture(uSampler, vUV);
+      gl_FragColor = vec4(baseColor);
+    }
+  `
+
+  Effect.ShadersStore['finalIfftVertexShader'] = `
+    precision highp float;
+    
+    attribute vec3 position;
+    uniform mat4 worldViewProjection;
+    
+    attribute vec2 uv;
+
+    varying vec2 vUV;
+
+    void main(void) {
+      vUV = uv;
+      gl_Position = worldViewProjection * vec4(position, 1.0);
+    }
+  `
+
+  Effect.ShadersStore['finalIfftFragmentShader'] = `
+    precision highp float;
+
+    uniform sampler2D uSampler;
+
+    varying vec2 vUV;
+
+    void main(void) {
+
+      vec4 baseColor = texture(uSampler, vUV);
+
+      gl_FragColor = vec4(baseColor);
+    }
+  `
+
+  const firstTimeIfft = ({ rawTextureX, rawTextureY, rawTextureZ }) => {
+    const finalShader = new ShaderMaterial(
+      'finalIfft',
+      scene, {
+        vertex: 'finalIfft',
+        fragment: 'finalIfft',
+      }, {
+        attributes: ['position', 'uv'],
+        uniforms: ['worldViewProjection', 'uSampler'],
+        samplers: ['uSampler'],
+        needAlphaBlending: true,
+      },
+    )
+
+    const firstIfft = new ProceduralTexture('firstTimeIfft', N, 'firstTimeIfft', scene)
+    
+    const finalPlane = MeshBuilder.CreateGround('plane', { width: N, height: N, subdivisions: N },  scene)
+    finalPlane.material = finalShader
+
+    firstIfft.setTexture('uSampler', rawTextureY)
+    finalShader.setTexture('uSampler', firstIfft)
+  }
 
   const runAnimate = () => {
     engine.runRenderLoop(function() {
@@ -421,9 +515,9 @@ const initScene = async () => {
   createAxis()
   createGui()
   createSphere()
-  createPlaneY()
-  createPlaneX()
-  createPlaneZ()
+  const { rawTextureX, rawTextureY, rawTextureZ } = createXyzTexture(scene)
+  createXyzPlane({ rawTextureX, rawTextureY, rawTextureZ })
+  firstTimeIfft({ rawTextureX, rawTextureY, rawTextureZ })
   runAnimate()
 
   scene.registerBeforeRender(function() {
