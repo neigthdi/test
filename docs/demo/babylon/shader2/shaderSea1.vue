@@ -628,7 +628,7 @@ const initScene = async () => {
 
     const texture = new Texture('/images/heightMap.png', scene)
     customShader.setTexture('textureSampler', texture)
-    customShader.setFloat('uDown', uTime)
+    customShader.setFloat('uTime', uTime)
     
     return customShader
   }
