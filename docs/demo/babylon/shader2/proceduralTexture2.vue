@@ -1,5 +1,6 @@
 <template>
   <div>
+    <div>注意：uUV的值会经过插值，导致获取到片元着色器vUV.x不等于顶点着色器的uv.x，如果要一致，需要用flat来固定</div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>

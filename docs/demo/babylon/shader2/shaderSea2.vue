@@ -274,6 +274,7 @@ const initScene = async () => {
     const xData = new Uint8Array(N * N * 4)
     const yData = new Uint8Array(N * N * 4)
     const zData = new Uint8Array(N * N * 4)
+    const fftData = new Uint8Array(N * N * 4)
 
     for (let y = 0; y < N; y++) {
       for (let x = 0; x < N; x++) {
@@ -324,6 +325,12 @@ const initScene = async () => {
         yData[index + 2] = 0
         yData[index + 3] = 255
 
+        
+        fftData[index] = h0k.x
+        fftData[index + 1] = h0k.y
+        fftData[index + 2] = h0kConj.x
+        fftData[index + 3] = h0kConj.y
+
 
         xData[index] = KxHTilde.x
         xData[index + 1] = KxHTilde.y
@@ -372,10 +379,22 @@ const initScene = async () => {
       Constants.TEXTURE_NEAREST_SAMPLINGMODE
     )
 
+    const rawTextureFft = new RawTexture(
+      fftData,
+      N,
+      N,
+      Constants.TEXTUREFORMAT_RGBA,
+      scene,
+      false, // 不生成 mipmap
+      false, // 不使用线性空间
+      Constants.TEXTURE_NEAREST_SAMPLINGMODE
+    )
+
     return {
       rawTextureY,
       rawTextureX,
-      rawTextureZ
+      rawTextureZ,
+      rawTextureFft
     }
   }
 
@@ -399,7 +418,7 @@ const initScene = async () => {
     planeZ.material = materialZ
   }
 
-  const ifftComputed = ({ rawTextureX, rawTextureY, rawTextureZ }) => {
+  const ifftComputed = (rawTextureFft) => {
   }
 
   const runAnimate = () => {
@@ -416,9 +435,9 @@ const initScene = async () => {
   createAxis()
   createGui()
   createSphere()
-  const { rawTextureX, rawTextureY, rawTextureZ } = createXyzTexture(scene)
+  const { rawTextureX, rawTextureY, rawTextureZ, rawTextureFft } = createXyzTexture(scene)
   createXyzPlane({ rawTextureX, rawTextureY, rawTextureZ })
-  ifftComputed({ rawTextureX, rawTextureY, rawTextureZ })
+  ifftComputed(rawTextureFft)
   runAnimate()
 
   scene.registerBeforeRender(function() {
