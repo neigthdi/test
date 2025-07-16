@@ -2,7 +2,6 @@
     <div>
       <div class="flex space-between">
         <div>fps: {{ fps }}</div>
-        computed pass 计算fft？
         <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
       </div>
       <canvas v-if="isRunning" id="phillips" class="stage"></canvas>

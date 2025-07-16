@@ -1,10 +1,13 @@
 <template>
   <div>
+    <div>proceduralTexture1和proceduralTexture2的区别：</div>
+    <div>如果第一个proceduralTexture传入了rawTextureY这些数据，想通过uTime改变texture(uSampler, vUV)是不起效果的，还会报错。</div>
+    <div>只有等创建了一份ProceduralTexture后，才能在第二份的ProceduralTexture传入uTime改变texture(uSampler, vUV)。</div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     </div>
-    <canvas v-if="isRunning" id="proceduralTexture" class="stage"></canvas>
+    <canvas v-if="isRunning" id="proceduralTexture1" class="stage"></canvas>
   </div>
 </template>
 
@@ -49,7 +52,7 @@ const onTrigger = async () => {
 let uTime = 0.2
 
 const initScene = async () => {
-  const ele = document.getElementById("proceduralTexture") as any
+  const ele = document.getElementById("proceduralTexture1") as any
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动
