@@ -102,6 +102,7 @@ function sidebarBase() {
         { text: '存储', link: '/other/storage' },
         { text: 'layerMask', link: '/other/layerMask' },
         { text: 'clone和createInstance', link: '/other/cloneAndCreateInstance' },
+        { text: 'three的优化(babylon)', link: '/other/threeOptimize' },
       ]
     },
     {
