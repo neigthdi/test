@@ -461,9 +461,6 @@ const destroy = () => {
 
 onMounted(async() => {
   await nextTick()
-  // isRunning.value = true
-  // await nextTick()
-  // sceneResources = await initScene()
 })
 
 onUnmounted(() => {
