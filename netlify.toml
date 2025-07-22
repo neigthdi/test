@@ -1,0 +1,5 @@
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Encoding = "br" # 优先使用 Brotli
+    Accept-Encoding = "gzip, deflate, br"
