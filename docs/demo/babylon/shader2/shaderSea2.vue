@@ -7,7 +7,7 @@
     <div><a href="https://zhuanlan.zhihu.com/p/65156063">fft海面模拟(三)</a></div>
     <div><a href="https://zhuanlan.zhihu.com/p/208511211">详尽的快速傅里叶变换推导</a></div>
     <div><a href="https://zhuanlan.zhihu.com/p/374489378">快速傅里叶变换--蝶形变换(直接看“举例”部分)</a></div>
-    <div>使用compute shader</div>
+    <div>学习如何使用compute shader，案例延后</div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
@@ -23,8 +23,8 @@ import {
   Scene,
   HemisphericLight,
   MeshBuilder,
-  Effect,
-  ShaderMaterial,
+  // Effect,
+  // ShaderMaterial,
   Color4,
   ArcRotateCamera,
   Vector3,
@@ -32,7 +32,7 @@ import {
   StandardMaterial,
   RawTexture,
   Constants,
-  ProceduralTexture,
+  // ProceduralTexture,
 } from 'babylonjs'
 import {
   AdvancedDynamicTexture,
@@ -461,6 +461,9 @@ const destroy = () => {
 
 onMounted(async() => {
   await nextTick()
+  // isRunning.value = true
+  // await nextTick()
+  // sceneResources = await initScene()
 })
 
 onUnmounted(() => {

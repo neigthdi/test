@@ -180,39 +180,40 @@ instance.setPreTransformMatrix(transform)
 以下用instancedBuffers来区分颜色，但是不能用各自的shader，因为是共享
 ```javascript
 // 1. 创建场景、相机、灯光（略）
-const scene = new BABYLON.Scene(engine);
-const camera = new BABYLON.ArcRotateCamera("cam", 0, 0, 10,
-                                           BABYLON.Vector3.Zero(), scene);
-camera.attachControl(canvas, true);
-new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+const scene = new BABYLON.Scene(engine)
+const camera = new BABYLON.ArcRotateCamera("cam", 0, 0, 10, BABYLON.Vector3.Zero(), scene)
+camera.attachControl(canvas, true)
+new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene)
 
 // 2. 创建“母版”网格（original）——这里用一个 1×1×1 的方块
-const original = BABYLON.MeshBuilder.CreateBox("masterBox", { size: 1 }, scene);
+const original = BABYLON.MeshBuilder.CreateBox('masterBox', {
+  size: 1
+}, scene)
 
 // 3. 启用顶点色（如果你后面想给每个实例独立的颜色）
-original.hasVertexAlpha = true;
+original.hasVertexAlpha = true
 
-// 4. 注册实例化颜色缓冲
-original.registerInstancedBuffer("color", 4);   // 4 个分量：r,g,b,a
+// 4. 创建材质（简单 PBR 即可，也可以用 StandardMaterial）
+const mat = new BABYLON.StandardMaterial('mat', scene)
+mat.useVertexColors = true // 启用顶点色
+original.material = mat
 
-// 5. 创建材质（简单 PBR 即可，也可以用 StandardMaterial）
-const mat = new BABYLON.PBRMaterial("mat", scene);
-mat.metallic = 0.2;
-mat.roughness = 0.7;
-// 让材质支持顶点色
-mat.useVertexColors = true;
-original.material = mat;
+// 5. 注册实例化颜色缓冲
+original.registerInstancedBuffer('color', 4) // 4 个分量：r,g,b,a
+
+// 4. 给原始网格设置颜色（默认颜色）
+original.instancedBuffers.color = new BABYLON.Color4(1, 0, 1, 1) // 白色
 
 // 6. 开始生成实例
-const instance1 = original.createInstance("i1");
-const instance2 = original.createInstance("i2");
+const instance1 = original.createInstance('i1')
+const instance2 = original.createInstance('i2')
+console.log(instance1)
 
-// 7. 给每个实例单独设置颜色
-instance1.instancedBuffers.color = new BABYLON.Color4(1, 0, 0, 1); // 红
-instance2.instancedBuffers.color = new BABYLON.Color4(0, 1, 0, 1); // 绿
+// 7. 给 instance1 实例单独设置颜色
+instance1.instancedBuffers.color = new BABYLON.Color4(1, 0, 0, 1) // 红
 
 // 8. 位置区分一下，方便观察
-instance1.position.x = -1.2;
-instance2.position.x =  1.2;
+instance1.position.x = -1.2
+instance2.position.x = 1.2
 ```
 
