@@ -118,6 +118,16 @@ function sidebarBase() {
       ]
     },
     {
+      text: 'wgsl相关',
+      collapsible: true,
+      items: [
+        { text: 'computeShader相关介绍', link: '/wgsl/computeShaderIntroduce' },
+        { text: '存储类别', link: '/wgsl/storageClass' },
+        { text: 'workgroup_size', link: '/wgsl/workgroupSize' },
+        { text: '内置变量', link: '/wgsl/builtInVar' },
+      ]
+    },
+    {
       text: '案例-babylon',
       collapsible: true,
       items: [
@@ -133,6 +143,7 @@ function sidebarBase() {
         { text: 'RPG相关', link: '/components/babylonRpg.md' },
         { text: 'shader1', link: '/components/babylonShader1.md' },
         { text: 'shader2', link: '/components/babylonShader2.md' },
+        { text: 'computeShader1', link: '/components/babylonComputeShader1.md' },
       ]
     },
     {

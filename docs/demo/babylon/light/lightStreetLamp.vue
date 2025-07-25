@@ -33,7 +33,7 @@ import {
   Slider,
 } from 'babylonjs-gui'
 
-let sceneResources
+let sceneResources, adt
 
 const fps = ref(0)
 const isRunning = ref(false)
@@ -92,7 +92,7 @@ const initScene = async () => {
   }
 
   const createGui = async (light, bulbInfo) => {
-    const adt = AdvancedDynamicTexture.CreateFullscreenUI('UI')
+    adt = AdvancedDynamicTexture.CreateFullscreenUI('UI')
     const panel = new StackPanel()
     panel.width = '220px'
     panel.top = '-20px'
@@ -200,6 +200,10 @@ const destroy = () => {
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()
     sceneResources = null
+  }
+  if (adt) {
+    adt.dispose()
+    adt = null
   }
 }
 

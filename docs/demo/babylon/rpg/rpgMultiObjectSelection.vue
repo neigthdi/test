@@ -51,7 +51,7 @@ const endPoint = ref<any>({})
 const collectionMesh = ref<any>([])
 const saveMaterial = ref<any>([])
 
-let sceneResources
+let sceneResources, adt
 
 const onTrigger = async () => {
   if (!isRunning.value) {
@@ -122,7 +122,7 @@ const initScene = async () => {
   }
 
   const createGui = async () => {
-    const adt = AdvancedDynamicTexture.CreateFullscreenUI('UI')
+    adt = AdvancedDynamicTexture.CreateFullscreenUI('UI')
 
     const xBox = MeshBuilder.CreateBox('x', { size: 1 }, scene)
     xBox.position = new Vector3(80, 0, 0)
@@ -391,6 +391,10 @@ const destroy = () => {
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()
     sceneResources = null
+  }
+  if (adt) {
+    adt.dispose()
+    adt = null
   }
 }
 

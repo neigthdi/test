@@ -34,7 +34,7 @@ import {
   TextBlock,
 } from 'babylonjs-gui'
 
-let sceneResources
+let sceneResources, adt
 
 const fps = ref(0)
 const isRunning = ref(false)
@@ -109,7 +109,7 @@ const initScene = async () => {
   }
 
   const createGui = async () => {
-    const adt = AdvancedDynamicTexture.CreateFullscreenUI('UI')
+    adt = AdvancedDynamicTexture.CreateFullscreenUI('UI')
 
     const xBox = MeshBuilder.CreateBox('x', { size: 1 }, scene)
     xBox.position = new Vector3(80, 0, 0)
@@ -234,6 +234,10 @@ const destroy = () => {
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()
     sceneResources = null
+  }
+  if (adt) {
+    adt.dispose()
+    adt = null
   }
 }
 

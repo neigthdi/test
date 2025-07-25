@@ -45,7 +45,7 @@ const isRunning = ref(false)
 
 const inputMap = {}
 const isRightHandedSystem = false
-let sceneResources
+let sceneResources, adt
 
 // 角色变量
 const peopleSpeed = 0.2
@@ -123,7 +123,7 @@ const initScene = async () => {
   }
 
   const createGui = async () => {
-    const adt = AdvancedDynamicTexture.CreateFullscreenUI('UI')
+    adt = AdvancedDynamicTexture.CreateFullscreenUI('UI')
 
     const xBox = MeshBuilder.CreateBox('x', { size: 1 }, scene)
     xBox.position = new Vector3(80, 0, 0)
@@ -200,7 +200,7 @@ const initScene = async () => {
   }
 
   const createGuiTip = () => {
-    const adt = AdvancedDynamicTexture.CreateFullscreenUI('UI')
+    adt = AdvancedDynamicTexture.CreateFullscreenUI('UI')
     const instructions = new TextBlock()
     instructions.text = 'Move W,A,S,D keys, B for Samba, look with the mouse'
     instructions.color = 'white'
@@ -333,6 +333,10 @@ const destroy = () => {
     sceneResources.engine.dispose()
     sceneResources.scene.dispose()
     sceneResources = null
+  }
+  if (adt) {
+    adt.dispose()
+    adt = null
   }
 }
 
