@@ -9,3 +9,6 @@
 
 ## 给ground设置图片材质-3
 <preview path="../demo/babylon/computeShader1/setTextureToGround3.vue"></preview>
+
+## 给ground设置图片材质-4（uniform---time）
+<preview path="../demo/babylon/computeShader1/setTextureToGround4.vue"></preview>
