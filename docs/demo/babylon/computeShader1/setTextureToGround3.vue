@@ -1,11 +1,12 @@
 <template>
-    <div>
-      <div class="flex space-between">
+  <div>
+    <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
-      </div>
-      <canvas v-if="isRunning" id="setTextureToGround3" class="stage"></canvas>
     </div>
+    {{ tips }}
+    <canvas v-if="isRunning" id="setTextureToGround3" class="stage"></canvas>
+  </div>
 </template>
   
   <script lang="ts" setup>
@@ -36,6 +37,7 @@
   
   const fps = ref(0)
   const isRunning = ref(false)
+  const tips = ref('')
   
   const onTrigger = async () => {
     if (!isRunning.value) {
@@ -59,6 +61,10 @@
     })
   
     const engine: any = new WebGPUEngine(ele)
+    if(!engine.isWebGPU) {
+      tips.value = '设备不支持WebGpu'
+      return false
+    }
     await engine.initAsync()
   
     const scene = new Scene(engine)
