@@ -121,7 +121,7 @@ function sidebarBase() {
       text: 'wgsl相关',
       collapsible: true,
       items: [
-        { text: 'computeShader相关介绍', link: '/wgsl/computeShaderIntroduce' },
+        { text: 'computeShader', link: '/wgsl/computeShaderIntroduce' },
         { text: '存储类别', link: '/wgsl/storageClass' },
         { text: '内置变量', link: '/wgsl/builtInVar' },
         { text: 'workgroup_size', link: '/wgsl/workgroupSize' },

@@ -34,7 +34,7 @@
     TextBlock,
   } from 'babylonjs-gui'
   
-  let sceneResources, adt, uTime = 0.02
+  let sceneResources, adt, uTime = 0.01
   
   const fps = ref(0)
   const isRunning = ref(false)
@@ -74,7 +74,7 @@
     const camera = new ArcRotateCamera('camera', -Math.PI / 1.5, Math.PI / 2.2, 15, new Vector3(0, 0, 0), scene)
     camera.upperBetaLimit = Math.PI / 2.2
     camera.wheelPrecision = 1
-    camera.panningSensibility = 200
+    camera.panningSensibility = 10
     camera.attachControl(ele, true)
     camera.setPosition(new Vector3(0, 160, -160))
   
@@ -175,9 +175,8 @@
         void main() {
           vUV = uv;
           vec4 baseColor = texture(uSampler, vUV);
-          // position.y = baseColor.r;
           vec3 newPosition = position;
-          newPosition.y = cos(position.x + sin(baseColor.r) * 5.0) * 2.0;
+          newPosition.y = cos(baseColor.r * 10.0 + newPosition.x * 5.0);
           gl_Position = worldViewProjection * vec4(newPosition, 1.0);
         }
       `
@@ -212,7 +211,7 @@
 
           var pix: vec4<f32> = textureSampleLevel(src, samplerSrc, vec2<f32>(global_id.xy) / dims, 0.0);
 
-          pix.r = sin(uTime) + pix.g;
+          pix.r = uTime - 1.0 * floor(uTime / 1.0);
 
           textureStore(dest, vec2<i32>(global_id.xy), pix);
         }
@@ -261,7 +260,7 @@
 
       scene.registerBeforeRender(() => {
 
-        uTime += 0.02
+        uTime += 0.01
         timeBuffer.updateFloat('uTime', uTime)
         timeBuffer.update()
 
