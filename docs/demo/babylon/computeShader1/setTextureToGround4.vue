@@ -287,10 +287,7 @@
       )
 
       const timeBuffer = new UniformBuffer(engine)
-      timeBuffer.addUniform('uTime', 4) // 4 表示 float 类型
-      timeBuffer.updateFloat('uTime', uTime)
-      timeBuffer.update()
-      shaderRow.setUniformBuffer('uTime', timeBuffer)
+      timeBuffer.addUniform('uTime', 4) // float 类型大小是4
 
       /* 绑定纹理 ----------------------------------------------------------- */
       // shaderRow.setTexture('src', srcTexture)
@@ -310,7 +307,7 @@
       matFinal.diffuseTexture = texCol
       groundChange.material = matFinal
 
-      scene.registerBeforeRender(function() {
+      scene.registerBeforeRender(async() => {
         uTime += 0.02
         timeBuffer.updateFloat('uTime', uTime)
         timeBuffer.update()
@@ -319,14 +316,13 @@
         shaderRow.setUniformBuffer('uTime', timeBuffer)
         shaderRow.setTexture('src', srcTexture)
         shaderRow.setStorageTexture('dest', texRow)
-        shaderRow.dispatch(imgSize / workGroupSizeRowX, imgSize / workGroupSizeRowY, 1)
-      
+        await shaderRow.dispatchWhenReady(imgSize / workGroupSizeRowX, imgSize / workGroupSizeRowY, 1)
+        // shaderRow.dispatchW(imgSize / workGroupSizeRowX, imgSize / workGroupSizeRowY, 1)
+
         shaderCol.setTexture('src', texRow)
         shaderCol.setStorageTexture('dest', texCol)
-        shaderCol.dispatch(imgSize / workGroupSizeColX, imgSize / workGroupSizeColY, 1)
-      
-        // 确保材质使用最新的纹理
-        matFinal.diffuseTexture = texCol
+        await shaderCol.dispatchWhenReady(imgSize / workGroupSizeColX, imgSize / workGroupSizeColY, 1)
+        // shaderCol.dispatch(imgSize / workGroupSizeColX, imgSize / workGroupSizeColY, 1)
       })
     }
   

@@ -1,6 +1,5 @@
 <template>
     <div>
-      (0, 0) 点在左下角，(255, 255)点在右上角
       <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
@@ -178,7 +177,6 @@
         @group(0) @binding(0) var samplerSrc: sampler;
         @group(0) @binding(1) var src: texture_2d<f32>;
         @group(0) @binding(2) var dest: texture_storage_2d<rgba8unorm, write>;
-        // @group(0) @binding(3) var<uniform> dir: u32;  // 1: 行方向, 2: 列方向
 
         var<workgroup> sharedData: array<vec4<f32>, ${imgSize}>;
 
@@ -237,7 +235,6 @@
         @group(0) @binding(0) var samplerSrc: sampler;
         @group(0) @binding(1) var src: texture_2d<f32>;
         @group(0) @binding(2) var dest: texture_storage_2d<rgba8unorm, write>;
-        // @group(0) @binding(3) var<uniform> dir: u32;  // 1: 行方向, 2: 列方向
 
         var<workgroup> sharedData: array<vec4<f32>, ${imgSize}>;
 
@@ -299,7 +296,6 @@
         { bindingsMapping: { 
             'src': { group: 0, binding: 1 },
             'dest': { group: 0, binding: 2 },
-            // 'dir': { group: 0, binding: 3 }
           }
         }
       )
@@ -311,18 +307,9 @@
         { bindingsMapping: { 
             'src': { group: 0, binding: 1 },
             'dest': { group: 0, binding: 2 },
-            // 'dir': { group: 0, binding: 3 }
           }
         }
       )
-
-      // /* 统一 uniform 缓冲区：dir ------------------------------------------- */
-      // const dirBuffer = new UniformBuffer(engine)
-      // dirBuffer.addUniform('dir', 1)
-      // /* 第一次 dispatch：行变换  srcTexture → texA -------------------------- */
-      // dirBuffer.updateInt('dir', 1) // dir = 1 -> 行
-      // dirBuffer.update()
-      // shader.setUniformBuffer('dir', dirBuffer)
 
       /* 绑定纹理 ----------------------------------------------------------- */
       shaderRow.setTexture('src', srcTexture)
@@ -332,16 +319,18 @@
       shaderCol.setStorageTexture('dest', texCol)
 
       // dispatchWhenReady = (1, 256, 1)：
-      //     x：表示在 x 方向上启动 1 个工作组。
-      //     y：表示在 y 方向上启动 256 个工作组。
-      //     z：表示在 z 方向上启动 1 个工作组。
+      //     x：表示在 x 方向上启动 1 个工作组。只启动 1 个工作组，因为每行只需要一个工作组来处理。
+      //     y：表示在 y 方向上启动 256 个工作组。启动 256 个工作组，因为图像有 256 行，每行需要一个工作组来处理。
+      //     z：表示在 z 方向上启动 1 个工作组。只启动 1 个工作组，因为处理的是二维图像。
+      // ☑️☑️☑️☑️☑️☑️☑️☑️☑️☑️☑️☑️☑️☑️☑️☑️☑️☑️☑️☑️☑️☑️
+      // ☑️☑️即 shaderRow.dispatchWhenReady(1, 256, 1) 把 256*256 分割成 256 行，然后 workgroup_size = (256, 1, 1) 把每行分割成256个元素。
       await shaderRow.dispatchWhenReady(imgSize / workGroupSizeRowX, imgSize / workGroupSizeRowY, 1)
 
 
       // dispatchWhenReady = (256, 1, 1)：
-      //     x：表示在 x 方向上启动 256 个工作组。
-      //     y：表示在 y 方向上启动 1 个工作组。
-      //     z：表示在 z 方向上启动 1 个工作组。
+      //     x：表示在 x 方向上启动 256 个工作组。启动 256 个工作组，因为图像有 256 列，每行需要一个工作组来处理。
+      //     y：表示在 y 方向上启动 1 个工作组。只启动 1 个工作组，因为每列只需要一个工作组来处理。
+      //     z：表示在 z 方向上启动 1 个工作组。只启动 1 个工作组，因为处理的是二维图像。
       await shaderCol.dispatchWhenReady(imgSize / workGroupSizeColX, imgSize / workGroupSizeColY, 1)
 
       /* 第二次 dispatch：列变换  texA → texB ------------------------------- */

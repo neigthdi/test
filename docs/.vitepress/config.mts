@@ -123,8 +123,8 @@ function sidebarBase() {
       items: [
         { text: 'computeShader相关介绍', link: '/wgsl/computeShaderIntroduce' },
         { text: '存储类别', link: '/wgsl/storageClass' },
-        { text: 'workgroup_size', link: '/wgsl/workgroupSize' },
         { text: '内置变量', link: '/wgsl/builtInVar' },
+        { text: 'workgroup_size', link: '/wgsl/workgroupSize' },
       ]
     },
     {

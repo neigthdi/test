@@ -25,7 +25,13 @@ a:hover {
 @media screen and (max-width: 600px){
   .stage {
     width: calc(100vw - 88px);
-    height: 360px;
+    height: calc(100vw - 88px);
+    border: 1px solid orange;
+  }
+
+  .shader-toy-stage {
+    width: calc(100vw - 88px);
+    height: calc(100vw - 88px);
     border: 1px solid orange;
   }
 }
@@ -37,13 +43,15 @@ a:hover {
     height: 360px;
     border: 1px solid orange;
   }
-}
 
-.shader-toy-stage {
+  .shader-toy-stage {
   width: 642px;
   height: 322px;
   border: 1px solid orange;
 }
+}
+
+
 
 h1,
 h2,
