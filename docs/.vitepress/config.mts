@@ -122,9 +122,9 @@ function sidebarBase() {
       collapsible: true,
       items: [
         { text: 'computeShader', link: '/wgsl/computeShaderIntroduce' },
+        { text: 'workgroupSize', link: '/wgsl/workgroupSize' },
         { text: '存储类别', link: '/wgsl/storageClass' },
         { text: '内置变量', link: '/wgsl/builtInVar' },
-        { text: 'workgroup_size', link: '/wgsl/workgroupSize' },
       ]
     },
     {
@@ -144,6 +144,7 @@ function sidebarBase() {
         { text: 'shader1', link: '/components/babylonShader1.md' },
         { text: 'shader2', link: '/components/babylonShader2.md' },
         { text: 'computeShader1', link: '/components/babylonComputeShader1.md' },
+        { text: 'computeShader2', link: '/components/babylonComputeShader2.md' },
       ]
     },
     {

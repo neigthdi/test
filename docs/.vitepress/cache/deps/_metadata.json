@@ -1,100 +1,61 @@
 {
-  "hash": "ebef2e50",
+  "hash": "ce8664c9",
   "configHash": "31f27b00",
-  "lockfileHash": "b52c77c9",
-  "browserHash": "4d97bbe7",
+  "lockfileHash": "91f70245",
+  "browserHash": "cdc8abcd",
   "optimized": {
     "vue": {
       "src": "../../../../node_modules/.pnpm/vue@3.3.4/node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "f832e914",
+      "fileHash": "476e769e",
       "needsInterop": false
     },
     "vitepress > @vue/devtools-api": {
       "src": "../../../../node_modules/.pnpm/@vue+devtools-api@7.6.8/node_modules/@vue/devtools-api/dist/index.js",
       "file": "vitepress___@vue_devtools-api.js",
-      "fileHash": "748582db",
+      "fileHash": "154b81fe",
       "needsInterop": false
     },
     "vitepress > @vueuse/core": {
       "src": "../../../../node_modules/.pnpm/@vueuse+core@11.3.0_vue@3.5.13/node_modules/@vueuse/core/index.mjs",
       "file": "vitepress___@vueuse_core.js",
-      "fileHash": "cd3686f6",
+      "fileHash": "b9c4f568",
       "needsInterop": false
     },
     "@vitepress-demo-preview/component": {
       "src": "../../../../node_modules/.pnpm/@vitepress-demo-preview+component@2.3.2_vitepress@1.5.0_vue@3.3.4/node_modules/@vitepress-demo-preview/component/dist/preview-component.js",
       "file": "@vitepress-demo-preview_component.js",
-      "fileHash": "3f210f79",
+      "fileHash": "bc9e7561",
       "needsInterop": false
     },
     "babylonjs": {
       "src": "../../../../node_modules/.pnpm/babylonjs@8.2.1/node_modules/babylonjs/babylon.js",
       "file": "babylonjs.js",
-      "fileHash": "5984b502",
+      "fileHash": "425b1954",
       "needsInterop": true
-    },
-    "babylonjs-loaders": {
-      "src": "../../../../node_modules/.pnpm/babylonjs-loaders@8.2.1/node_modules/babylonjs-loaders/babylonjs.loaders.js",
-      "file": "babylonjs-loaders.js",
-      "fileHash": "52ad4b7c",
-      "needsInterop": true
-    },
-    "glslCanvas": {
-      "src": "../../../../node_modules/.pnpm/glslCanvas@0.2.6_m3q7vsdrftwzhkwk3rjrznqtja/node_modules/glslCanvas/dist/GlslCanvas.es.js",
-      "file": "glslCanvas.js",
-      "fileHash": "87ecc637",
-      "needsInterop": false
-    },
-    "three": {
-      "src": "../../../../node_modules/.pnpm/three@0.166.0/node_modules/three/build/three.module.js",
-      "file": "three.js",
-      "fileHash": "525209b6",
-      "needsInterop": false
-    },
-    "three/examples/jsm/controls/OrbitControls.js": {
-      "src": "../../../../node_modules/.pnpm/three@0.166.0/node_modules/three/examples/jsm/controls/OrbitControls.js",
-      "file": "three_examples_jsm_controls_OrbitControls__js.js",
-      "fileHash": "cc3f7f03",
-      "needsInterop": false
-    },
-    "three/examples/jsm/utils/BufferGeometryUtils.js": {
-      "src": "../../../../node_modules/.pnpm/three@0.166.0/node_modules/three/examples/jsm/utils/BufferGeometryUtils.js",
-      "file": "three_examples_jsm_utils_BufferGeometryUtils__js.js",
-      "fileHash": "8c7beadd",
-      "needsInterop": false
-    },
-    "gsap": {
-      "src": "../../../../node_modules/.pnpm/gsap@3.12.5/node_modules/gsap/index.js",
-      "file": "gsap.js",
-      "fileHash": "a878c9e3",
-      "needsInterop": false
     },
     "babylonjs-gui": {
       "src": "../../../../node_modules/.pnpm/babylonjs-gui@8.2.1/node_modules/babylonjs-gui/babylon.gui.js",
       "file": "babylonjs-gui.js",
-      "fileHash": "7f163b4f",
+      "fileHash": "0d7a3b93",
       "needsInterop": true
     },
     "babylonjs-materials": {
       "src": "../../../../node_modules/.pnpm/babylonjs-materials@8.2.1/node_modules/babylonjs-materials/babylonjs.materials.js",
       "file": "babylonjs-materials.js",
-      "fileHash": "81d32cb8",
+      "fileHash": "9472541d",
       "needsInterop": true
     }
   },
   "chunks": {
-    "chunk-4QPWKAW5": {
-      "file": "chunk-4QPWKAW5.js"
-    },
     "chunk-67UUJLDS": {
       "file": "chunk-67UUJLDS.js"
     },
-    "chunk-TEORZ34R": {
-      "file": "chunk-TEORZ34R.js"
+    "chunk-RUMFRTKG": {
+      "file": "chunk-RUMFRTKG.js"
     },
-    "chunk-5WRI5ZAA": {
-      "file": "chunk-5WRI5ZAA.js"
+    "chunk-BUSYA2B4": {
+      "file": "chunk-BUSYA2B4.js"
     }
   }
 }

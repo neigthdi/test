@@ -167,14 +167,14 @@
       // 默认绑定了 samplerSrc ？？？
       // 只有先 sampler 才能 src ， 至于 dest binding到其他位置无所谓？把 dest 的 binding 从0改成3，依旧可以运行
       const copyTextureComputeShader = `
-        // 定义输出纹理 dest，类型为 texture_storage_2d（可写入的存储纹理），格式为 rgba8unorm（8位规范化无符号整数 RGBA），用途为 write（仅写入）
-        @group(0) @binding(3) var dest: texture_storage_2d<rgba8unorm, write>;
-        
         // 定义采样器 samplerSrc，用于控制纹理 src 的采样方式（如过滤模式、寻址模式）。
-        @group(0) @binding(1) var samplerSrc: sampler;
+        @group(0) @binding(0) var samplerSrc: sampler;
 
         // 定义输入纹理 src，类型为 texture_2d<f32>（二维浮点纹理），不可直接写入，需通过 textureSampleLevel 读取。
-        @group(0) @binding(2) var src: texture_2d<f32>;
+        @group(0) @binding(1) var src: texture_2d<f32>;
+
+        // 定义输出纹理 dest，类型为 texture_storage_2d（可写入的存储纹理），格式为 rgba8unorm（8位规范化无符号整数 RGBA），用途为 write（仅写入）
+        @group(0) @binding(2) var dest: texture_storage_2d<rgba8unorm, write>;
 
         // 定义每个工作组（Workgroup）的线程数为 1x1x1（即每次调用只处理一个像素）。
         // @workgroup_size(1,1,1) 效率较低，建议优化为更大的工作组（如 8x8x1）。
@@ -214,18 +214,17 @@
         engine, 
         { computeSource: copyTextureComputeShader }, 
         { bindingsMapping: { 
-            'dest': { group: 0, binding: 3 },
-            'src': { group: 0, binding: 2 }
+            'src': { group: 0, binding: 1 },
+            'dest': { group: 0, binding: 2 }
           }
         }
       )
 
       const src = new Texture('/images/grass.png', scene)
       const dest = RawTexture.CreateRGBAStorageTexture(null, 512, 512, scene, false, false)
-
       
-      shader.setStorageTexture('dest', dest)
       shader.setTexture('src', src)
+      shader.setStorageTexture('dest', dest)
 
       // dispatchWhenReady()
       // 这是 Compute Shader 的调度方法，用于启动计算任务。

@@ -1,7 +1,7 @@
 <template>
   <div>
-    <div><a href="https://zhuanlan.zhihu.com/p/623569022">GerstnerWave原理</a></div>
-    <div><a href="https://gameidea.org/2023/12/01/3d-ocean-shader-using-gerstner-waves/">Gerstner Waves</a></div>
+    <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/623569022">GerstnerWave原理</a></div>
+    <div><a target="_blank" href="https://gameidea.org/2023/12/01/3d-ocean-shader-using-gerstner-waves/">Gerstner Waves</a></div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
@@ -73,8 +73,8 @@ const initScene = async () => {
 
   const camera = new ArcRotateCamera('camera', -Math.PI / 1.5, Math.PI / 2.2, 15, new Vector3(0, 0, 0), scene)
   camera.upperBetaLimit = Math.PI / 2.2
-  camera.wheelPrecision = 2
-  camera.panningSensibility = 100
+  camera.wheelPrecision = 1
+  camera.panningSensibility = 10
   camera.attachControl(ele, true)
   camera.setPosition(new Vector3(160, 160, -160))
 

@@ -1,8 +1,5 @@
-## 模拟大海-1（学习Gerstner波）
+## 模拟大海（学习Gerstner波）
 <preview path="../demo/babylon/shader2/shaderSea1.vue"></preview>
-
-## 模拟大海-2（学习快速傅里叶变换）（学习 compute shader）（未完成）{ style="color: red;"}
-<preview path="../demo/babylon/shader2/shaderSea2.vue"></preview>
 
 ## 水面倒影
 <preview path="../demo/babylon/shader2/shaderWaterReflection.vue"></preview>

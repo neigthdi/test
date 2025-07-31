@@ -1,11 +1,18 @@
 <template>
   <div>
-    <div>注意：uUV的值会经过插值，导致获取到片元着色器vUV.x不等于顶点着色器的uv.x，如果要一致，需要用flat来固定</div>
+    <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/41455378">傅里叶系列(只看第一和第三)</a></div>
+    <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/1913515900235153904">傅里叶系列(作为上面的第二节，j是复数i)</a></div>
+    <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/64414956">fft海面模拟(一)</a></div>
+    <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/64726720">fft海面模拟(二)</a></div>
+    <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/65156063">fft海面模拟(三)</a></div>
+    <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/208511211">详尽的快速傅里叶变换推导</a></div>
+    <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/374489378">快速傅里叶变换--蝶形变换(直接看“举例”部分)</a></div>
+    <div>学习如何使用compute shader，案例延后</div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     </div>
-    <canvas v-if="isRunning" id="proceduralTexture2" class="stage"></canvas>
+    <canvas v-if="isRunning" id="shaderSea1" class="stage"></canvas>
   </div>
 </template>
 
@@ -25,7 +32,6 @@ import {
   StandardMaterial,
   RawTexture,
   Constants,
-  ProceduralTexture,
 } from 'babylonjs'
 import {
   AdvancedDynamicTexture,
@@ -52,7 +58,7 @@ const onTrigger = async () => {
 }
 
 const initScene = async () => {
-  const ele = document.getElementById("proceduralTexture2") as any
+  const ele = document.getElementById("shaderSea1") as any
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动
@@ -171,7 +177,7 @@ const initScene = async () => {
   const PI = 3.14159265358979323846
   const TWO_PI = 2 * PI
   const G = 9.8
-  const N = 512
+  const N = 128
 
   // 复数乘法
   function complexMultiply(a, b) {
@@ -267,6 +273,8 @@ const initScene = async () => {
     const xData = new Uint8Array(N * N * 4)
     const yData = new Uint8Array(N * N * 4)
     const zData = new Uint8Array(N * N * 4)
+    const fftData = new Uint8Array(N * N * 4)
+    const fftOmega = new Uint8Array(N * N )
 
     for (let y = 0; y < N; y++) {
       for (let x = 0; x < N; x++) {
@@ -317,6 +325,14 @@ const initScene = async () => {
         yData[index + 2] = 0
         yData[index + 3] = 255
 
+        
+        // 到时候应该只用到 H_Tilde.x ？
+        fftData[index] = h0k.x
+        fftData[index + 1] = h0k.y
+        fftData[index + 2] = h0kConj.x
+        fftData[index + 3] = h0kConj.y
+        fftOmega[x + y] = omega
+
 
         xData[index] = KxHTilde.x
         xData[index + 1] = KxHTilde.y
@@ -365,10 +381,23 @@ const initScene = async () => {
       Constants.TEXTURE_NEAREST_SAMPLINGMODE
     )
 
+    const rawTextureFft = new RawTexture(
+      fftData,
+      N,
+      N,
+      Constants.TEXTUREFORMAT_RGBA,
+      scene,
+      false, // 不生成 mipmap
+      false, // 不使用线性空间
+      Constants.TEXTURE_NEAREST_SAMPLINGMODE
+    )
+
     return {
       rawTextureY,
       rawTextureX,
-      rawTextureZ
+      rawTextureZ,
+      rawTextureFft,
+      fftOmega
     }
   }
 
@@ -392,134 +421,13 @@ const initScene = async () => {
     planeZ.material = materialZ
   }
 
-  Effect.ShadersStore['firstShaderVertexShader'] = `
-    precision highp float;
-    
-    attribute vec3 position;
-    attribute vec2 uv;
-
-    uniform mat4 worldViewProjection;
-
-    uniform sampler2D uSampler;
-
-    void main() {
-      // texture的参数含义
-      // 纹理采样器（sampler2D）：这是一个指向纹理的引用，包含了整个纹理的信息
-      // 纹理坐标（vec2）：这是一个二维向量，表示在纹理中要采样的位置。通常，纹理坐标（uv）的范围是 [0, 1]，其中 (0, 0) 表示纹理的左下角，(1, 1) 表示纹理的右上角  
-      // vec4 baseColor = texture(uSampler, uv);
-
-      vUV = uv;
-      gl_Position = worldViewProjection * vec4(position, 1.0);
-    }
-  `
-
-  Effect.ShadersStore['firstShaderFragmentShader'] = `
-    precision highp float;
-
-    uniform sampler2D uSampler;
-
-    varying vec2 vUV;
-    uniform float uTime;
-
-    void main() {
-      vec4 baseColor = texture(uSampler, vUV);
-      gl_FragColor = vec4(baseColor);
-    }
-  `
-
-   Effect.ShadersStore['secondShaderVertexShader'] = `
-    precision highp float;
-    
-    attribute vec3 position;
-    uniform mat4 worldViewProjection;
-    
-    attribute vec2 uv;
-
-    varying vec2 vUV;
-
-    void main() {
-      vUV = uv;
-      gl_Position = worldViewProjection * vec4(position, 1.0);
-    }
-  `
-
-  Effect.ShadersStore['secondShaderFragmentShader'] = `
-    precision highp float;
-
-    uniform sampler2D uSampler;
-
-    varying vec2 vUV;
-    uniform float uTime;
-
-    void main() {
-
-      vec4 baseColor = texture(uSampler, vUV);
-
-      if(vUV.y > 0.5) baseColor.g = 0.5;
-      baseColor.b += sin(uTime);
-
-      gl_FragColor = vec4(baseColor);
-    }
-  `
-
-  Effect.ShadersStore['finalIfftVertexShader'] = `
-    precision highp float;
-    
-    attribute vec3 position;
-    uniform mat4 worldViewProjection;
-    
-    attribute vec2 uv;
-
-    varying vec2 vUV;
-
-    void main(void) {
-      vUV = uv;
-      gl_Position = worldViewProjection * vec4(position, 1.0);
-    }
-  `
-
-  Effect.ShadersStore['finalIfftFragmentShader'] = `
-    precision highp float;
-
-    uniform sampler2D uSampler;
-
-    varying vec2 vUV;
-
-    void main(void) {
-
-      vec4 baseColor = texture(uSampler, vUV);
-
-      gl_FragColor = vec4(baseColor);
-    }
-  `
-
-  const ifftComputed = ({ rawTextureX, rawTextureY, rawTextureZ }) => {
-    const finalShader = new ShaderMaterial(
-      'finalIfft',
-      scene, {
-        vertex: 'finalIfft',
-        fragment: 'finalIfft',
-      }, {
-        attributes: ['position', 'uv'],
-        uniforms: ['worldViewProjection', 'uSampler'],
-        samplers: ['uSampler'],
-        needAlphaBlending: true,
-      },
-    )
-
-    const procTex1 = new ProceduralTexture('first', N, 'firstShader', scene)
-    const procTex2 = new ProceduralTexture('second', 256, 'secondShader', scene)
-    const finalPlane = MeshBuilder.CreateGround('plane', { width: N, height: N, subdivisions: N },  scene)
-    finalPlane.material = finalShader
-    
-    procTex1.setTexture('uSampler', rawTextureY)
-    procTex2.setTexture('uSampler', procTex1)
-    finalShader.setTexture('uSampler', procTex2)
-
-    scene.registerBeforeRender(() => {
-      procTex2.setFloat('uTime', uTime)
-      uTime += 0.02
-    })
+  const ifftComputed = (rawTextureFft, fftOmega) => {
+    const computeShader = `
+      @group(0) @binding(0) var samplerSrc: sampler;
+      @group(0) @binding(1) var src: texture_2d<f32>;
+      @group(0) @binding(2) var dest: texture_storage_2d<rgba8unorm, write>;
+      @group(0) @binding(3) var<uniform> uTime: f32;
+    `
   }
 
   const runAnimate = () => {
@@ -536,14 +444,10 @@ const initScene = async () => {
   createAxis()
   createGui()
   createSphere()
-  const { rawTextureX, rawTextureY, rawTextureZ } = createXyzTexture(scene)
+  const { rawTextureX, rawTextureY, rawTextureZ, rawTextureFft, fftOmega } = createXyzTexture(scene)
   createXyzPlane({ rawTextureX, rawTextureY, rawTextureZ })
-  ifftComputed({ rawTextureX, rawTextureY, rawTextureZ })
+  ifftComputed(rawTextureFft, fftOmega)
   runAnimate()
-
-  scene.registerBeforeRender(function() {
-    uTime += 0.04
-  })
 
   return {
     scene,

@@ -1,30 +1,31 @@
 <template>
   <div>
-    <div><a href="https://zhuanlan.zhihu.com/p/41455378">傅里叶系列(只看第一和第三)</a></div>
-    <div><a href="https://zhuanlan.zhihu.com/p/1913515900235153904">傅里叶系列(作为上面的第二节，j是复数i)</a></div>
-    <div><a href="https://zhuanlan.zhihu.com/p/64414956">fft海面模拟(一)</a></div>
-    <div><a href="https://zhuanlan.zhihu.com/p/64726720">fft海面模拟(二)</a></div>
-    <div><a href="https://zhuanlan.zhihu.com/p/65156063">fft海面模拟(三)</a></div>
-    <div><a href="https://zhuanlan.zhihu.com/p/208511211">详尽的快速傅里叶变换推导</a></div>
-    <div><a href="https://zhuanlan.zhihu.com/p/374489378">快速傅里叶变换--蝶形变换(直接看“举例”部分)</a></div>
-    <div>学习如何使用compute shader，案例延后</div>
+    <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/41455378">傅里叶系列(只看第一和第三)</a></div>
+    <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/1913515900235153904">傅里叶系列(作为上面的第二节，j是复数i)</a></div>
+    <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/64414956">fft海面模拟(一)</a></div>
+    <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/64726720">fft海面模拟(二)</a></div>
+    <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/65156063">fft海面模拟(三)</a></div>
+    <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/208511211">详尽的快速傅里叶变换推导</a></div>
+    <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/374489378">快速傅里叶变换--蝶形变换(直接看“举例”部分)</a></div>
+    <div class="color-red">乘以 uTime 后，和 shader2 的 phillips 效果图不一样，为啥呢？</div>
+    {{ tips }}
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     </div>
-    <canvas v-if="isRunning" id="shaderSea2" class="stage"></canvas>
+    <canvas v-if="isRunning" id="shaderSea1" class="stage"></canvas>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
 import {
-  Engine,
+  WebGPUEngine,
   Scene,
   HemisphericLight,
   MeshBuilder,
-  // Effect,
-  // ShaderMaterial,
+  Effect,
+  ShaderMaterial,
   Color4,
   ArcRotateCamera,
   Vector3,
@@ -32,7 +33,8 @@ import {
   StandardMaterial,
   RawTexture,
   Constants,
-  // ProceduralTexture,
+  ComputeShader,
+  UniformBuffer,
 } from 'babylonjs'
 import {
   AdvancedDynamicTexture,
@@ -42,10 +44,11 @@ import {
 } from 'babylonjs-gui'
 
 let sceneResources, adt
-let uTime = 0.2
+let uTime = 2
 
 const fps = ref(0)
 const isRunning = ref(false)
+const tips = ref('')
 
 const onTrigger = async () => {
   if (!isRunning.value) {
@@ -59,7 +62,7 @@ const onTrigger = async () => {
 }
 
 const initScene = async () => {
-  const ele = document.getElementById("shaderSea2") as any
+  const ele = document.getElementById("shaderSea1") as any
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动
@@ -67,19 +70,21 @@ const initScene = async () => {
     event.preventDefault() // 阻止默认滚动行为
   })
 
-  const engine: any = new Engine(ele, true, {
-    preserveDrawingBuffer: true,
-    stencil: true,
-    disableWebGL2Support: false
-  })
+  const engine: any = new WebGPUEngine(ele)
+
+  if(!engine.isWebGPU) {
+    tips.value = '设备不支持WebGpu'
+    return false
+  }
+  await engine.initAsync()
 
   const scene = new Scene(engine)
   scene.useRightHandedSystem = false
 
   const camera = new ArcRotateCamera('camera', -Math.PI / 1.5, Math.PI / 2.2, 15, new Vector3(0, 0, 0), scene)
   camera.upperBetaLimit = Math.PI / 2.2
-  camera.wheelPrecision = 2
-  camera.panningSensibility = 100
+  camera.wheelPrecision = 1
+  camera.panningSensibility = 10
   camera.attachControl(ele, true)
   camera.setPosition(new Vector3(0, 560, -560))
 
@@ -164,21 +169,10 @@ const initScene = async () => {
     zPanel.linkWithMesh(zBox)
   }
 
-  const createSphere = () => {
-    const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 10 }, scene)
-    const sphereMat = new StandardMaterial('sphere')
-    sphereMat.diffuseColor = new Color3(1.0, 0.6, 0.2)
-    sphere.material = sphereMat
-    sphere.position.x = 70
-    sphere.position.y = 70
-    sphere.position.z = 70
-  }
-
-
   const PI = 3.14159265358979323846
   const TWO_PI = 2 * PI
   const G = 9.8
-  const N = 512
+  const IMG_SIZE = 128
 
   // 复数乘法
   function complexMultiply(a, b) {
@@ -271,23 +265,24 @@ const initScene = async () => {
   }
 
   function createXyzTexture (scene) {
-    const xData = new Uint8Array(N * N * 4)
-    const yData = new Uint8Array(N * N * 4)
-    const zData = new Uint8Array(N * N * 4)
-    const fftData = new Uint8Array(N * N * 4)
+    const xData = new Uint8Array(IMG_SIZE * IMG_SIZE * 4)
+    const yData = new Uint8Array(IMG_SIZE * IMG_SIZE * 4)
+    const zData = new Uint8Array(IMG_SIZE * IMG_SIZE * 4)
+    const fftData = new Uint8Array(IMG_SIZE * IMG_SIZE * 4)
+    const fftDispersion = new Uint8Array(IMG_SIZE * IMG_SIZE * 4)
 
-    for (let y = 0; y < N; y++) {
-      for (let x = 0; x < N; x++) {
-        const index = (x + y * N) * 4
+    for (let y = 0; y < IMG_SIZE; y++) {
+      for (let x = 0; x < IMG_SIZE; x++) {
+        const index = (x + y * IMG_SIZE) * 4
         const gaussValue1 = gauss({x: x + 3, y: y + 5})
         const gaussValue2 = gauss({x: x + 7, y: y + 11})
 
-        const nx = x - N / 2
-        const ny = y - N / 2
+        const nx = x - IMG_SIZE / 2
+        const ny = y - IMG_SIZE / 2
 
         const K = {
-          x: TWO_PI * nx / N,
-          y: TWO_PI * ny / N,
+          x: TWO_PI * nx / IMG_SIZE,
+          y: TWO_PI * ny / IMG_SIZE,
         }
 
         const phillipsRes1 = Math.sqrt(phillips(K) * 0.5)
@@ -302,6 +297,9 @@ const initScene = async () => {
           y: gaussValue2.y * phillipsRes2 * -1
         }
 
+        // 如果加上 uTime 的话，是要 dispersion(K) * uTime 的
+        // 所以这段通过 compute shader 来计算
+        // 然后生成 texture1 ，再分别进行 row 和 col 的计算
         const omega = dispersion(K)
         const c = Math.cos(omega)
         const s = Math.sin(omega)
@@ -330,14 +328,20 @@ const initScene = async () => {
         fftData[index + 1] = h0k.y
         fftData[index + 2] = h0kConj.x
         fftData[index + 3] = h0kConj.y
+        fftDispersion[index] = omega
+        fftDispersion[index + 1] = 255
+        fftDispersion[index + 2] = 255
+        fftDispersion[index + 3] = 255
 
 
+        // x 方向，叉积计算法向量
         xData[index] = KxHTilde.x
         xData[index + 1] = KxHTilde.y
         xData[index + 2] = 0
         xData[index + 3] = 255
 
 
+        // z 方向，叉积计算法向量
         zData[index] = KzHTilde.x
         zData[index + 1] = KzHTilde.y
         zData[index + 2] = 0
@@ -348,8 +352,8 @@ const initScene = async () => {
 
     const rawTextureY = new RawTexture(
       yData,
-      N,
-      N,
+      IMG_SIZE,
+      IMG_SIZE,
       Constants.TEXTUREFORMAT_RGBA,
       scene,
       false, // 不生成 mipmap
@@ -359,8 +363,8 @@ const initScene = async () => {
 
     const rawTextureX = new RawTexture(
       xData,
-      N,
-      N,
+      IMG_SIZE,
+      IMG_SIZE,
       Constants.TEXTUREFORMAT_RGBA,
       scene,
       false, // 不生成 mipmap
@@ -370,8 +374,8 @@ const initScene = async () => {
 
     const rawTextureZ = new RawTexture(
       zData,
-      N,
-      N,
+      IMG_SIZE,
+      IMG_SIZE,
       Constants.TEXTUREFORMAT_RGBA,
       scene,
       false, // 不生成 mipmap
@@ -381,8 +385,19 @@ const initScene = async () => {
 
     const rawTextureFft = new RawTexture(
       fftData,
-      N,
-      N,
+      IMG_SIZE,
+      IMG_SIZE,
+      Constants.TEXTUREFORMAT_RGBA,
+      scene,
+      false, // 不生成 mipmap
+      false, // 不使用线性空间
+      Constants.TEXTURE_NEAREST_SAMPLINGMODE
+    )
+
+    const rawTextureFftDispersion = new RawTexture(
+      fftDispersion,
+      IMG_SIZE,
+      IMG_SIZE,
       Constants.TEXTUREFORMAT_RGBA,
       scene,
       false, // 不生成 mipmap
@@ -394,31 +409,127 @@ const initScene = async () => {
       rawTextureY,
       rawTextureX,
       rawTextureZ,
-      rawTextureFft
+      rawTextureFft,
+      rawTextureFftDispersion
     }
   }
 
   const createXyzPlane = ({ rawTextureX, rawTextureY, rawTextureZ }) => {
-    const planeX = MeshBuilder.CreateGround('planeX', { width: N, height: N, subdivisions: N }, scene)
-    planeX.position = new Vector3(-N - 10, 0, N + 10)
+    const planeX = MeshBuilder.CreateGround('planeX', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
+    planeX.position = new Vector3(-IMG_SIZE - 10, 0, IMG_SIZE + 10)
     const materialX = new StandardMaterial("planeMaterial", scene)
     materialX.diffuseTexture = rawTextureX
     planeX.material = materialX
 
-    const planeY = MeshBuilder.CreateGround('planeY', { width: N, height: N, subdivisions: N }, scene)
-    planeY.position = new Vector3(0, 0, N + 10)
+    const planeY = MeshBuilder.CreateGround('planeY', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
+    planeY.position = new Vector3(0, 0, IMG_SIZE + 10)
     const materialY = new StandardMaterial("planeMaterial", scene)
     materialY.diffuseTexture = rawTextureY
     planeY.material = materialY
 
-    const planeZ = MeshBuilder.CreateGround('planeZ', { width: N, height: N, subdivisions: N }, scene)
-    planeZ.position = new Vector3(N + 10, 0, N + 10)
+    const planeZ = MeshBuilder.CreateGround('planeZ', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
+    planeZ.position = new Vector3(IMG_SIZE + 10, 0, IMG_SIZE + 10)
     const materialZ = new StandardMaterial("planeMaterial", scene)
     materialZ.diffuseTexture = rawTextureZ
     planeZ.material = materialZ
   }
 
-  const ifftComputed = (rawTextureFft) => {
+  const ifftComputed = async (rawTextureFft, rawTextureFftDispersion) => {
+    const workGroupSizeRowX = IMG_SIZE
+    const workGroupSizeRowY = 1
+    const workGroupSizeColX = 1
+    const workGroupSizeColY = IMG_SIZE
+
+    /** 第一步 计算 omega 和 uTime ，得到 textureHTilde */
+    const Code_H_Tilde = `
+      @group(0) @binding(0) var samplerSrc: sampler;
+      @group(0) @binding(1) var src: texture_2d<f32>;
+      @group(0) @binding(2) var dest: texture_storage_2d<rgba8unorm, write>;
+      @group(0) @binding(3) var<uniform> uTime: f32;
+
+      @group(1) @binding(0) var samplerFft: sampler;
+      @group(1) @binding(1) var fft_dispersion: texture_2d<f32>;
+      
+      fn complexMultiply(a: vec2<f32>, b: vec2<f32>) -> vec2<f32> {
+        var result: vec2<f32>;
+        result.x = a.x * b.x - a.y * b.y;  // 实部
+        result.y = a.x * b.y + a.y * b.x;  // 虚部
+        return result;
+      }
+
+      @compute @workgroup_size(1, 1, 1)
+      fn main(
+        @builtin(global_invocation_id) global_id: vec3<u32>,
+        @builtin(local_invocation_id) local_id: vec3<u32>
+      ) {
+        let src_dims: vec2<f32> = vec2<f32>(textureDimensions(src, 0));
+        let src_texture: vec4<f32> = textureSampleLevel(src, samplerSrc, vec2<f32>(global_id.xy) / src_dims, 0.0);
+
+        let fft_dispersion_dims: vec2<f32> = vec2<f32>(textureDimensions(fft_dispersion, 0));
+        let fft_dispersion_texture: vec4<f32> = textureSampleLevel(fft_dispersion, samplerFft, vec2<f32>(global_id.xy) / fft_dispersion_dims, 0.0);
+
+        var color = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+
+        let omega = fft_dispersion_texture.r * uTime;
+        let c = cos(omega);
+        let s = sin(omega);
+        let h0k = src_texture.rg;
+        let h0k_conj = src_texture.ba;
+
+        let h1 = complexMultiply(h0k, vec2<f32>(c, s));
+        let h2 = complexMultiply(h0k_conj, vec2<f32>(c, -s));
+
+        color.r = h1.r + h2.r;
+        color.g = h1.g + h2.g;
+
+        textureStore(dest, vec2<i32>(global_id.xy), color);
+      }
+    `
+    /** 第二步 计算 row ，得到 textureRow */
+    /** 第三步 计算 col ，得到 textureCol */
+
+    const phillips = MeshBuilder.CreateGround('Ground', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
+    const phillipsTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false)
+
+    const shader = new ComputeShader(
+      'myCompute', 
+      engine, 
+      { computeSource: Code_H_Tilde }, 
+      { bindingsMapping: {
+          'src': { group: 0, binding: 1 },
+          'dest': { group: 0, binding: 2 },
+          'uTime': { group: 0, binding: 3 },
+          'fft_dispersion': { group: 1, binding: 1 },
+        }
+      }
+    )
+
+    const timeBuffer = new UniformBuffer(engine)
+    timeBuffer.addUniform('uTime', 4) // float 类型大小是4
+
+    shader.setTexture('src', rawTextureFft)
+    shader.setTexture('fft_dispersion', rawTextureFftDispersion)
+    shader.setStorageTexture('dest', phillipsTexture)
+
+    // await shader.dispatchWhenReady(N / workGroupSizeRowX, N / workGroupSizeRowY, 1)
+    // shader.dispatchWhenReady(dest.getSize().width, dest.getSize().height, 1)
+
+    const mat = new StandardMaterial('mat', scene)
+    mat.diffuseTexture = phillipsTexture
+    phillips.material = mat
+    phillips.position = new Vector3(0, 0, IMG_SIZE * 2 + 20)
+
+    scene.registerBeforeRender(async() => {
+      uTime += 2
+      timeBuffer.updateFloat('uTime', uTime)
+      timeBuffer.update()
+
+      shader.setUniformBuffer('uTime', timeBuffer)
+      shader.setTexture('src', rawTextureFft)
+      shader.setTexture('fft_dispersion', rawTextureFftDispersion)
+      shader.setStorageTexture('dest', phillipsTexture)
+      await shader.dispatchWhenReady(phillipsTexture.getSize().width, phillipsTexture.getSize().height, 1)
+    })
   }
 
   const runAnimate = () => {
@@ -434,15 +545,10 @@ const initScene = async () => {
   createLight()
   createAxis()
   createGui()
-  createSphere()
-  const { rawTextureX, rawTextureY, rawTextureZ, rawTextureFft } = createXyzTexture(scene)
+  const { rawTextureX, rawTextureY, rawTextureZ, rawTextureFft, rawTextureFftDispersion } = createXyzTexture(scene)
   createXyzPlane({ rawTextureX, rawTextureY, rawTextureZ })
-  ifftComputed(rawTextureFft)
+  ifftComputed(rawTextureFft, rawTextureFftDispersion)
   runAnimate()
-
-  scene.registerBeforeRender(function() {
-    uTime += 0.04
-  })
 
   return {
     scene,
