@@ -195,7 +195,7 @@
       `
 
       const copyTextureComputeShader = `
-        @group(0) @binding(1) var samplerSrc: sampler;
+        @group(0) @binding(1) var sampler_src: sampler;
 
         @group(0) @binding(2) var src: texture_2d<f32>;
 
@@ -209,7 +209,7 @@
 
           let dims: vec2<f32> = vec2<f32>(textureDimensions(src, 0));
 
-          var pix: vec4<f32> = textureSampleLevel(src, samplerSrc, vec2<f32>(global_id.xy) / dims, 0.0);
+          var pix: vec4<f32> = textureSampleLevel(src, sampler_src, vec2<f32>(global_id.xy) / dims, 0.0);
 
           pix.r = uTime - 1.0 * floor(uTime / 1.0);
 

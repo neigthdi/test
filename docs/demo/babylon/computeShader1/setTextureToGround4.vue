@@ -178,7 +178,7 @@
       const texCol = RawTexture.CreateRGBAStorageTexture(null, imgSize, imgSize, scene, false, false)
 
       const computeShaderRow = `
-        @group(0) @binding(0) var samplerSrc: sampler;
+        @group(0) @binding(0) var sampler_src: sampler;
         @group(0) @binding(1) var src: texture_2d<f32>;
         @group(0) @binding(2) var dest: texture_storage_2d<rgba8unorm, write>;
         @group(0) @binding(3) var<uniform> uTime: f32;
@@ -191,7 +191,7 @@
           @builtin(local_invocation_id) local_id: vec3<u32> // local_id.x 范围是 0~255 共256个线程 ， local_id.y 范围是 0 共1个线程
         ) {
           let dims: vec2<f32> = vec2<f32>(textureDimensions(src, 0));
-          let origin_texture: vec4<f32> = textureSampleLevel(src, samplerSrc, vec2<f32>(global_id.xy) / dims, 0.0);
+          let origin_texture: vec4<f32> = textureSampleLevel(src, sampler_src, vec2<f32>(global_id.xy) / dims, 0.0);
 
 
           for (var i = 0u; i < ${imgSize / 2}u; i++) {
@@ -222,7 +222,7 @@
       `
 
       const computeShaderCol = `
-        @group(0) @binding(0) var samplerSrc: sampler;
+        @group(0) @binding(0) var sampler_src: sampler;
         @group(0) @binding(1) var src: texture_2d<f32>;
         @group(0) @binding(2) var dest: texture_storage_2d<rgba8unorm, write>;
 
@@ -235,7 +235,7 @@
           @builtin(local_invocation_id) local_id: vec3<u32> // local_id.x 范围是 0 共1个线程 ， local_id.y 范围是 0~255 共256个线程
         ) {
           let dims: vec2<f32> = vec2<f32>(textureDimensions(src, 0));
-          let origin_texture: vec4<f32> = textureSampleLevel(src, samplerSrc, vec2<f32>(global_id.xy) / dims, 0.0);
+          let origin_texture: vec4<f32> = textureSampleLevel(src, sampler_src, vec2<f32>(global_id.xy) / dims, 0.0);
 
 
           // for (var i = 0u; i < ${imgSize / 2}u; i++) {

@@ -7,7 +7,6 @@
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/65156063">fft海面模拟(三)</a></div>
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/208511211">详尽的快速傅里叶变换推导</a></div>
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/374489378">快速傅里叶变换--蝶形变换(直接看“举例”部分)</a></div>
-    <div class="color-red">乘以 uTime 后，和 shader2 的 phillips 效果图不一样，为啥呢？</div>
     {{ tips }}
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
@@ -44,7 +43,7 @@ import {
 } from 'babylonjs-gui'
 
 let sceneResources, adt
-let uTime = 2
+let uTime = 0.0
 
 const fps = ref(0)
 const isRunning = ref(false)
@@ -269,8 +268,8 @@ const initScene = async () => {
     const yData = new Uint8Array(IMG_SIZE * IMG_SIZE * 4)
     const zData = new Uint8Array(IMG_SIZE * IMG_SIZE * 4)
     const fftData = new Uint8Array(IMG_SIZE * IMG_SIZE * 4)
-    const fftDispersion = new Uint8Array(IMG_SIZE * IMG_SIZE * 4)
-
+    const fftK = new Float32Array(IMG_SIZE * IMG_SIZE * 4)
+   
     for (let y = 0; y < IMG_SIZE; y++) {
       for (let x = 0; x < IMG_SIZE; x++) {
         const index = (x + y * IMG_SIZE) * 4
@@ -297,9 +296,6 @@ const initScene = async () => {
           y: gaussValue2.y * phillipsRes2 * -1
         }
 
-        // 如果加上 uTime 的话，是要 dispersion(K) * uTime 的
-        // 所以这段通过 compute shader 来计算
-        // 然后生成 texture1 ，再分别进行 row 和 col 的计算
         const omega = dispersion(K)
         const c = Math.cos(omega)
         const s = Math.sin(omega)
@@ -328,10 +324,12 @@ const initScene = async () => {
         fftData[index + 1] = h0k.y
         fftData[index + 2] = h0kConj.x
         fftData[index + 3] = h0kConj.y
-        fftDispersion[index] = omega
-        fftDispersion[index + 1] = 255
-        fftDispersion[index + 2] = 255
-        fftDispersion[index + 3] = 255
+
+
+        fftK[index] = K.x
+        fftK[index + 1] = K.y
+        fftK[index + 2] = maxK.x
+        fftK[index + 3] = maxK.y
 
 
         // x 方向，叉积计算法向量
@@ -394,8 +392,8 @@ const initScene = async () => {
       Constants.TEXTURE_NEAREST_SAMPLINGMODE
     )
 
-    const rawTextureFftDispersion = new RawTexture(
-      fftDispersion,
+    const rawTextureFftK = new RawTexture(
+      fftK,
       IMG_SIZE,
       IMG_SIZE,
       Constants.TEXTUREFORMAT_RGBA,
@@ -410,7 +408,7 @@ const initScene = async () => {
       rawTextureX,
       rawTextureZ,
       rawTextureFft,
-      rawTextureFftDispersion
+      rawTextureFftK
     }
   }
 
@@ -434,7 +432,7 @@ const initScene = async () => {
     planeZ.material = materialZ
   }
 
-  const ifftComputed = async (rawTextureFft, rawTextureFftDispersion) => {
+  const ifftComputed = async (rawTextureFft, rawTextureFftK) => {
     const workGroupSizeRowX = IMG_SIZE
     const workGroupSizeRowY = 1
     const workGroupSizeColX = 1
@@ -448,8 +446,9 @@ const initScene = async () => {
       @group(0) @binding(3) var<uniform> uTime: f32;
 
       @group(1) @binding(0) var samplerFft: sampler;
-      @group(1) @binding(1) var fft_dispersion: texture_2d<f32>;
+      @group(1) @binding(1) var fftK: texture_2d<f32>;
       
+      // 复数乘法
       fn complexMultiply(a: vec2<f32>, b: vec2<f32>) -> vec2<f32> {
         var result: vec2<f32>;
         result.x = a.x * b.x - a.y * b.y;  // 实部
@@ -457,6 +456,11 @@ const initScene = async () => {
         return result;
       }
 
+      // 色散关系函数
+      fn dispersion(k: vec2<f32>) -> f32 {
+        return sqrt(9.8 * length(k));
+      }
+ 
       @compute @workgroup_size(1, 1, 1)
       fn main(
         @builtin(global_invocation_id) global_id: vec3<u32>,
@@ -465,12 +469,14 @@ const initScene = async () => {
         let src_dims: vec2<f32> = vec2<f32>(textureDimensions(src, 0));
         let src_texture: vec4<f32> = textureSampleLevel(src, samplerSrc, vec2<f32>(global_id.xy) / src_dims, 0.0);
 
-        let fft_dispersion_dims: vec2<f32> = vec2<f32>(textureDimensions(fft_dispersion, 0));
-        let fft_dispersion_texture: vec4<f32> = textureSampleLevel(fft_dispersion, samplerFft, vec2<f32>(global_id.xy) / fft_dispersion_dims, 0.0);
+        let fft_dims: vec2<f32> = vec2<f32>(textureDimensions(fftK, 0));
+        let fft_texture: vec4<f32> = textureSampleLevel(fftK, samplerFft, vec2<f32>(global_id.xy) / fft_dims, 0.0);
 
         var color = vec4<f32>(0.0, 0.0, 0.0, 1.0);
 
-        let omega = fft_dispersion_texture.r * uTime;
+        let k = vec2<f32>(fft_texture.r, fft_texture.g);
+
+        let omega = dispersion(k) * uTime;
         let c = cos(omega);
         let s = sin(omega);
         let h0k = src_texture.rg;
@@ -499,16 +505,16 @@ const initScene = async () => {
           'src': { group: 0, binding: 1 },
           'dest': { group: 0, binding: 2 },
           'uTime': { group: 0, binding: 3 },
-          'fft_dispersion': { group: 1, binding: 1 },
+          'fftK': { group: 1, binding: 1 },
         }
       }
     )
 
-    const timeBuffer = new UniformBuffer(engine)
-    timeBuffer.addUniform('uTime', 4) // float 类型大小是4
+    const uniformBuffer = new UniformBuffer(engine)
+    uniformBuffer.addUniform('uTime', 4) // float 类型大小是4
 
     shader.setTexture('src', rawTextureFft)
-    shader.setTexture('fft_dispersion', rawTextureFftDispersion)
+    shader.setTexture('fftK', rawTextureFftK)
     shader.setStorageTexture('dest', phillipsTexture)
 
     // await shader.dispatchWhenReady(N / workGroupSizeRowX, N / workGroupSizeRowY, 1)
@@ -520,13 +526,13 @@ const initScene = async () => {
     phillips.position = new Vector3(0, 0, IMG_SIZE * 2 + 20)
 
     scene.registerBeforeRender(async() => {
-      uTime += 2
-      timeBuffer.updateFloat('uTime', uTime)
-      timeBuffer.update()
+      uTime += 0.02
+      uniformBuffer.updateFloat('uTime', uTime)
+      uniformBuffer.update()
 
-      shader.setUniformBuffer('uTime', timeBuffer)
+      shader.setUniformBuffer('uTime', uniformBuffer)
       shader.setTexture('src', rawTextureFft)
-      shader.setTexture('fft_dispersion', rawTextureFftDispersion)
+      shader.setTexture('fftK', rawTextureFftK)
       shader.setStorageTexture('dest', phillipsTexture)
       await shader.dispatchWhenReady(phillipsTexture.getSize().width, phillipsTexture.getSize().height, 1)
     })
@@ -545,9 +551,9 @@ const initScene = async () => {
   createLight()
   createAxis()
   createGui()
-  const { rawTextureX, rawTextureY, rawTextureZ, rawTextureFft, rawTextureFftDispersion } = createXyzTexture(scene)
+  const { rawTextureX, rawTextureY, rawTextureZ, rawTextureFft, rawTextureFftK } = createXyzTexture(scene)
   createXyzPlane({ rawTextureX, rawTextureY, rawTextureZ })
-  ifftComputed(rawTextureFft, rawTextureFftDispersion)
+  ifftComputed(rawTextureFft, rawTextureFftK)
   runAnimate()
 
   return {

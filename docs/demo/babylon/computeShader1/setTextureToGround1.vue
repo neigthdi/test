@@ -164,11 +164,11 @@
     const createGround = () => {
       const ground = MeshBuilder.CreateGround('Ground', { width: 128, height: 128, subdivisions: 128 }, scene)
 
-      // 默认绑定了 samplerSrc ？？？
+      // 默认绑定了 sampler_src ？？？
       // 只有先 sampler 才能 src ， 至于 dest binding到其他位置无所谓？把 dest 的 binding 从0改成3，依旧可以运行
       const copyTextureComputeShader = `
-        // 定义采样器 samplerSrc，用于控制纹理 src 的采样方式（如过滤模式、寻址模式）。
-        @group(0) @binding(0) var samplerSrc: sampler;
+        // 定义采样器 sampler_src，用于控制纹理 src 的采样方式（如过滤模式、寻址模式）。
+        @group(0) @binding(0) var sampler_src: sampler;
 
         // 定义输入纹理 src，类型为 texture_2d<f32>（二维浮点纹理），不可直接写入，需通过 textureSampleLevel 读取。
         @group(0) @binding(1) var src: texture_2d<f32>;
@@ -189,15 +189,15 @@
           let dims: vec2<f32> = vec2<f32>(textureDimensions(src, 0));
 
           // global_id.xy / dims：将线程坐标归一化为 [0, 1] 范围内的纹理坐标。
-          // textureSampleLevel：使用采样器 samplerSrc 读取 src 的像素颜色，0.0 表示使用最高细节级别（无 Mipmap）。
+          // textureSampleLevel：使用采样器 sampler_src 读取 src 的像素颜色，0.0 表示使用最高细节级别（无 Mipmap）。
           // 从纹理中采样一个颜色值，支持 指定 mipmap 层级（通过 level 参数）。
           // textureSampleLevel(
           //     src,                      // 输入纹理（类型为 texture_2d<f32> 或类似）
-          //     samplerSrc,               // 采样器
+          //     sampler_src,               // 采样器
           //     uv,                       // 归一化的 UV 坐标（范围 [0, 1]）
           //     0.0                       // 指定采样的 mipmap 层级（0 表示最详细的层级）。
           // );
-          let pix: vec4<f32> = textureSampleLevel(src, samplerSrc, vec2<f32>(global_id.xy) / dims, 0.0);
+          let pix: vec4<f32> = textureSampleLevel(src, sampler_src, vec2<f32>(global_id.xy) / dims, 0.0);
 
           // 将采样得到的颜色 pix 写入 dest 的对应坐标（需转换为 vec2<i32>）。
           // textureStore(

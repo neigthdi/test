@@ -180,7 +180,7 @@
       const texCol = RawTexture.CreateRGBAStorageTexture(null, imgSize, imgSize, scene, false, false)
 
       const computeShaderRow = `
-        @group(0) @binding(0) var samplerSrc: sampler;
+        @group(0) @binding(0) var sampler_src: sampler;
         @group(0) @binding(1) var src: texture_2d<f32>;
         @group(0) @binding(2) var dest: texture_storage_2d<rgba8unorm, write>;
 
@@ -200,7 +200,7 @@
         ) {
           // 要进行采样，不然后面就不能运行，即使 origin_texture 并没有使用到
           let dims: vec2<f32> = vec2<f32>(textureDimensions(src, 0));
-          let origin_texture: vec4<f32> = textureSampleLevel(src, samplerSrc, vec2<f32>(global_id.xy) / dims, 0.0);
+          let origin_texture: vec4<f32> = textureSampleLevel(src, sampler_src, vec2<f32>(global_id.xy) / dims, 0.0);
 
 
           // 对行进行操作
@@ -238,7 +238,7 @@
       `
 
       const computeShaderCol = `
-        @group(0) @binding(0) var samplerSrc: sampler;
+        @group(0) @binding(0) var sampler_src: sampler;
         @group(0) @binding(1) var src: texture_2d<f32>;
         @group(0) @binding(2) var dest: texture_storage_2d<rgba8unorm, write>;
 
@@ -258,7 +258,7 @@
         ) {
           // 要进行采样，不然后面就不能运行，即使 origin_texture 并没有使用到
           let dims: vec2<f32> = vec2<f32>(textureDimensions(src, 0));
-          let origin_texture: vec4<f32> = textureSampleLevel(src, samplerSrc, vec2<f32>(global_id.xy) / dims, 0.0);
+          let origin_texture: vec4<f32> = textureSampleLevel(src, sampler_src, vec2<f32>(global_id.xy) / dims, 0.0);
 
 
           // 对列进行操作
