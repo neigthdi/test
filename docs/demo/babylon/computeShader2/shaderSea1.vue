@@ -400,7 +400,7 @@ const initScene = async () => {
       scene,
       false, // 不生成 mipmap
       false, // 不使用线性空间
-      Constants.TEXTURE_NEAREST_SAMPLINGMODE
+      Constants.TEXTURE_NEAREST_SAMPLINGMODE,
     )
 
     return {
@@ -511,14 +511,11 @@ const initScene = async () => {
     )
 
     const uniformBuffer = new UniformBuffer(engine)
-    uniformBuffer.addUniform('uTime', 4) // float 类型大小是4
+    uniformBuffer.addUniform('uTime', 4)
 
     shader.setTexture('src', rawTextureFft)
     shader.setTexture('fftK', rawTextureFftK)
     shader.setStorageTexture('dest', phillipsTexture)
-
-    // await shader.dispatchWhenReady(N / workGroupSizeRowX, N / workGroupSizeRowY, 1)
-    // shader.dispatchWhenReady(dest.getSize().width, dest.getSize().height, 1)
 
     const mat = new StandardMaterial('mat', scene)
     mat.diffuseTexture = phillipsTexture
@@ -531,9 +528,7 @@ const initScene = async () => {
       uniformBuffer.update()
 
       shader.setUniformBuffer('uTime', uniformBuffer)
-      shader.setTexture('src', rawTextureFft)
-      shader.setTexture('fftK', rawTextureFftK)
-      shader.setStorageTexture('dest', phillipsTexture)
+      
       await shader.dispatchWhenReady(phillipsTexture.getSize().width, phillipsTexture.getSize().height, 1)
     })
   }

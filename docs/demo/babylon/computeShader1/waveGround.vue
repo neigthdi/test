@@ -233,7 +233,7 @@
       const dest = RawTexture.CreateRGBAStorageTexture(null, 512, 512, scene, false, false)
  
       const timeBuffer = new UniformBuffer(engine)
-      timeBuffer.addUniform('uTime', 4) // float 类型大小是4
+      timeBuffer.addUniform('uTime', 4)
 
       const mat = new StandardMaterial('mat', scene)
       mat.diffuseTexture = dest

@@ -293,7 +293,7 @@
       )
 
       const timeBuffer = new UniformBuffer(engine)
-      timeBuffer.addUniform('uTime', 4) // float 类型大小是4
+      timeBuffer.addUniform('uTime', 4)
 
       /* 绑定纹理 ----------------------------------------------------------- */
       // shaderRow.setTexture('src', srcTexture)
