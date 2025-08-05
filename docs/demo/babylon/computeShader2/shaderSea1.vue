@@ -34,6 +34,7 @@ import {
   Constants,
   ComputeShader,
   UniformBuffer,
+  Texture,
 } from 'babylonjs'
 import {
   AdvancedDynamicTexture,
@@ -252,7 +253,7 @@ const initScene = async () => {
  
     // 仅保留与风向同方向的波
     if (dot_KW > 0.0) {
-        phi *= V
+      phi *= V
     }
  
     // 衰减因子（减少长波）
@@ -439,10 +440,10 @@ const initScene = async () => {
     const workGroupSizeColY = IMG_SIZE
 
     /** 第一步 计算 omega 和 uTime ，得到 textureHTilde */
-    const Code_H_Tilde = `
+    const Code_Phillips_Texture = `
       @group(0) @binding(0) var samplerSrc: sampler;
       @group(0) @binding(1) var src: texture_2d<f32>;
-      @group(0) @binding(2) var dest: texture_storage_2d<rgba8unorm, write>;
+      @group(0) @binding(2) var phillipsTexture: texture_storage_2d<rgba32float, write>;
       @group(0) @binding(3) var<uniform> uTime: f32;
 
       @group(1) @binding(0) var samplerFft: sampler;
@@ -488,34 +489,71 @@ const initScene = async () => {
         color.r = h1.r + h2.r;
         color.g = h1.g + h2.g;
 
-        textureStore(dest, vec2<i32>(global_id.xy), color);
+        textureStore(phillipsTexture, vec2<i32>(global_id.xy), color);
       }
     `
+
     /** 第二步 计算 row ，得到 textureRow */
+    const Code_Row = ``
+
     /** 第三步 计算 col ，得到 textureCol */
+    const Code_Col = ``
 
     const phillips = MeshBuilder.CreateGround('Ground', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
-    const phillipsTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false)
+    const phillipsTexture = RawTexture.CreateRGBAStorageTexture(
+      null, 
+      IMG_SIZE, 
+      IMG_SIZE, 
+      scene, 
+      false, 
+      false, 
+      Texture.BILINEAR_SAMPLINGMODE, 
+      Constants.TEXTURETYPE_FLOAT
+    )
 
-    const shader = new ComputeShader(
-      'myCompute', 
+    const shaderPhillips = new ComputeShader(
+      'shaderPhillips', 
       engine, 
-      { computeSource: Code_H_Tilde }, 
+      { computeSource: Code_Phillips_Texture }, 
       { bindingsMapping: {
           'src': { group: 0, binding: 1 },
-          'dest': { group: 0, binding: 2 },
+          'phillipsTexture': { group: 0, binding: 2 },
           'uTime': { group: 0, binding: 3 },
           'fftK': { group: 1, binding: 1 },
         }
       }
     )
 
+    // const shaderRow = new ComputeShader(
+    //   'shaderRow', 
+    //   engine, 
+    //   { computeSource: Code_Row }, 
+    //   { bindingsMapping: {
+    //       'src': { group: 0, binding: 1 },
+    //       'rowTexture': { group: 0, binding: 2 },
+    //       'w': { group: 0, binding: 3 },
+    //     }
+    //   }
+    // )
+
+    // const shaderCol = new ComputeShader(
+    //   'shaderCol', 
+    //   engine, 
+    //   { computeSource: Code_Col }, 
+    //   { bindingsMapping: {
+    //       'src': { group: 0, binding: 1 },
+    //       'colTexture': { group: 0, binding: 2 },
+    //       'w': { group: 0, binding: 3 },
+    //     }
+    //   }
+    // )
+
     const uniformBuffer = new UniformBuffer(engine)
     uniformBuffer.addUniform('uTime', 4)
 
-    shader.setTexture('src', rawTextureFft)
-    shader.setTexture('fftK', rawTextureFftK)
-    shader.setStorageTexture('dest', phillipsTexture)
+    shaderPhillips.setTexture('src', rawTextureFft)
+    shaderPhillips.setTexture('fftK', rawTextureFftK)
+    shaderPhillips.setStorageTexture('phillipsTexture', phillipsTexture)
 
     const mat = new StandardMaterial('mat', scene)
     mat.diffuseTexture = phillipsTexture
@@ -527,9 +565,9 @@ const initScene = async () => {
       uniformBuffer.updateFloat('uTime', uTime)
       uniformBuffer.update()
 
-      shader.setUniformBuffer('uTime', uniformBuffer)
+      shaderPhillips.setUniformBuffer('uTime', uniformBuffer)
       
-      await shader.dispatchWhenReady(phillipsTexture.getSize().width, phillipsTexture.getSize().height, 1)
+      await shaderPhillips.dispatchWhenReady(phillipsTexture.getSize().width, phillipsTexture.getSize().height, 1)
     })
   }
 

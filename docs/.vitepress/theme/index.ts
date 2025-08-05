@@ -3,14 +3,19 @@ import { ElementPlusContainer } from "@vitepress-demo-preview/component";
 
 import "@vitepress-demo-preview/component/dist/style.css";
 
+import 'katex/dist/katex.min.css';
+
 import "./custom.css";
 
 import "./index_oimo.js"
 import "./havok.js"
 
+import Katex from './components/Katex.vue'
+
 export default {
   ...DefaultTheme,
   enhanceApp({ app }) {
     app.component('demo-preview', ElementPlusContainer);
+    app.component('Katex', Katex);
   },
 };
