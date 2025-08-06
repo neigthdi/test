@@ -1,7 +1,13 @@
+<!-- <Katex :expression="'\( X_1 = [0.23, 0.88] \), \( X_5 = [0.68, 0.43] \)'" inline /> -->
+
+<template>
+  <div v-html="html" :class="block ? 'block' : 'inline'" />
+</template>
+
+
 <script setup lang="ts">
 import { computed } from 'vue'
 import { renderToString } from 'katex'
-import 'katex/dist/katex.min.css'
  
 const props: any = defineProps({
   expression: String,
@@ -16,11 +22,9 @@ const html = computed(() =>
 )
 </script>
  
-<template>
-  <div v-html="html" :class="block ? 'block' : 'inline'" />
-</template>
+
  
-<style>
+<style scoped>
 .block {
   text-align: center;
   margin: 1em 0;

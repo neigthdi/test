@@ -103,7 +103,7 @@ function sidebarBase() {
         { text: 'layerMask', link: '/other/layerMask' },
         { text: 'clone和createInstance', link: '/other/cloneAndCreateInstance' },
         { text: 'three的优化(babylon)', link: '/other/threeOptimize' },
-        { text: 'fft海洋计算步骤', link: '/other/fft' },
+        { text: 'fft的旋转因子', link: '/other/fft' },
       ]
     },
     {
