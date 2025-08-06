@@ -6,7 +6,7 @@
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/64726720">fft海面模拟(二)</a></div>
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/65156063">fft海面模拟(三)</a></div>
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/208511211">详尽的快速傅里叶变换推导</a></div>
-    <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/374489378">快速傅里叶变换--蝶形变换(直接看“举例”部分)</a></div>
+    <div><a target="_blank" href="/other/fft.html">蝶形变换的 WN_k</a></div>
     {{ tips }}
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
@@ -270,6 +270,7 @@ const initScene = async () => {
     const zData = new Uint8Array(IMG_SIZE * IMG_SIZE * 4)
     const fftData = new Uint8Array(IMG_SIZE * IMG_SIZE * 4)
     const fftK = new Float32Array(IMG_SIZE * IMG_SIZE * 4)
+    const wData = new Float32Array(IMG_SIZE * IMG_SIZE * 4)
    
     for (let y = 0; y < IMG_SIZE; y++) {
       for (let x = 0; x < IMG_SIZE; x++) {
@@ -346,6 +347,22 @@ const initScene = async () => {
         zData[index + 2] = 0
         zData[index + 3] = 255
 
+        // 旋转W的数据
+        if(y === 0) {
+          const angle = (2 * Math.PI * x) / IMG_SIZE;
+          const re  = Math.cos(angle)
+          const im  = Math.sin(angle)
+          wData[index] = re
+          wData[index + 1] = im
+          wData[index + 2] = 0
+          wData[index + 3] = 0
+        } else {
+          wData[index] = 0
+          wData[index + 1] = 0
+          wData[index + 2] = 0
+          wData[index + 3] = 0
+        }
+
       }
     }
 
@@ -404,12 +421,24 @@ const initScene = async () => {
       Constants.TEXTURE_NEAREST_SAMPLINGMODE,
     )
 
+    const rawTextureW = new RawTexture(
+      wData,
+      IMG_SIZE,
+      IMG_SIZE,
+      Constants.TEXTUREFORMAT_RGBA,
+      scene,
+      false, // 不生成 mipmap
+      false, // 不使用线性空间
+      Constants.TEXTURE_NEAREST_SAMPLINGMODE,
+    )
+
     return {
       rawTextureY,
       rawTextureX,
       rawTextureZ,
       rawTextureFft,
-      rawTextureFftK
+      rawTextureFftK,
+      rawTextureW
     }
   }
 
@@ -433,7 +462,7 @@ const initScene = async () => {
     planeZ.material = materialZ
   }
 
-  const ifftComputed = async (rawTextureFft, rawTextureFftK) => {
+  const ifftComputed = async (rawTextureFft, rawTextureFftK, rawTextureW) => {
     const workGroupSizeRowX = IMG_SIZE
     const workGroupSizeRowY = 1
     const workGroupSizeColX = 1
@@ -494,12 +523,66 @@ const initScene = async () => {
     `
 
     /** 第二步 计算 row ，得到 textureRow */
-    const Code_Row = ``
+    const Code_Row = `
+      @group(0) @binding(0) var samplerSrc: sampler;
+      @group(0) @binding(1) var src: texture_2d<f32>;
+      @group(0) @binding(2) var rowTexture: texture_storage_2d<rgba32float, write>;
+
+      @group(1) @binding(0) var samplerW: sampler;
+      @group(1) @binding(1) var wData: texture_2d<f32>;
+
+      var<workgroup> sharedData: array<vec4<f32>, ${IMG_SIZE}>;
+
+      @compute @workgroup_size(${workGroupSizeRowX}, ${workGroupSizeRowY}, 1)
+    `
 
     /** 第三步 计算 col ，得到 textureCol */
-    const Code_Col = ``
+    const Code_Col = `
+      @group(0) @binding(0) var samplerSrc: sampler;
+      @group(0) @binding(1) var src: texture_2d<f32>;
+      @group(0) @binding(2) var colTexture: texture_storage_2d<rgba32float, write>;
 
-    const phillips = MeshBuilder.CreateGround('Ground', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
+      @group(1) @binding(0) var samplerW: sampler;
+      @group(1) @binding(1) var wData: texture_2d<f32>;
+
+      var<workgroup> sharedData: array<vec4<f32>, ${IMG_SIZE}>;
+
+      @compute @workgroup_size(${workGroupSizeColX}, ${workGroupSizeColY}, 1)
+    `
+
+    Effect.ShadersStore['seaVertexShader'] = `
+      precision highp float;
+      
+      attribute vec3 position;
+      attribute vec2 uv;
+
+      uniform mat4 worldViewProjection;
+      uniform sampler2D uSampler;
+
+      varying vec3 vColor;
+
+      void main() {
+        vec4 baseColor = texture(uSampler, uv);
+
+        vec3 color = vec3(0.0, 0.0, 0.0);
+
+        vColor = color;
+
+        gl_Position = worldViewProjection * vec4(position, 1.0);
+      }
+    `
+
+    Effect.ShadersStore['seaFragmentShader'] = `
+      precision highp float;
+
+      varying vec3 vColor;
+
+      void main() {
+        gl_FragColor = vec4(vColor, 1.0);
+      }
+    `
+
+    const phillips = MeshBuilder.CreateGround('phillips', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
     const phillipsTexture = RawTexture.CreateRGBAStorageTexture(
       null, 
       IMG_SIZE, 
@@ -510,6 +593,19 @@ const initScene = async () => {
       Texture.BILINEAR_SAMPLINGMODE, 
       Constants.TEXTURETYPE_FLOAT
     )
+
+
+    // const finalSea = MeshBuilder.CreateGround('finalSea', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
+    // const finalSeaTexture = RawTexture.CreateRGBAStorageTexture(
+    //   null, 
+    //   IMG_SIZE, 
+    //   IMG_SIZE, 
+    //   scene, 
+    //   false, 
+    //   false, 
+    //   Texture.BILINEAR_SAMPLINGMODE, 
+    //   Constants.TEXTURETYPE_FLOAT
+    // )
 
     const shaderPhillips = new ComputeShader(
       'shaderPhillips', 
@@ -531,7 +627,7 @@ const initScene = async () => {
     //   { bindingsMapping: {
     //       'src': { group: 0, binding: 1 },
     //       'rowTexture': { group: 0, binding: 2 },
-    //       'w': { group: 0, binding: 3 },
+    //       'wData': { group: 1, binding: 1 },
     //     }
     //   }
     // )
@@ -543,10 +639,24 @@ const initScene = async () => {
     //   { bindingsMapping: {
     //       'src': { group: 0, binding: 1 },
     //       'colTexture': { group: 0, binding: 2 },
-    //       'w': { group: 0, binding: 3 },
+    //       'wData': { group: 1, binding: 1 },
     //     }
     //   }
     // )
+
+    // const seaShader = new ShaderMaterial(
+    //   'sea',
+    //   scene, {
+    //     vertex: 'sea',
+    //     fragment: 'sea',
+    //   }, {
+    //     attributes: ['position', 'uv'],
+    //     uniforms: ['worldViewProjection', 'uSampler'],
+    //     samplers: ['uSampler'],
+    //     needAlphaBlending: true,
+    //   },
+    // )
+    // seaShader.setTexture('uSampler', finalSeaTexture)
 
     const uniformBuffer = new UniformBuffer(engine)
     uniformBuffer.addUniform('uTime', 4)
@@ -559,6 +669,9 @@ const initScene = async () => {
     mat.diffuseTexture = phillipsTexture
     phillips.material = mat
     phillips.position = new Vector3(0, 0, IMG_SIZE * 2 + 20)
+
+
+   
 
     scene.registerBeforeRender(async() => {
       uTime += 0.02
@@ -584,9 +697,9 @@ const initScene = async () => {
   createLight()
   createAxis()
   createGui()
-  const { rawTextureX, rawTextureY, rawTextureZ, rawTextureFft, rawTextureFftK } = createXyzTexture(scene)
+  const { rawTextureX, rawTextureY, rawTextureZ, rawTextureFft, rawTextureFftK, rawTextureW } = createXyzTexture(scene)
   createXyzPlane({ rawTextureX, rawTextureY, rawTextureZ })
-  ifftComputed(rawTextureFft, rawTextureFftK)
+  ifftComputed(rawTextureFft, rawTextureFftK, rawTextureW)
   runAnimate()
 
   return {
