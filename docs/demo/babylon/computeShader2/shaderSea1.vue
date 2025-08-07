@@ -6,7 +6,7 @@
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/64726720">fft海面模拟(二)</a></div>
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/65156063">fft海面模拟(三)</a></div>
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/208511211">详尽的快速傅里叶变换推导</a></div>
-    <div><a target="_blank" href="/other/fft.html">蝶形变换的 WN_k</a></div>
+    <div><a target="_blank" href="/math/fft.html">蝶形变换的 WN_k</a></div>
     {{ tips }}
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
@@ -468,6 +468,8 @@ const initScene = async () => {
     const workGroupSizeColX = 1
     const workGroupSizeColY = IMG_SIZE
 
+    const totalStep = Math.log2(IMG_SIZE)
+
     /** 第一步 计算 omega 和 uTime ，得到 textureHTilde */
     const Code_Phillips_Texture = `
       @group(0) @binding(0) var samplerSrc: sampler;
@@ -534,6 +536,38 @@ const initScene = async () => {
       var<workgroup> sharedData: array<vec4<f32>, ${IMG_SIZE}>;
 
       @compute @workgroup_size(${workGroupSizeRowX}, ${workGroupSizeRowY}, 1)
+
+      fn main(
+        @builtin(global_invocation_id) global_id: vec3<u32>,
+        @builtin(local_invocation_id) local_id: vec3<u32>
+      ) {
+
+        let src_dims: vec2<f32> = vec2<f32>(textureDimensions(src, 0));
+        let src_texture: vec4<f32> = textureSampleLevel(src, samplerSrc, vec2<f32>(global_id.xy) / src_dims, 0.0);
+
+        let w_dims: vec2<f32> = vec2<f32>(textureDimensions(wData, 0));
+        let w_texture: vec4<f32> = textureSampleLevel(wData, samplerW, vec2<f32>(global_id.xy) / w_dims, 0.0);
+
+        var color = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+
+        // 该行存入到 sharedData 中
+        for(var i = 0u; i < ${IMG_SIZE}u; i++) {
+          sharedData[i] = textureLoad(src, vec2<i32>(i, global_id.y), 0);
+        }
+
+        // 开始计算
+        var temp: array<vec4<f32>, ${IMG_SIZE}> = [];
+        let totalStep = ${totalStep}u;
+
+        // 进行 log2(128) 7次循环，每次循环获取 W
+        // for(var i = 0; i < totalStep; i++) {
+        //   for(var j = 0; j < i; j++) {
+        //   }
+        // }
+
+
+        workgroupBarrier();
+      }
     `
 
     /** 第三步 计算 col ，得到 textureCol */
@@ -594,7 +628,6 @@ const initScene = async () => {
       Constants.TEXTURETYPE_FLOAT
     )
 
-
     // const finalSea = MeshBuilder.CreateGround('finalSea', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
     // const finalSeaTexture = RawTexture.CreateRGBAStorageTexture(
     //   null, 
@@ -620,17 +653,17 @@ const initScene = async () => {
       }
     )
 
-    // const shaderRow = new ComputeShader(
-    //   'shaderRow', 
-    //   engine, 
-    //   { computeSource: Code_Row }, 
-    //   { bindingsMapping: {
-    //       'src': { group: 0, binding: 1 },
-    //       'rowTexture': { group: 0, binding: 2 },
-    //       'wData': { group: 1, binding: 1 },
-    //     }
-    //   }
-    // )
+    const shaderRow = new ComputeShader(
+      'shaderRow', 
+      engine, 
+      { computeSource: Code_Row }, 
+      { bindingsMapping: {
+          'src': { group: 0, binding: 1 },
+          'rowTexture': { group: 0, binding: 2 },
+          'wData': { group: 1, binding: 1 },
+        }
+      }
+    )
 
     // const shaderCol = new ComputeShader(
     //   'shaderCol', 
