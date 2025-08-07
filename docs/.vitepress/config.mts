@@ -79,6 +79,14 @@ function sidebarBase() {
       ]
     },
     {
+      text: '事件',
+      collapsible: true,
+      items: [
+        { text: '注册事件', link: '/events/register' },
+        { text: '碰撞检测', link: '/events/collision' }
+      ]
+    },
+    {
       text: 'html模板',
       collapsible: true,
       items: [
@@ -86,11 +94,10 @@ function sidebarBase() {
       ]
     },
     {
-      text: '事件',
+      text: '数学',
       collapsible: true,
       items: [
-        { text: '注册事件', link: '/events/register' },
-        { text: '碰撞检测', link: '/events/collision' }
+        { text: 'fft的W和stockham', link: '/math/fft' },
       ]
     },
     {
@@ -103,7 +110,6 @@ function sidebarBase() {
         { text: 'layerMask', link: '/other/layerMask' },
         { text: 'clone和createInstance', link: '/other/cloneAndCreateInstance' },
         { text: 'three的优化(babylon)', link: '/other/threeOptimize' },
-        { text: 'fft的旋转因子', link: '/other/fft' },
       ]
     },
     {

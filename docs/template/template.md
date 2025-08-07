@@ -115,18 +115,23 @@
 
 				
 
+
 				
-
-
-
-				/** 编写 */
 				const light = new BABYLON.HemisphericLight('light', new BABYLON.Vector3(0.5, 0.5, 0))
 				const ground = BABYLON.MeshBuilder.CreateGround('ground', { width: 6, height: 6 }, scene)
+
+
+				/** 其他逻辑代码 */
 
 
 
 
 				createAxis()
+
+
+				scene.registerBeforeRender(function() {
+					// 需要循环的逻辑
+				})
 
 				return scene
 			}
