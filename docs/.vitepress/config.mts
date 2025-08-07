@@ -97,7 +97,7 @@ function sidebarBase() {
       text: '数学',
       collapsible: true,
       items: [
-        { text: 'fft的W和stockham', link: '/math/fft' },
+        { text: 'Stockham FFT、W', link: '/math/fft' },
       ]
     },
     {

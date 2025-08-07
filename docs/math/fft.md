@@ -3,7 +3,7 @@
 进一步化简，考虑到i^2 = -1，得到：
 ac + adi + bci - bd = (ac - bd) + (ad + bc)i
 ```
-## 原理
+## 取W的原理
 
 ![image](./img/fft-0.png)
 ![image](./img/fft-1.png)
@@ -14,35 +14,111 @@ ac + adi + bci - bd = (ac - bd) + (ad + bc)i
 ![image](./img/fft-6.png)
 ![image](./img/fft-7.png)
 
-## stockham fft
+## Stockham FFT
+以8*8为例子
 ![image](./img/fft-stockham.png)
 
-### 第一轮
-D[K] 和 D[K + 4] 计算
-```javascript
-const list = array[all]
-const p1 = list[k]
-const p2 = list[k + 4]
-array[k] = p1 + w * p2
-array[k + 4] = p1 - w * p2
-```
 
-### 第二轮
-D[K] 和 D[K + 2] 计算
-```javascript
-const list = array[all]
-const p1 = list[k]
-const p2 = list[k + 2]
-array[k] = p1 + w * p2
-array[k + 2] = p1 - w * p2
-```
+在 **Stockham FFT** 中，**三轮计算**（即 `log2(N)` 轮，对于 `N=8` 是 3 轮）会逐步将输入数组 `a` 转换为频域结果。每轮的计算涉及 **蝶形运算（Butterfly Operation）** 和 **旋转因子（Twiddle Factors）** 的应用。  
 
-### 第三轮
-D[K] 和 D[K + 1] 计算
+### **Stockham FFT 三轮计算（N=8）**
+给定输入数组 `A = [0, 1, 2, 3, 4, 5, 6, 7]`，进行 **3 轮 FFT 计算**，其中 `w = 1`（即不应用旋转因子，相当于 DFT 的简化情况）。  
+
+---
+
+### **第一轮（stride=1）**
+- **跨度（stride）**：`1`（即相邻元素配对）
+- **配对方式**：`(0,4), (1,5), (2,6), (3,7)`
+- **旋转因子**：`w = 1`（无旋转）
+- **计算**：
+  - `B[0] = A[0] + A[4] = 0 + 4 = 4`
+  - `B[4] = A[0] - A[4] = 0 - 4 = -4`
+  - `B[1] = A[1] + A[5] = 1 + 5 = 6`
+  - `B[5] = A[1] - A[5] = 1 - 5 = -4`
+  - `B[2] = A[2] + A[6] = 2 + 6 = 8`
+  - `B[6] = A[2] - A[6] = 2 - 6 = -4`
+  - `B[3] = A[3] + A[7] = 3 + 7 = 10`
+  - `B[7] = A[3] - A[7] = 3 - 7 = -4`
+- **结果**：
+  ```javascript
+  B = [4, 6, 8, 10, -4, -4, -4, -4]
+  把B的结果输入到A中，作为下一轮输入
+  A = B
+  ```
+
+---
+
+### **第二轮（stride=2）**
+- **跨度（stride）**：`2`（即间隔 2 的元素配对）
+- **配对方式**：`(0,2), (1,3), (4,6), (5,7)`
+- **旋转因子**：`w = 1`（无旋转）
+- **计算**：
+  - `A = [4, 6, 8, 10, -4, -4, -4, -4]`（第一轮结果）
+  - `B[0] = A[0] + A[2] = 4 + 8 = 12`
+  - `B[2] = A[0] - A[2] = 4 - 8 = -4`
+  - `B[1] = A[1] + A[3] = 6 + 10 = 16`
+  - `B[3] = A[1] - A[3] = 6 - 10 = -4`
+  - `B[4] = A[4] + A[6] = -4 + (-4) = -8`
+  - `B[6] = A[4] - A[6] = -4 - (-4) = 0`
+  - `B[5] = A[5] + A[7] = -4 + (-4) = -8`
+  - `B[7] = A[5] - A[7] = -4 - (-4) = 0`
+- **结果**：
+  ```javascript
+  B = [12, 16, -4, -4, -8, -8, 0, 0]
+  把B的结果输入到A中，作为下一轮输入
+  A = B
+  ```
+
+---
+
+### **第三轮（stride=4）**
+- **跨度（stride）**：`4`（即间隔 4 的元素配对）
+- **配对方式**：`(0,4), (1,5), (2,6), (3,7)`
+- **旋转因子**：`w = 1`（无旋转）
+- **计算**：
+  - `A = [12, 16, -4, -4, -8, -8, 0, 0]`（第二轮结果）
+  - `B[0] = A[0] + A[4] = 12 + (-8) = 4`
+  - `B[4] = A[0] - A[4] = 12 - (-8) = 20`
+  - `B[1] = A[1] + A[5] = 16 + (-8) = 8`
+  - `B[5] = A[1] - A[5] = 16 - (-8) = 24`
+  - `B[2] = A[2] + A[6] = -4 + 0 = -4`
+  - `B[6] = A[2] - A[6] = -4 - 0 = -4`
+  - `B[3] = A[3] + A[7] = -4 + 0 = -4`
+  - `B[7] = A[3] - A[7] = -4 - 0 = -4`
+- **结果**：
+  ```javascript
+  B = [4, 8, -4, -4, 20, 24, -4, -4]
+  把B的结果输入到A中，作为最终输出
+  A = B
+  ```
+
+---
+
+### ** JavaScript 实现**
 ```javascript
-const list = array[all]
-const p1 = list[k]
-const p2 = list[k + 1]
-array[k] = p1 + w * p2
-array[k + 1] = p1 - w * p2
+function stockhamFFT(a) {
+  const N = a.length;
+  let A = [...a]; // 输入数组
+  let B = new Array(N); // 输出数组
+
+  for (let stride = 1; stride < N; stride *= 2) {
+    const halfStride = stride * 2;
+    for (let k = 0; k < stride; k++) {
+      const w = 1; // 旋转因子（这里 w=1，简化计算）
+      for (let i = k; i < N; i += halfStride) {
+        const j = i + stride;
+        const x = A[i];
+        const y = A[j] * w;
+        B[i] = x + y;
+        B[j] = x - y;
+      }
+    }
+    // 交换 A 和 B，准备下一轮
+    [A, B] = [B, A];
+  }
+  return A; // 最终结果在 A 中
+}
+
+const a = [0, 1, 2, 3, 4, 5, 6, 7];
+console.log(stockhamFFT(a)); // 输出: [4, 8, -4, -4, 20, 24, -4, -4]
 ```

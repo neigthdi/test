@@ -46,7 +46,7 @@ const vertexShader = `
 const fragmentShader = `
   varying vec3 vp;
   uniform vec3 u_color;
-  uniform vec3 u_tcolor;
+  uniform vec3 u_t_color;
   uniform float u_r;
   uniform float u_length;
   uniform float u_max;
@@ -65,7 +65,7 @@ const fragmentShader = `
       if (vp.y < 0.0) {
         vColor = u_color * opacity;
       } else {
-        vColor = u_tcolor;
+        vColor = u_t_color;
       }
     }
     gl_FragColor = vec4(vColor, uOpacity);
@@ -111,7 +111,7 @@ const initScene = () => {
     const material = new ShaderMaterial({
       uniforms: {
         u_color: { value: new Color('#5588aa') },
-        u_tcolor: { value: new Color('#f55c1a') },
+        u_t_color: { value: new Color('#f55c1a') },
         u_r: { value: 0.25 },
         u_length: { value: 20 },
       },
