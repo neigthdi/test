@@ -188,20 +188,20 @@ for (var m = 0; m < logRes; m ++) {
 
     for (var k = 0; k < kFor; k ++) {
       
-      var in1 = OutputData[indexIn]
-      var in2 = OutputData[indexIn + 4]
+      var inputData1 = OutputData[indexIn]
+      var inputData2 = OutputData[indexIn + 4]
 
-      var out1 = 2 * (indexIn - (indexIn mod 2^m)) + (indexIn mod 2^m)
-      var out2 = out1 + step
+      var outputIndex1 = 2 * (indexIn - (indexIn mod 2^m)) + (indexIn mod 2^m)
+      var outputIndex2 = outputIndex1 + step
 
-      var indexW = kFor * 2^(logRes - m)
+      var indexW = k * 2^(logRes - (m + 1))
       var w = dataW[indexW]
 
-      var p1 = in1
-      var p2 = 复数乘法(in2, w)
+      var p1 = inputData1
+      var p2 = 复数乘法(inputData2, w)
 
-      tempArray[out1] = p1 + p2
-      tempArray[out2] = p1 - p2
+      tempArray[outputIndex1] = p1 + p2
+      tempArray[outputIndex2] = p1 - p2
     
       indexIn ++
     }
@@ -210,4 +210,116 @@ for (var m = 0; m < logRes; m ++) {
 
   OutputData = tempArray
 }
+```
+```javascript
+function complexMultiply(a, b) {
+  return {
+    x: a.x * b.x - a.y * b.y, // 实部
+    y: a.x * b.y + a.y * b.x // 虚部
+  }
+}
+
+function complexAdd(a, b) {
+  return {
+    x: a.x + b.x, // 实部
+    y: a.y + b.y // 虚部
+  }
+}
+
+function complexSubtraction(a, b) {
+  return {
+    x: a.x - b.x, // 实部
+    y: a.y - b.y // 虚部
+  }
+}
+
+let OutputData = [
+  { x: 0, y: 0 },
+  { x: 1, y: 0 },
+  { x: 2, y: 0 },
+  { x: 3, y: 0 },
+  { x: 4, y: 0 },
+  { x: 5, y: 0 },
+  { x: 6, y: 0 },
+  { x: 7, y: 0 },
+]
+
+let tempArray = new Array(8)
+
+const dataW = [
+  { x: 1, y: 0 },
+  { x: 0.7071, y: -0.7071 },
+  { x: 0, y: -1 },
+  { x: -0.7071, y: -0.7071 },
+]
+
+const logRes = 3
+
+for (var m = 0; m < logRes; m++) {
+
+  var indexIn = 0
+  var step = Math.pow(2, m)
+  var blockSize = Math.pow(2, m + 1)
+  var blockNum = 8 / blockSize
+  var kFor = blockSize / 2
+
+  for (var n = 0; n < blockNum; n++) {
+    for (var k = 0; k < kFor; k++) {
+      var inputData1 = OutputData[indexIn]
+      var inputData2 = OutputData[indexIn + 4]
+
+      var outputIndex1 = 2 * (indexIn - (indexIn % Math.pow(2, m))) + (indexIn % Math.pow(2, m))
+      var outputIndex2 = outputIndex1 + step
+
+      var indexW = k * Math.pow(2, 3 - (m + 1))
+      var w = dataW[indexW]
+
+      var p1 = inputData1
+      var p2 = complexMultiply(inputData2, w)
+
+      tempArray[outputIndex1] = complexAdd(p1, p2)
+      tempArray[outputIndex2] = complexSubtraction(p1, p2)
+
+      indexIn++
+    }
+  }
+  OutputData = tempArray
+  tempArray = []
+}
+
+console.log(OutputData)
+// [
+//   {
+//       "x": 28,
+//       "y": 0
+//   },
+//   {
+//       "x": -4,
+//       "y": 9.6568
+//   },
+//   {
+//       "x": -4,
+//       "y": 4
+//   },
+//   {
+//       "x": -4,
+//       "y": 1.6567999999999996
+//   },
+//   {
+//       "x": -4,
+//       "y": 0
+//   },
+//   {
+//       "x": -4,
+//       "y": -1.6567999999999996
+//   },
+//   {
+//       "x": -4,
+//       "y": -4
+//   },
+//   {
+//       "x": -4,
+//       "y": -9.6568
+//   }
+// ]
 ```
