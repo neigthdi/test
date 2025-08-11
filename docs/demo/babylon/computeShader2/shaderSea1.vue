@@ -7,7 +7,7 @@
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/65156063">fft海面模拟(三)</a></div>
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/208511211">详尽的快速傅里叶变换推导</a></div>
     <div><a target="_blank" href="/math/fft.html">蝶形变换的 WN_k</a></div>
-    {{ tips }}
+    <div>没有优化，法向量也没计算，泡沫也没计算（雅可比行列式）</div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
@@ -48,7 +48,6 @@ let uTime = 0.0
 
 const fps = ref(0)
 const isRunning = ref(false)
-const tips = ref('')
 
 const onTrigger = async () => {
   if (!isRunning.value) {
@@ -71,11 +70,6 @@ const initScene = async () => {
   })
 
   const engine: any = new WebGPUEngine(ele)
-
-  if(!engine.isWebGPU) {
-    tips.value = '设备不支持WebGpu'
-    return false
-  }
   await engine.initAsync()
 
   const scene = new Scene(engine)
@@ -584,6 +578,7 @@ const initScene = async () => {
       @compute @workgroup_size(${workGroupSizeColX}, ${workGroupSizeColY}, 1)
     `
 
+    // 这里对uv进行细节优化，因为都是方块，一块一块的像素
     Effect.ShadersStore['seaVertexShader'] = `
       precision highp float;
       
@@ -628,7 +623,7 @@ const initScene = async () => {
       Constants.TEXTURETYPE_FLOAT
     )
 
-    // const finalSea = MeshBuilder.CreateGround('finalSea', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
+    const finalSea = MeshBuilder.CreateGround('finalSea', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
     // const finalSeaTexture = RawTexture.CreateRGBAStorageTexture(
     //   null, 
     //   IMG_SIZE, 
