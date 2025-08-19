@@ -408,7 +408,7 @@ const initScene = () => {
   myGl.clear()
 
   const img = new Image()
-  img.src = '/public/images/star.jpg'
+  img.src = '/images/star.jpg'
   img.crossOrigin = ''
   img.onload = () => {
     // 区域填充色
