@@ -20,6 +20,9 @@ dependencies:
   babylonjs-materials:
     specifier: ^8.2.1
     version: 8.2.1
+  earcut:
+    specifier: ^3.0.2
+    version: 3.0.2
   glslCanvas:
     specifier: ^0.2.6
     version: 0.2.6
@@ -2475,6 +2478,10 @@ packages:
     dependencies:
       webidl-conversions: 7.0.0
     dev: true
+
+  /earcut@3.0.2:
+    resolution: {integrity: sha512-X7hshQbLyMJ/3RPhyObLARM2sNxxmRALLKx1+NVFFnQ9gKzmCrxm9+uLIAdBcvc8FNLpctqlQ2V6AE92Ol9UDQ==}
+    dev: false
 
   /electron-to-chromium@1.5.36:
     resolution: {integrity: sha512-HYTX8tKge/VNp6FGO+f/uVDmUkq+cEfcxYhKf15Akc4M5yxt5YmorwlAitKWjWhWQnKcDRBAQKXkhqqXMqcrjw==}

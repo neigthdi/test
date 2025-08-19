@@ -6,3 +6,6 @@
 
 ## 图片合并
 <preview path="../demo/webgl/mergeImage.vue"></preview>
+
+## 线宽（有瑕疵）以及图片嵌入{ style="color: orange;"}
+<preview path="../demo/webgl/lineWidthAndMap.vue"></preview>

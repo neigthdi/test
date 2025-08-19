@@ -462,7 +462,7 @@ const initScene = async () => {
     const workGroupSizeColX = 1
     const workGroupSizeColY = IMG_SIZE
 
-    const totalStep = Math.log2(IMG_SIZE)
+    const logRes = Math.log2(IMG_SIZE)
 
     /** 第一步 计算 omega 和 uTime ，得到 textureHTilde */
     const Code_Phillips_Texture = `
@@ -550,11 +550,11 @@ const initScene = async () => {
         }
 
         // 开始计算
-        var temp: array<vec4<f32>, ${IMG_SIZE}> = [];
-        let totalStep = ${totalStep}u;
+        let logRes = ${logRes}u;
 
         // 进行 log2(128) 7次循环，每次循环获取 W
-        // for(var i = 0; i < totalStep; i++) {
+        // for(var i = 0; i < logRes; i++) {
+        //   var temp: array<vec4<f32>, ${IMG_SIZE}> = [];
         //   for(var j = 0; j < i; j++) {
         //   }
         // }
