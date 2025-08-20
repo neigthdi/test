@@ -1,7 +1,7 @@
 <template>
   <div>
     <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
-    <canvas v-if="isRunning" id="pointsWave" class="stage"></canvas>
+    <canvas v-if="isRunning" id="pointsWave" class="stage-webgl"></canvas>
   </div>
 </template>
 
@@ -104,7 +104,7 @@ const initScene = () => {
   function createPointData() {
     let max = 10
     let number = 100
-    let tier = 10
+    let tier = 3
     let arr = []
     let degs = function (deg) {
       return (Math.PI * deg) / 180

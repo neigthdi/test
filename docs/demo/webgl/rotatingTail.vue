@@ -1,7 +1,7 @@
 <template>
   <div>
     <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
-    <canvas v-if="isRunning" id="rotatingTail" class="stage"></canvas>
+    <canvas v-if="isRunning" id="rotatingTail" class="stage-webgl"></canvas>
   </div>
 </template>
 
@@ -29,8 +29,8 @@ const initScene = () => {
   const gl: any = c.getContext('webgl', {
       preserveDrawingBuffer: true
     })
-  let width = c.width
-  let height = c.height
+  let width = c.clientWidth
+  let height = c.clientHeight
   const webgl: any = {}
 
   webgl.vertexShaderSource = `
@@ -124,10 +124,12 @@ const initScene = () => {
   gl.enable(gl.BLEND)
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
+  // 如果使用这行，就要设置成 let width = c.width  let height = c.height
   // 需要告诉 WebGL 怎样把提供的 gl_Position 裁剪空间坐标对应到画布像素坐标。
   // 通常也把画布像素坐标叫做屏幕空间。
   // 为了实现这个目的，只需要调用 gl.viewport 方法并传递画布的当前尺寸。
-  gl.viewport(0, 0, width, height)
+  // gl.viewport(0, 0, width, height)
+  
   // 设置全局变量 分辨率
   gl.uniform2f(webgl.uniformLocs.resolution, width, height)
 

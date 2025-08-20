@@ -1,3 +1,5 @@
+import "./chunk-5WRI5ZAA.js";
+
 // node_modules/.pnpm/earcut@3.0.2/node_modules/earcut/src/earcut.js
 function earcut(data, holeIndices, dim = 2) {
   const hasHoles = holeIndices && holeIndices.length;

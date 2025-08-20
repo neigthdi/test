@@ -2,7 +2,7 @@
 <template>
   <div>
     <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
-    <canvas v-if="isRunning" id="mergeImage" class="stage"></canvas>
+    <canvas v-if="isRunning" id="mergeImage" class="stage-webgl"></canvas>
   </div>
 </template>
 
@@ -146,7 +146,6 @@ const initScene = () => {
   }
 
   function showImage(texture, img, u_Sampler, TEXTURE, texUnit) {
-    console.log(texture, img, u_Sampler, TEXTURE, texUnit)
     // document.body.appendChild(img)
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1)
     // 开始0号纹理通道

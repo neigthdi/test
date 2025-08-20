@@ -34,6 +34,12 @@ a:hover {
     height: calc(100vw - 88px);
     border: 1px solid orange;
   }
+  
+  .stage-webgl {
+    width: calc(100vw - 88px);
+    height: calc(100vw - 88px);
+    border: 1px solid orange;
+  }
 }
 
 /*PC*/
@@ -45,10 +51,16 @@ a:hover {
   }
 
   .shader-toy-stage {
-  width: 642px;
-  height: 322px;
-  border: 1px solid orange;
-}
+    width: 642px;
+    height: 322px;
+    border: 1px solid orange;
+  }
+
+   .stage-webgl {
+    width: 360px;
+    height: 360px;
+    border: 1px solid orange;
+  }
 }
 
 

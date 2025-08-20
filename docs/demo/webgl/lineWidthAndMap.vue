@@ -5,7 +5,7 @@
       <div @click="onShowImg = !onShowImg" class="pointer">点击展示图片</div>
     </div>
     <img v-if="onShowImg" src="/public/markdown/webgl/lineWidthAndMap.png" alt="lineWidthAndMap" />
-    <canvas v-if="isRunning" id="lineWidthAndMap" class="stage"></canvas>
+    <canvas v-if="isRunning" id="lineWidthAndMap" class="stage-webgl"></canvas>
   </div>
 </template>
 
@@ -121,40 +121,61 @@ const lineWidthVertex = `
 	}
 	
 	void main() {
-		vColor = vec3(1.0, 0.0, 1.0);
-		
-		float len = u_line_width * 0.5;
-		vec2 extrudedPosition;
-		
-		// 特殊情况处理：起点和终点
-		if (distance(a_prev_point, a_center) < 0.000001) {
-			
-			// 起点 - 使用下一段的法线
-			vec2 nextDir = normalize(a_center - a_next_point); // 注意：这两个※※※※这里是 a_center - a_next_point
-			vec2 normal = calculateNormal(nextDir);
-			extrudedPosition = a_center + normal * len * a_side;
-			
-		} else if (distance(a_next_point, a_center) < 0.000001) {
-			
-			// 终点 - 使用前一段的法线
-			vec2 prevDir = normalize(a_prev_point - a_center); // 注意：这两个※※※※这里是 a_prev_point - a_center
-			vec2 normal = calculateNormal(prevDir);
-			extrudedPosition = a_center + normal * len * a_side;
-			
-		} else {
-			
-			vec2 v1Norm = normalize(a_center - a_next_point);
-			vec2 v2Norm = normalize(a_center - a_prev_point);
-			vec2 v3Norm = calculateNormal(v1Norm);
-			vec2 vNorm = normalize(v1Norm + v2Norm);
-			float scale = len / dot(v3Norm, vNorm);
-			extrudedPosition = a_center + vNorm * scale * a_side;
-			
-		}
-		
-		gl_Position = vec4(extrudedPosition, 0.0, 1.0);
-		gl_PointSize = 1.0;
-	}
+    vColor = vec3(1.0, 0.0, 1.0);
+    
+    float len = u_line_width * 0.5;
+    vec2 extrudedPosition;
+    
+    // 特殊情况处理：起点和终点
+    if (distance(a_prev_point, a_center) < 0.000001) {
+      
+      // 起点 - 使用下一段的法线
+
+      // 方法一：
+      // vec2 nextDir = normalize(a_center - a_next_point); // 注意：这两个※※※※这里是 a_center - a_next_point
+
+      // 方法二：
+      vec2 nextDir = normalize(a_next_point - a_center); // 注意：这两个※※※※这里是 a_next_point - a_center
+
+      vec2 normal = calculateNormal(nextDir);
+      extrudedPosition = a_center + normal * len * a_side;
+      
+    } else if (distance(a_next_point, a_center) < 0.000001) {
+      
+      // 终点 - 使用前一段的法线
+
+      // 方法一：
+      // vec2 prevDir = normalize(a_prev_point - a_center); // 注意：这两个※※※※这里是 a_prev_point - a_center
+
+      // 方法二：
+      vec2 prevDir = normalize(a_center - a_prev_point); // 注意：这两个※※※※这里是 a_center - a_prev_point
+      
+      vec2 normal = calculateNormal(prevDir);
+      extrudedPosition = a_center + normal * len * a_side;
+      
+    } else {
+      
+      // 方法一：
+      // vec2 v1Norm = normalize(a_center - a_next_point);
+      // vec2 v2Norm = normalize(a_center - a_prev_point);
+      // vec2 v3Norm = calculateNormal(v1Norm);
+      // vec2 vNorm = normalize(v1Norm + v2Norm);
+      // float scale = len / dot(v3Norm, vNorm);
+      // extrudedPosition = a_center + vNorm * scale * a_side;
+      
+      // 方法二：
+      vec2 v1Norm = normalize(a_next_point - a_center);
+      vec2 v2Norm = normalize(a_center - a_prev_point);
+      vec2 v3Norm = calculateNormal(v1Norm);
+      vec2 v4Norm = calculateNormal(v2Norm);
+      vec2 vNorm = normalize(v3Norm + v4Norm);
+      float scale = len / dot(v4Norm, vNorm);
+      extrudedPosition = a_center + vNorm * scale * a_side;
+    }
+    
+    gl_Position = vec4(extrudedPosition, 0.0, 1.0);
+    gl_PointSize = 1.0;
+  }
 `
 
 const lineWidthFragment = `
