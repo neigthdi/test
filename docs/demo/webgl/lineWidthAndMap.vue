@@ -299,11 +299,30 @@ class Webgl {
       this.gl.uniform1f(location, value)
     }
   }
-  
+
   setUniform2f(name, value1, value2) {
     const location = this.gl.getUniformLocation(this.gl.program, name)
     if (location) {
       this.gl.uniform2f(location, value1, value2)
+    }
+  }
+
+  setUniform1i(name, value) {
+    const location = this.gl.getUniformLocation(this.gl.program, name)
+    if (location) {
+      this.gl.uniform1i(location, value)
+    }
+  }
+
+  setUniform2fv(name, value) {
+    const location = this.gl.getUniformLocation(this.gl.program, name)
+    if (location) {
+      if (Array.isArray(value[0])) { // 如果是数组的数组（如 vec2 数组）
+        const flat = value.flat() // 需要浏览器支持 .flat()
+        this.gl.uniform2fv(location, new Float32Array(flat))
+      } else {
+        this.gl.uniform2fv(location, value) // 假设是已扁平化的数组
+      }
     }
   }
 
@@ -346,6 +365,7 @@ class Webgl {
     }
   }
 }
+
 
 
 let animationFrame 

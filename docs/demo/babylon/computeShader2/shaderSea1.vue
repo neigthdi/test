@@ -7,7 +7,7 @@
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/65156063">fft海面模拟(三)</a></div>
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/208511211">详尽的快速傅里叶变换推导</a></div>
     <div><a target="_blank" href="/math/fft.html">蝶形变换的 WN_k</a></div>
-    <div>没有优化，法向量也没计算，泡沫也没计算（雅可比行列式）</div>
+    <div>1、法向量没计算（是否是累加到高度图中？）；2、泡沫没计算（雅可比行列式）</div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
@@ -545,6 +545,7 @@ const initScene = async () => {
         var color = vec4<f32>(0.0, 0.0, 0.0, 1.0);
 
         // 该行存入到 sharedData 中
+        // 使用 global_id.x 作为索引，因为要存储列数据
         sharedData[global_id.x] = textureLoad(src, vec2<i32>(global_id.x, global_id.y), 0);
         workgroupBarrier();
 
@@ -568,6 +569,30 @@ const initScene = async () => {
       var<workgroup> sharedData: array<vec4<f32>, ${IMG_SIZE}>;
 
       @compute @workgroup_size(${workGroupSizeColX}, ${workGroupSizeColY}, 1)
+
+      fn main(
+        @builtin(global_invocation_id) global_id: vec3<u32>,
+        @builtin(local_invocation_id) local_id: vec3<u32>
+      ) {
+        let src_dims: vec2<f32> = vec2<f32>(textureDimensions(src, 0));
+        let src_texture: vec4<f32> = textureSampleLevel(src, samplerSrc, vec2<f32>(global_id.xy) / src_dims, 0.0);
+
+        let w_dims: vec2<f32> = vec2<f32>(textureDimensions(wData, 0));
+        let w_texture: vec4<f32> = textureSampleLevel(wData, samplerW, vec2<f32>(global_id.xy) / w_dims, 0.0);
+
+        var color = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+
+        // 该列存入到 sharedData 中
+        // 使用 global_id.y 作为索引，因为要存储列数据
+        sharedData[global_id.y] = textureLoad(src, vec2<i32>(global_id.x, global_id.y), 0);
+        workgroupBarrier();
+
+        // 开始计算
+
+        workgroupBarrier();
+
+        textureStore(colTexture, vec2<i32>(global_id.xy), sharedData[global_id.x]);
+      }
     `
 
     // 这里对uv进行细节优化，因为都是方块，一块一块的像素
