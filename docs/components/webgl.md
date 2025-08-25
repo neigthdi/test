@@ -9,3 +9,6 @@
 
 ## 线宽以及图片嵌入
 <preview path="../demo/webgl/lineWidthAndMap.vue"></preview>
+
+## 线宽以及线条阴影
+<preview path="../demo/webgl/lineWidthAndShadow.vue"></preview>

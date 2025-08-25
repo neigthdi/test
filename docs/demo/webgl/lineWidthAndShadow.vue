@@ -2,16 +2,13 @@
   <div>
     <div class="flex space-between">
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
-      <div @click="onShowImg = !onShowImg" class="pointer">点击展示图片</div>
     </div>
-    <img v-if="onShowImg" src="/public/markdown/webgl/lineWidthAndMap.png" alt="lineWidthAndMap" />
-    <canvas v-if="isRunning" id="lineWidthAndMap" class="stage-webgl"></canvas>
+    <canvas v-if="isRunning" id="lineWidthAndShadow" class="stage-webgl"></canvas>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, nextTick, onUnmounted } from 'vue'
-import earcut from 'earcut'
 
 // gl.POINTS：绘制单个点。
 // gl.LINES：绘制线段，每两个顶点构成一条线段。
@@ -20,6 +17,156 @@ import earcut from 'earcut'
 // gl.TRIANGLES：绘制三角形，每三个顶点构成一个三角形。
 // gl.TRIANGLE_STRIP：绘制三角形带，每三个连续的顶点构成一个三角形。
 // gl.TRIANGLE_FAN：绘制三角形扇，第一个顶点作为中心点，后续每两个顶点与中心点构成一个三角形。
+
+// uv的垂直距离到当前线段的距离
+const lineWidthVertex = `
+  precision mediump float;
+  
+  attribute vec2 a_center;
+  attribute vec2 a_prev_point;
+  attribute vec2 a_next_point;
+  attribute float a_side;
+  
+  uniform float u_line_width;
+  
+  varying vec3 vColor;
+  
+  vec2 calculateNormal(vec2 dir) {
+    // 只能两行两列乘以两行一列，第一个的列数=第二个的行数
+    // 旋转矩阵 |cos, -sin||x| ---> 【x * cosθ - y * sinθ】 ---> x' 
+    // 旋转矩阵 |sin, +cos||y| ---> 【x * sinθ + y * cosθ】 ---> y' 
+    return normalize(vec2(-dir.y, dir.x));
+  }
+  
+  void main() {
+    vColor = vec3(0.9, 0.0, 1.0);
+    
+    float len = u_line_width * 0.5;
+    vec2 extrudedPosition;
+    
+    // 特殊情况处理：起点和终点
+    if (distance(a_prev_point, a_center) < 0.00001) {
+      
+      // 起点 - 使用下一段的法线
+      vec2 nextDir = normalize(a_center - a_next_point); // 注意：这两个※※※※这里是 a_center - a_next_point
+      vec2 normal = calculateNormal(nextDir);
+      extrudedPosition = a_center + normal * len * a_side;
+      
+    } else if (distance(a_center, a_next_point) < 0.00001) {
+      
+      // 终点 - 使用前一段的法线
+      vec2 prevDir = normalize(a_prev_point - a_center); // 注意：这两个※※※※这里是 a_prev_point - a_center
+      vec2 normal = calculateNormal(prevDir);
+      extrudedPosition = a_center + normal * len * a_side;
+      
+    } else {
+      
+      vec2 v1Norm = normalize(a_center - a_next_point);
+      vec2 v2Norm = normalize(a_center - a_prev_point);
+      vec2 v3Norm = calculateNormal(v1Norm);
+      vec2 vNorm = normalize(v1Norm + v2Norm);
+      float scale = len / dot(v3Norm, vNorm);
+      extrudedPosition = a_center + vNorm * scale * a_side;
+      
+    }
+    
+    gl_Position = vec4(extrudedPosition, 0.0, 1.0);
+    gl_PointSize = 1.0;
+  }
+`
+
+const lineWidthFragment = `
+  precision mediump float;
+  
+  uniform vec2 u_viewport;
+  uniform vec2 u_points[6];
+  uniform int u_points_len;
+  
+  varying vec3 vColor;
+  
+  void main() {
+    vec3 finalColor = vColor;
+    
+    vec2 fragCoord = gl_FragCoord.xy;
+    vec2 uv = (fragCoord / u_viewport) * 2.0 - 1.0;
+    
+    
+    float distanceCenterToLine = 1000000.0; // 初始化为一个很大的值
+    // 定义线段的点
+    // vec2 points[6];
+    // points[0] = vec2(0.5, 0.5);
+    // points[1] = vec2(0.5, 0.0);
+    // points[2] = vec2(0.0, 0.0);
+    // points[3] = vec2(0.0, -0.5);
+    // points[4] = vec2(0.5, -0.5);
+    // points[5] = vec2(0.5, -0.25);
+
+    // 遍历所有线段
+    for (int i = 0; i < 10000000; i++) {
+      
+      if (i >= u_points_len - 1) break;
+      
+      // 	vec2 p1 = points[i];
+      // 	vec2 p2 = points[i + 1];
+      vec2 p1 = u_points[i];
+      vec2 p2 = u_points[i + 1];
+
+      // 计算线段的方向向量 lineDir，即终点 p2 减去起点 p1。
+      vec2 lineDir = p2 - p1;
+      
+      // 计算线段的长度 lineLength，即方向向量 lineDir 的长度。
+      float lineLength = length(lineDir);
+      // float lineLength = distance(p2, p1);
+      
+      // 将方向向量 lineDir 归一化，使其长度为 1。归一化后的方向向量可以用于后续的计算。
+      lineDir /= lineLength;
+
+      // 计算从线段起点 p1 到当前片段位置 uv 的向量 toFrag（碎片）。
+      vec2 toFrag = uv - p1;
+      
+      // 计算向量 toFrag 在方向向量 lineDir 上的投影长度 projection。投影长度表示 uv 在线段方向上的位置。
+      float projection = dot(toFrag, lineDir);
+      
+      // 计算当前片段 uv 在线段上的最近点 closestPoint。clamp(projection, 0.0, lineLength) 确保投影长度在 [0, 线段长度] 的范围内，避免超出线段范围。然后将投影长度乘以方向向量 lineDir，并加到起点 p1 上，得到最近点。
+      vec2 closestPoint = p1 + lineDir * clamp(projection, 0.0, lineLength);
+      
+      // 计算当前片段 uv 到最近点 closestPoint 的距离 distance。
+      float distance = length(uv - closestPoint);
+
+      // 更新最小距离 distanceCenterToLine，取当前距离 distance 和之前计算的最小距离中的较小值。
+      distanceCenterToLine = min(distanceCenterToLine, distance);
+    }
+    if (distanceCenterToLine < 0.02) {
+      finalColor = vec3(0.0, 1.0, 0.0);
+    }
+    
+    
+    // 这个有瑕疵
+    // float distanceCenterToLine = 0.0; // 初始化
+    // float disA = distance(vPrev, vCenter);
+    // float disB = distance(vCenter, vNext);
+    // vec2 pointA = vec2(0.0);
+    // vec2 pointB = vec2(0.0);
+    // if (disA >= disB) {
+    // 	pointA = vCenter;
+    // 	pointB = vNext;
+    // } else {
+    // 	pointA = vPrev;
+    // 	pointB = vCenter;
+    // }
+    // vec2 lineDir = normalize(pointA - pointB);
+    // float distanceCenterToPoint = distance(pointA, uv);
+    // float distanceProject = distanceCenterToPoint * dot(lineDir, normalize(pointA - uv));
+    // distanceCenterToLine = pow(distanceCenterToPoint * distanceCenterToPoint - distanceProject * distanceProject, 0.5);
+    // if (distanceCenterToLine > 0.02) {
+    // 	finalColor = vec3(0.0, 1.0, 0.0);
+    // }
+    
+  
+    
+    gl_FragColor = vec4(finalColor, 1.0);
+  }
+`
 
 const lineVertex = `
 	precision mediump float;
@@ -38,147 +185,6 @@ const lineVertex = `
 `
 
 const lineFragment = `
-	precision mediump float;
-	
-	varying vec3 vColor;
-	
-	void main() {
-		gl_FragColor = vec4(vColor, 1.0);
-	}
-`
-
-const areaVertex = `
-	precision mediump float;
-	
-	attribute vec2 a_Area;
-	
-	varying vec3 vColor;
-	
-	void main() {
-		
-		vColor = vec3(1.0, 0.0, 0.0);
-		
-		gl_Position = vec4(a_Area, 0.0, 1.0);
-		gl_PointSize = 1.0;
-	}
-`
-
-const areaFragment = `
-	precision mediump float;
-	
-	varying vec3 vColor;
-	
-	void main() {
-		gl_FragColor = vec4(vColor, 0.1);
-	}
-`
-
-const imgVertex = `
-	precision mediump float;
-	
-	attribute vec2 a_Position;
-	
-	attribute vec2 a_TexCoord;
-	
-	varying vec2 v_TexCoord;
-	
-	void main(){
-		gl_Position = vec4(a_Position, 0.0, 1.0);; // 顶点坐标
-		v_TexCoord = a_TexCoord; // 纹理坐标系下的坐标
-	}
-`
-
-const imgFragment = `
-	precision mediump float;
-	
-	uniform sampler2D u_Sampler0; // 纹理
-	
-	varying vec2 v_TexCoord; // 纹理坐标系下的坐标
-	
-	void main(){
-		vec4 color0 = texture2D(u_Sampler0,v_TexCoord);
-		gl_FragColor = color0; 
-	}
-`
-
-const lineWidthVertex = `
-	precision mediump float;
-	
-	attribute vec2 a_center;
-	attribute vec2 a_prev_point;
-	attribute vec2 a_next_point;
-	attribute float a_side;
-	
-	uniform float u_line_width;
-	
-	varying vec3 vColor;
-	
-	vec2 calculateNormal(vec2 dir) {
-		// 只能两行两列乘以两行一列，第一个的列数=第二个的行数
-		// 旋转矩阵 |cos, -sin||x| ---> 【x * cosθ - y * sinθ】 ---> x' 
-		// 旋转矩阵 |sin, +cos||y| ---> 【x * sinθ + y * cosθ】 ---> y' 
-		return normalize(vec2(-dir.y, dir.x));
-	}
-	
-	void main() {
-    vColor = vec3(1.0, 0.0, 1.0);
-    
-    float len = u_line_width * 0.5;
-    vec2 extrudedPosition;
-    
-    // 特殊情况处理：起点和终点
-    if (distance(a_prev_point, a_center) < 0.000001) {
-      
-      // 起点 - 使用下一段的法线
-
-      // 方法一：
-      // vec2 nextDir = normalize(a_center - a_next_point); // 注意：这两个※※※※这里是 a_center - a_next_point
-
-      // 方法二：
-      vec2 nextDir = normalize(a_next_point - a_center); // 注意：这两个※※※※这里是 a_next_point - a_center
-
-      vec2 normal = calculateNormal(nextDir);
-      extrudedPosition = a_center + normal * len * a_side;
-      
-    } else if (distance(a_next_point, a_center) < 0.000001) {
-      
-      // 终点 - 使用前一段的法线
-
-      // 方法一：
-      // vec2 prevDir = normalize(a_prev_point - a_center); // 注意：这两个※※※※这里是 a_prev_point - a_center
-
-      // 方法二：
-      vec2 prevDir = normalize(a_center - a_prev_point); // 注意：这两个※※※※这里是 a_center - a_prev_point
-      
-      vec2 normal = calculateNormal(prevDir);
-      extrudedPosition = a_center + normal * len * a_side;
-      
-    } else {
-      
-      // 方法一：
-      // vec2 v1Norm = normalize(a_center - a_next_point);
-      // vec2 v2Norm = normalize(a_center - a_prev_point);
-      // vec2 v3Norm = calculateNormal(v1Norm);
-      // vec2 vNorm = normalize(v1Norm + v2Norm);
-      // float scale = len / dot(v3Norm, vNorm);
-      // extrudedPosition = a_center + vNorm * scale * a_side;
-      
-      // 方法二：
-      vec2 v1Norm = normalize(a_next_point - a_center);
-      vec2 v2Norm = normalize(a_center - a_prev_point);
-      vec2 v3Norm = calculateNormal(v1Norm);
-      vec2 v4Norm = calculateNormal(v2Norm);
-      vec2 vNorm = normalize(v3Norm + v4Norm);
-      float scale = len / dot(v4Norm, vNorm);
-      extrudedPosition = a_center + vNorm * scale * a_side;
-    }
-    
-    gl_Position = vec4(extrudedPosition, 0.0, 1.0);
-    gl_PointSize = 1.0;
-  }
-`
-
-const lineWidthFragment = `
 	precision mediump float;
 	
 	varying vec3 vColor;
@@ -299,11 +305,30 @@ class Webgl {
       this.gl.uniform1f(location, value)
     }
   }
-  
+
   setUniform2f(name, value1, value2) {
     const location = this.gl.getUniformLocation(this.gl.program, name)
     if (location) {
       this.gl.uniform2f(location, value1, value2)
+    }
+  }
+
+  setUniform1i(name, value) {
+    const location = this.gl.getUniformLocation(this.gl.program, name)
+    if (location) {
+      this.gl.uniform1i(location, value)
+    }
+  }
+
+  setUniform2fv(name, value) {
+    const location = this.gl.getUniformLocation(this.gl.program, name)
+    if (location) {
+      if (Array.isArray(value[0])) { // 如果是数组的数组（如 vec2 数组）
+        const flat = value.flat() // 需要浏览器支持 .flat()
+        this.gl.uniform2fv(location, new Float32Array(flat))
+      } else {
+        this.gl.uniform2fv(location, value) // 假设是已扁平化的数组
+      }
     }
   }
 
@@ -352,7 +377,6 @@ let animationFrame
 let sceneResources
 
 const isRunning = ref(false)
-const onShowImg = ref(false)
 
 const onTrigger = async () => {
   if (!isRunning.value) {
@@ -367,24 +391,20 @@ const onTrigger = async () => {
 
 const initScene = () => {
   const points = [
-    { x: 0, y: 0 },
     { x: 0.5, y: 0.5 },
     { x: 0.5, y: 0 },
-    { x: 0.25, y: -0.25 },
-    { x: 0.5, y: -0.5 },
+    { x: 0, y: 0 },
     { x: 0, y: -0.5 },
-    { x: -0.5, y: -0.25 },
-    { x: -0.5, y: 0.25 },
-    { x: 0, y: 0 }, // 这两个补充线段的闭合
-    { x: 0.5, y: 0.5 }, // 这两个补充线段的闭合
+    { x: 0.5, y: -0.5 },
+    { x: 0.5, y: -0.25 },
   ]
 
-  const lw = 0.04
-  const centers: any = []
-  const prevPoints: any = []
-  const nextPoints: any = []
-  const sides: any = []
-  const indices: any = []
+  let lw = 0.08
+  let centers: any = []
+  let prevPoints: any = []
+  let nextPoints: any = []
+  let sides: any = []
+  let indices: any = []
 
   for (let i = 0; i < points.length; i++) {
     const now = points[i]
@@ -416,7 +436,6 @@ const initScene = () => {
     prevPoints.push(prev.x, prev.y)
     nextPoints.push(next.x, next.y)
     sides.push(-1)
-
   }
 
   // 创建三角形索引
@@ -434,76 +453,39 @@ const initScene = () => {
     indices.push(base + 1, base + 2, base + 3)
   }
 
+  const ele: any = document.querySelector('#lineWidthAndShadow')
+  const w = ele.clientWidth
+  const h = ele.clientHeight
+
+  const myGl = new Webgl('#lineWidthAndShadow', w, h)
+  myGl.init()
+  myGl.clear()
+
+  myGl.initShader(lineWidthVertex, lineWidthFragment)
+  myGl.setAttribute({ data: new Float32Array(centers), size: 2, attrName: 'a_center' })
+  myGl.setAttribute({ data: new Float32Array(prevPoints), size: 2, attrName: 'a_prev_point' })
+  myGl.setAttribute({ data: new Float32Array(nextPoints), size: 2, attrName: 'a_next_point' })
+  myGl.setAttribute({ data: new Float32Array(sides), size: 1, attrName: 'a_side' })
+
+  myGl.setUniform1i('u_points_len', points.length)
+  myGl.setUniform1f('u_line_width', lw)
+  myGl.setUniform2fv('u_viewport', [w, h])
+  myGl.setUniform2fv('u_points', points.map(point => [point.x, point.y]))
+
+  myGl.setIndexBuffer(indices)
+  myGl.draw('TRIANGLES', indices.length, true)
+
+
   const tempLines: any = []
   points.forEach((v: any) => {
     tempLines.push(v.x)
     tempLines.push(v.y)
   })
+
   const lines = new Float32Array(tempLines)
-
-  const ele: any = document.querySelector('#lineWidthAndMap')
-  const w = ele.clientWidth
-  const h = ele.clientHeight
-
-  const myGl = new Webgl('#lineWidthAndMap', w, h)
-  myGl.init()
-  myGl.clear()
-
-  const img = new Image()
-  img.src = '/images/star.jpg'
-  img.crossOrigin = ''
-  img.onload = () => {
-    // 区域填充色
-    const areaIndices = earcut(tempLines, [], 2) // 2表示每个顶点有2个坐标(x, y)。返回的是组成三角形的index。
-    const triangles = new Float32Array(areaIndices.length * 2)
-    for (let i = 0; i < areaIndices.length; i++) {
-    triangles[i * 2] = lines[areaIndices[i] * 2]
-    triangles[i * 2 + 1] = lines[areaIndices[i] * 2 + 1]
-    }
-    myGl.initShader(areaVertex, areaFragment)
-    myGl.setAttribute({ data: triangles, size: 2, attrName: 'a_Area' })
-    myGl.draw('TRIANGLES', triangles.length / 2)
-
-    // 创建纹理坐标
-    // 1、indices 和 lines 的含义
-    // 	---- indices 是一个数组，表示三角形的顶点索引。这些索引是从 earcut 函数返回的，用于将多边形的顶点分割成三角形。
-    // 	---- lines 是一个 Float32Array，包含多边形的所有顶点坐标。每个顶点由两个浮点数表示（x 和 y 坐标）。
-    // 2、texCoords 的作用
-    // 	---- texCoords 是一个 Float32Array，用于存储每个顶点的纹理坐标。纹理坐标是二维的，范围通常是 [0, 1]，表示纹理图像上的位置。
-    // 	---- 纹理坐标用于告诉 GPU 如何将纹理图像映射到几何图形上。每个顶点都有一个对应的纹理坐标，GPU 会根据这些坐标将纹理图像映射到三角形上。
-    // 3、映射顶点坐标到纹理坐标
-    // 	---- 顶点坐标范围是 [-1, 1]（这是常见的归一化坐标范围），需要将这些坐标映射到 [0, 1] 范围，以便作为纹理坐标。
-    // 	---- texCoords[i * 2] = (lines[indices[i] * 2] + 1) / 2：将 x 坐标从 [-1, 1] 映射到 [0, 1]。
-    // 	---- texCoords[i * 2 + 1] = (lines[indices[i] * 2 + 1] + 1) / 2：将 y 坐标从 [-1, 1] 映射到 [0, 1]。
-    // 	---- 原始范围：[−1,1]
-    // 	---- 目标范围：[0,1]
-    // 	---- 新坐标 = (旧坐标+1) / 2
-    const texCoords = new Float32Array(areaIndices.length * 2)
-    for (let i = 0; i < areaIndices.length; i++) {
-      texCoords[i * 2] = (lines[areaIndices[i] * 2] + 1) / 2 // 将顶点坐标映射到 [0, 1] 范围
-      texCoords[i * 2 + 1] = (lines[areaIndices[i] * 2 + 1] + 1) / 2
-    }
-    myGl.initShader(imgVertex, imgFragment)
-    myGl.setAttribute({ data: triangles, size: 2, attrName: 'a_Position' })
-    myGl.setAttribute({ data: texCoords, size: 2, attrName: 'a_TexCoord' })
-    myGl.setTexture(img, 'u_Sampler0', 'TEXTURE0', 0)
-    myGl.draw('TRIANGLES', triangles.length / 2)
-
-    // 画有宽度的线段
-    myGl.initShader(lineWidthVertex, lineWidthFragment)
-    myGl.setAttribute({ data: new Float32Array(centers), size: 2, attrName: 'a_center' })
-    myGl.setAttribute({ data: new Float32Array(prevPoints), size: 2, attrName: 'a_prev_point' })
-    myGl.setAttribute({ data: new Float32Array(nextPoints), size: 2, attrName: 'a_next_point' })
-    myGl.setAttribute({ data: new Float32Array(sides), size: 1, attrName: 'a_side' })
-    myGl.setIndexBuffer(indices)
-    myGl.setUniform1f('u_line_width', lw)
-    myGl.draw('TRIANGLES', indices.length, true)
-
-    // 画线段
-    myGl.initShader(lineVertex, lineFragment)
-    myGl.setAttribute({ data: lines, size: 2, attrName: 'a_Position' })
-    myGl.draw('LINE_STRIP', lines.length / 2)
-  }
+  myGl.initShader(lineVertex, lineFragment)
+  myGl.setAttribute({ data: lines, size: 2, attrName: 'a_Position' })
+  myGl.draw('LINE_STRIP', lines.length / 2)
 }
 
 const destroy = () => {

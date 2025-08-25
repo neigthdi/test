@@ -545,22 +545,14 @@ const initScene = async () => {
         var color = vec4<f32>(0.0, 0.0, 0.0, 1.0);
 
         // 该行存入到 sharedData 中
-        for(var i = 0u; i < ${IMG_SIZE}u; i++) {
-          sharedData[i] = textureLoad(src, vec2<i32>(i, global_id.y), 0);
-        }
+        sharedData[global_id.x] = textureLoad(src, vec2<i32>(global_id.x, global_id.y), 0);
+        workgroupBarrier();
 
         // 开始计算
-        let logRes = ${logRes}u;
-
-        // 进行 log2(128) 7次循环，每次循环获取 W
-        // for(var i = 0; i < logRes; i++) {
-        //   var temp: array<vec4<f32>, ${IMG_SIZE}> = [];
-        //   for(var j = 0; j < i; j++) {
-        //   }
-        // }
-
 
         workgroupBarrier();
+
+        textureStore(rowTexture, vec2<i32>(global_id.xy), sharedData[global_id.x]);
       }
     `
 
