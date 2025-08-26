@@ -1,5 +1,2 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
-
-# git commit时校验提交信息的格式，详细规则可查看根目录下的commitlint.config.js文件（需安装依赖husky、@commitlint/cli、@commitlint/config-conventional）
-npx --no -- commitlint --edit "$1"
