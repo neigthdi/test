@@ -19,6 +19,7 @@
     "earcut": "^3.0.2",
     "glslCanvas": "^0.2.6",
     "gsap": "^3.12.5",
+    "husky": "^9.1.7",
     "katex": "^0.16.22",
     "markdown-it-katex": "^2.0.3",
     "three": "0.166.0",
