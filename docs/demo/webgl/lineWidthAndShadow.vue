@@ -93,13 +93,32 @@ const lineWidthFragment = `
     
     float distanceCenterToLine = 1000000.0; // 初始化为一个很大的值
     // 定义线段的点
-    // vec2 points[6];
-    // points[0] = vec2(0.5, 0.5);
-    // points[1] = vec2(0.5, 0.0);
-    // points[2] = vec2(0.0, 0.0);
-    // points[3] = vec2(0.0, -0.5);
-    // points[4] = vec2(0.5, -0.5);
-    // points[5] = vec2(0.5, -0.25);
+    vec2 points[7];
+    points[0] = vec2(0.5, 0.5);
+    points[1] = vec2(0.5, 0.0);
+    points[2] = vec2(0.0, 0.0);
+    points[3] = vec2(0.0, -0.5);
+    points[4] = vec2(0.5, -0.5);
+    points[5] = vec2(0.5, -0.25);
+    points[6] = vec2(0.7, -0.35);
+
+    // lineDir 需要归一化的原因：
+    // lineDir 是线段的方向向量，表示线段的方向。
+    // 在计算投影长度时，方向向量需要归一化，以确保其长度为1。
+    // 归一化后的方向向量在计算投影时可以提供一个标准化的参考方向，使得投影长度的计算不受线段长度的影响，只与方向有关。
+
+    // toFrag 不需要归一化的原因：
+    // toFrag 是从线段起点到当前片段位置的向量。
+    // 归一化会改变向量的长度，而在这个计算中，我们需要保留 toFrag 的原始长度信息，因为投影长度的计算依赖于 toFrag 的实际长度。
+    // 如果对 toFrag 进行归一化，会丢失其原始长度信息，导致投影长度计算不准确。
+
+    // dot(toFrag, lineDir) 计算的是两个向量的点积。点积的几何意义是：
+    // 投影长度=向量A的长度×向量B的长度×cos(θ)
+    // 在这个场景中：
+    //   lineDir 是归一化的，其长度为1。
+    //   toFrag 没有归一化，保留了其原始长度。
+    // 因此，点积的结果是：
+    //   投影长度=toFrag的长度×cos(θ)
 
     // 遍历所有线段
     // 这个10不能设置得太高，在某些移动端 GPU 上无法正确执行
@@ -107,10 +126,10 @@ const lineWidthFragment = `
       
       if (i >= u_points_len - 1) break;
       
-      // 	vec2 p1 = points[i];
-      // 	vec2 p2 = points[i + 1];
-      vec2 p1 = u_points[i];
-      vec2 p2 = u_points[i + 1];
+      	vec2 p1 = points[i];
+      	vec2 p2 = points[i + 1];
+      // vec2 p1 = u_points[i];
+      // vec2 p2 = u_points[i + 1];
 
       // 计算线段的方向向量 lineDir，即终点 p2 减去起点 p1。
       vec2 lineDir = p2 - p1;
@@ -137,7 +156,7 @@ const lineWidthFragment = `
       // 更新最小距离 distanceCenterToLine，取当前距离 distance 和之前计算的最小距离中的较小值。
       distanceCenterToLine = min(distanceCenterToLine, distance);
     }
-    if (distanceCenterToLine < 0.05) {
+    if (distanceCenterToLine < 0.04) {
       finalColor = vec3(0.0, 1.0, 0.0);
     }
     
@@ -398,9 +417,10 @@ const initScene = () => {
     { x: 0, y: -0.5 },
     { x: 0.5, y: -0.5 },
     { x: 0.5, y: -0.25 },
+    { x: 0.7, y: -0.35 },
   ]
 
-  let lw = 0.2
+  let lw = 0.16
   let centers: any = []
   let prevPoints: any = []
   let nextPoints: any = []
