@@ -20,7 +20,7 @@ import { ref, nextTick, onUnmounted } from 'vue'
 
 // uv的垂直距离到当前线段的距离
 const lineWidthVertex = `
-  precision mediump float;
+  precision highp float;
   
   attribute vec2 a_center;
   attribute vec2 a_prev_point;
@@ -76,7 +76,7 @@ const lineWidthVertex = `
 `
 
 const lineWidthFragment = `
-  precision mediump float;
+  precision highp float;
   
   uniform vec2 u_viewport;
   uniform vec2 u_points[6];
@@ -102,7 +102,8 @@ const lineWidthFragment = `
     // points[5] = vec2(0.5, -0.25);
 
     // 遍历所有线段
-    for (int i = 0; i < 10000000; i++) {
+    // 这个10不能设置得太高，在某些移动端 GPU 上无法正确执行
+    for (int i = 0; i < 10; i++) {
       
       if (i >= u_points_len - 1) break;
       
@@ -136,7 +137,7 @@ const lineWidthFragment = `
       // 更新最小距离 distanceCenterToLine，取当前距离 distance 和之前计算的最小距离中的较小值。
       distanceCenterToLine = min(distanceCenterToLine, distance);
     }
-    if (distanceCenterToLine < 0.02) {
+    if (distanceCenterToLine < 0.05) {
       finalColor = vec3(0.0, 1.0, 0.0);
     }
     
@@ -169,7 +170,7 @@ const lineWidthFragment = `
 `
 
 const lineVertex = `
-	precision mediump float;
+	precision highp float;
 	
 	attribute vec2 a_Position;
 	
@@ -185,7 +186,7 @@ const lineVertex = `
 `
 
 const lineFragment = `
-	precision mediump float;
+	precision highp float;
 	
 	varying vec3 vColor;
 	
@@ -399,7 +400,7 @@ const initScene = () => {
     { x: 0.5, y: -0.25 },
   ]
 
-  let lw = 0.08
+  let lw = 0.2
   let centers: any = []
   let prevPoints: any = []
   let nextPoints: any = []
