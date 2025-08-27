@@ -105,15 +105,17 @@ float dot(vec2 x, vec2 y)
 
 可以想象，把向量 A 投影到向量 B 上，点积就是投影的长度与向量 B 的长度的乘积。      
 两个向量 A 和 B 的点积定义为 A·B = ∥a∥∥b∥cos⁡(θ) ，其中∥a∥和∥b∥分别是向量 A 和 B 的模长（长度），θ是它们之间的夹角。         
-当向量被归一化以后，即长度变为 1，则：a⋅b=cos(θ)，此时，点积就直接等于两个向量之间夹角的余弦值。     
+当向量A和向量B被归一化以后，即长度变为 1，则：A⋅B=cos(θ)，此时，点积就直接等于两个向量之间夹角的余弦值。     
 ***
 
 例如 a 向量为 (x1, y1),b 向量 (x2, y2) 那么 dot(a, b) 就会返回 x1 * x2 + y1 * y2。    
 ***
 
-<font color=red>特殊点：</font>      
-&emsp;&emsp;<font color=purple>如果是dot(a, b)，计算的是两个不同向量的点积，结果是一个标量，表达式是a⋅b=∥a∥∥b∥cosθ，表示两个向量的长度和夹角的余弦值的乘积。</font>     
-&emsp;&emsp;<font color=orange>如果是dot(a, a)，计算的是向量与自身的点积，即 a⋅a，是模的平方。注意length，length是要开方的。</font>
+- 要点：    
+  - <font color=purple>如果是dot(a, b)，计算的是两个不同向量的点积，结果是一个标量，表达式是a⋅b=∥a∥∥b∥cosθ，表示两个向量的长度和夹角的余弦值的乘积。</font>     
+  - <font color=orange>如果是dot(a, a)，计算的是向量与自身的点积，即 a⋅a，是模的平方。注意length，length是要开方的。</font>
+  - <font color=red>如果向量A和向量B被归一化以后，即长度变为 1，则：dot(A, B) = A⋅B = cos(θ)，此时，点积就直接等于两个向量之间夹角的余弦值。</font>
+  - <font color=cornflowerblue>如果向量A没有归一化，而向量B归一化，即∥b∥ = 1，此时dot(A, B) = A投影到B的长度。因为点积的公式为：A⋅B = ∥A∥∥B∥cosθ，而投影长度为：∥A∥cosθ。可以重新整理公式：∥A∥cosθ = A⋅B / ∥B∥。由于向量B已经归一化，最终得到【投影长度】 = ∥A∥cosθ = A⋅B = dot(A, B)。如果B向量没有归一化，就要正常的求∥B∥的值了，多了些计算。</font>
 ***
 
 #### 余弦距离 = 1 - 余弦相似度    
