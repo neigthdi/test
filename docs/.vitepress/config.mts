@@ -98,6 +98,7 @@ function sidebarBase() {
       collapsible: true,
       items: [
         { text: 'Stockham FFT、W', link: '/math/fft' },
+        { text: '位运算符', link: '/math/bitwiseOperation' },
       ]
     },
     {

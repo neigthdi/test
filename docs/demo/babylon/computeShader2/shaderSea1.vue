@@ -1,13 +1,16 @@
 <template>
   <div>
+    <div>在海面模拟中，通常先在频域中生成海面的频谱（即不同频率波的振幅和相位信息）。这些频谱可以通过物理模型（如Phillips频谱或Pierson-Moskowitz频谱）生成。</div>
+    <div>为了将这些频域信息转换为实际的海面高度（时域信息），需要使用离散傅里叶逆变换（IDFT）。通过IDFT，可以将频域中的复数振幅转换为时域中的海面高度。</div>
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/41455378">傅里叶系列(只看第一和第三)</a></div>
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/1913515900235153904">傅里叶系列(作为上面的第二节，j是复数i)</a></div>
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/64414956">fft海面模拟(一)</a></div>
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/64726720">fft海面模拟(二)</a></div>
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/65156063">fft海面模拟(三)</a></div>
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/208511211">详尽的快速傅里叶变换推导</a></div>
-    <div><a target="_blank" href="/math/fft.html">蝶形变换的 WN_k</a></div>
-    <div>1、法向量没计算（是否是累加到高度图中？）；2、泡沫没计算（雅可比行列式）</div>
+    <div><a target="_blank" href="/math/fft.html">蝶形变换的 W_[N_k]</a></div>
+    <div>1、法向量没计算（关系到光的反射、左手坐标系和右手坐标系的叉积计算相反）</div>
+    <div>2、泡沫没计算（雅可比行列式）</div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
@@ -462,7 +465,8 @@ const initScene = async () => {
     const workGroupSizeColX = 1
     const workGroupSizeColY = IMG_SIZE
 
-    const logRes = Math.log2(IMG_SIZE)
+    const logN = Math.log2(IMG_SIZE)
+    const half = logN / 2
 
     /** 第一步 计算 omega 和 uTime ，得到 textureHTilde */
     const Code_Phillips_Texture = `
@@ -527,7 +531,7 @@ const initScene = async () => {
       @group(1) @binding(0) var samplerW: sampler;
       @group(1) @binding(1) var wData: texture_2d<f32>;
 
-      var<workgroup> sharedData: array<vec4<f32>, ${IMG_SIZE}>;
+      var<workgroup> sharedData: array<vec4<f32>, ${IMG_SIZE}u>;
 
       @compute @workgroup_size(${workGroupSizeRowX}, ${workGroupSizeRowY}, 1)
 
@@ -549,7 +553,22 @@ const initScene = async () => {
         sharedData[global_id.x] = textureLoad(src, vec2<i32>(global_id.x, global_id.y), 0);
         workgroupBarrier();
 
+        var tempArr: array<vec4<f32>, ${IMG_SIZE}>;
         // 开始计算
+        for (var m = 0u; m < ${logN}u; m++) {
+          var indexIn = 0u;
+          var step = 1u << m; // 等于pow
+          var blockSize = 1u << (m + 1u);
+          var blockNum = ${IMG_SIZE}u / blockSize;
+          var kFor = blockSize / 2u;
+
+          for (var n = 0u; n < blockNum; n++) {
+            for(var k = 0u; k < kFor; k++) {
+              var inputData1 = sharedData[indexIn];
+              var inputData2 = sharedData[indexIn];
+            }
+          }
+        }
 
         workgroupBarrier();
 
