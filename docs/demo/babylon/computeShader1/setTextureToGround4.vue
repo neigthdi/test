@@ -307,6 +307,12 @@
       matFinal.diffuseTexture = texCol
       groundChange.material = matFinal
 
+      shaderRow.setTexture('src', srcTexture)
+      shaderRow.setStorageTexture('dest', texRow)
+
+      shaderCol.setTexture('src', texRow)
+      shaderCol.setStorageTexture('dest', texCol)
+
       scene.registerBeforeRender(async() => {
         uTime += 0.02
         timeBuffer.updateFloat('uTime', uTime)
@@ -314,13 +320,13 @@
       
         // 重新执行 Compute Shader
         shaderRow.setUniformBuffer('uTime', timeBuffer)
-        shaderRow.setTexture('src', srcTexture)
-        shaderRow.setStorageTexture('dest', texRow)
+        // shaderRow.setTexture('src', srcTexture)
+        // shaderRow.setStorageTexture('dest', texRow)
         await shaderRow.dispatchWhenReady(imgSize / workGroupSizeRowX, imgSize / workGroupSizeRowY, 1)
         // shaderRow.dispatchW(imgSize / workGroupSizeRowX, imgSize / workGroupSizeRowY, 1)
 
-        shaderCol.setTexture('src', texRow)
-        shaderCol.setStorageTexture('dest', texCol)
+        // shaderCol.setTexture('src', texRow)
+        // shaderCol.setStorageTexture('dest', texCol)
         await shaderCol.dispatchWhenReady(imgSize / workGroupSizeColX, imgSize / workGroupSizeColY, 1)
         // shaderCol.dispatch(imgSize / workGroupSizeColX, imgSize / workGroupSizeColY, 1)
       })

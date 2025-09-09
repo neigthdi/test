@@ -9,8 +9,9 @@
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/65156063">fft海面模拟(三)</a></div>
     <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/208511211">详尽的快速傅里叶变换推导</a></div>
     <div><a target="_blank" href="/math/fft.html">蝶形变换的 W_[N_k]</a></div>
-    <div>1、法向量没计算（关系到光的反射、左手坐标系和右手坐标系的叉积计算相反）</div>
-    <div>2、泡沫没计算（雅可比行列式）</div>
+    <div>一、法向量没计算（关系到光的反射、左手坐标系和右手坐标系的叉积计算相反）</div>
+    <div>二、泡沫没计算（雅可比行列式）</div>
+    <div>三、未进行代码优化（1：一片漆黑，值太小）</div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
@@ -80,8 +81,8 @@ const initScene = async () => {
 
   const camera = new ArcRotateCamera('camera', -Math.PI / 1.5, Math.PI / 2.2, 15, new Vector3(0, 0, 0), scene)
   camera.upperBetaLimit = Math.PI / 2.2
-  camera.wheelPrecision = 1
-  camera.panningSensibility = 10
+  camera.wheelPrecision = 1.5
+  camera.panningSensibility = 8
   camera.attachControl(ele, true)
   camera.setPosition(new Vector3(0, 560, -560))
 
@@ -262,11 +263,11 @@ const initScene = async () => {
   }
 
   function createXyzTexture (scene) {
-    const xData = new Uint8Array(IMG_SIZE * IMG_SIZE * 4)
+    const xData = new Uint8Array(IMG_SIZE * IMG_SIZE * 4) // 无符号的8位整数数组。每个元素占用1个字节（8位）。可以用来表示像素值（在图像处理中，像素值通常是一个0到255的整数
     const yData = new Uint8Array(IMG_SIZE * IMG_SIZE * 4)
     const zData = new Uint8Array(IMG_SIZE * IMG_SIZE * 4)
     const fftData = new Uint8Array(IMG_SIZE * IMG_SIZE * 4)
-    const fftK = new Float32Array(IMG_SIZE * IMG_SIZE * 4)
+    const fftK = new Float32Array(IMG_SIZE * IMG_SIZE * 4) // 32位浮点数数组。每个元素占用4个字节。常用于科学计算、图形渲染中需要小数精度的场景。
     const wData = new Float32Array(IMG_SIZE * IMG_SIZE * 4)
    
     for (let y = 0; y < IMG_SIZE; y++) {
@@ -280,7 +281,7 @@ const initScene = async () => {
 
         const K = {
           x: TWO_PI * nx / IMG_SIZE,
-          y: TWO_PI * ny / IMG_SIZE,
+          y: TWO_PI * ny / IMG_SIZE
         }
 
         const phillipsRes1 = Math.sqrt(phillips(K) * 0.5)
@@ -345,115 +346,57 @@ const initScene = async () => {
         zData[index + 3] = 255
 
         // 旋转W的数据
-        if(y === 0) {
-          const angle = (2 * Math.PI * x) / IMG_SIZE;
-          const re  = Math.cos(angle)
-          const im  = Math.sin(angle)
-          wData[index] = re
-          wData[index + 1] = im
-          wData[index + 2] = 0
-          wData[index + 3] = 0
-        } else {
-          wData[index] = 0
-          wData[index + 1] = 0
-          wData[index + 2] = 0
-          wData[index + 3] = 0
-        }
+        const angle = (2 * Math.PI * x) / IMG_SIZE;
+        const re  = Math.cos(angle)
+        const im  = Math.sin(angle)
+        wData[index] = re
+        wData[index + 1] = im
+        wData[index + 2] = 0
+        wData[index + 3] = 0
 
       }
     }
 
-    const rawTextureY = new RawTexture(
-      yData,
-      IMG_SIZE,
-      IMG_SIZE,
-      Constants.TEXTUREFORMAT_RGBA,
-      scene,
-      false, // 不生成 mipmap
-      false, // 不使用线性空间
-      Constants.TEXTURE_NEAREST_SAMPLINGMODE
-    )
+    const rawTextureY = new RawTexture(yData, IMG_SIZE, IMG_SIZE, Constants.TEXTUREFORMAT_RGBA, scene, false, false, Constants.TEXTURE_NEAREST_SAMPLINGMODE)
 
-    const rawTextureX = new RawTexture(
-      xData,
-      IMG_SIZE,
-      IMG_SIZE,
-      Constants.TEXTUREFORMAT_RGBA,
-      scene,
-      false, // 不生成 mipmap
-      false, // 不使用线性空间
-      Constants.TEXTURE_NEAREST_SAMPLINGMODE
-    )
+    const rawTextureX = new RawTexture(xData, IMG_SIZE, IMG_SIZE, Constants.TEXTUREFORMAT_RGBA, scene, false, false, Constants.TEXTURE_NEAREST_SAMPLINGMODE)
 
-    const rawTextureZ = new RawTexture(
-      zData,
-      IMG_SIZE,
-      IMG_SIZE,
-      Constants.TEXTUREFORMAT_RGBA,
-      scene,
-      false, // 不生成 mipmap
-      false, // 不使用线性空间
-      Constants.TEXTURE_NEAREST_SAMPLINGMODE
-    )
+    const rawTextureZ = new RawTexture(zData, IMG_SIZE, IMG_SIZE, Constants.TEXTUREFORMAT_RGBA, scene, false, false, Constants.TEXTURE_NEAREST_SAMPLINGMODE)
 
-    const rawTextureFft = new RawTexture(
-      fftData,
-      IMG_SIZE,
-      IMG_SIZE,
-      Constants.TEXTUREFORMAT_RGBA,
-      scene,
-      false, // 不生成 mipmap
-      false, // 不使用线性空间
-      Constants.TEXTURE_NEAREST_SAMPLINGMODE
-    )
+    const rawTextureFft = new RawTexture(fftData, IMG_SIZE, IMG_SIZE, Constants.TEXTUREFORMAT_RGBA, scene, false, false, Constants.TEXTURE_NEAREST_SAMPLINGMODE)
 
-    const rawTextureFftK = new RawTexture(
-      fftK,
-      IMG_SIZE,
-      IMG_SIZE,
-      Constants.TEXTUREFORMAT_RGBA,
-      scene,
-      false, // 不生成 mipmap
-      false, // 不使用线性空间
-      Constants.TEXTURE_NEAREST_SAMPLINGMODE,
-    )
+    const rawTextureFftK = new RawTexture(fftK, IMG_SIZE, IMG_SIZE, Constants.TEXTUREFORMAT_RGBA, scene, false, false, Constants.TEXTURE_NEAREST_SAMPLINGMODE)
 
-    const rawTextureW = new RawTexture(
-      wData,
-      IMG_SIZE,
-      IMG_SIZE,
-      Constants.TEXTUREFORMAT_RGBA,
-      scene,
-      false, // 不生成 mipmap
-      false, // 不使用线性空间
-      Constants.TEXTURE_NEAREST_SAMPLINGMODE,
-    )
+    const rawTextureW = new RawTexture(wData, IMG_SIZE, IMG_SIZE, Constants.TEXTUREFORMAT_RGBA, scene, false, false, Constants.TEXTURE_NEAREST_SAMPLINGMODE)
+    const rawTextureStorageW = RawTexture.CreateRGBAStorageTexture(wData, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.NEAREST_SAMPLINGMODE, Constants.TEXTURETYPE_FLOAT)
+    const planeW = MeshBuilder.CreatePlane('planeW', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+    planeW.position = new Vector3(2 * IMG_SIZE + 20, 0, IMG_SIZE + 10)
+    planeW.rotation = new Vector3(Math.PI / 2, 0, 0)
+    const materialW = new StandardMaterial("planeMaterial", scene)
+    materialW.diffuseTexture = rawTextureStorageW
+    planeW.material = materialW
 
-    return {
-      rawTextureY,
-      rawTextureX,
-      rawTextureZ,
-      rawTextureFft,
-      rawTextureFftK,
-      rawTextureW
-    }
+    return { rawTextureY, rawTextureX, rawTextureZ, rawTextureFft, rawTextureFftK, rawTextureW }
   }
 
-  const createXyzPlane = ({ rawTextureX, rawTextureY, rawTextureZ }) => {
-    const planeX = MeshBuilder.CreateGround('planeX', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
+  const createXyzPlane = ({ rawTextureX, rawTextureY, rawTextureZ, rawTextureW }) => {
+    const planeX =  MeshBuilder.CreatePlane('planeX', { width: IMG_SIZE, height: IMG_SIZE }, scene)
     planeX.position = new Vector3(-IMG_SIZE - 10, 0, IMG_SIZE + 10)
+    planeX.rotation = new Vector3(Math.PI / 2, 0, 0)
     const materialX = new StandardMaterial("planeMaterial", scene)
     materialX.diffuseTexture = rawTextureX
     planeX.material = materialX
 
-    const planeY = MeshBuilder.CreateGround('planeY', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
+    const planeY =MeshBuilder.CreatePlane('planeY', { width: IMG_SIZE, height: IMG_SIZE }, scene)
     planeY.position = new Vector3(0, 0, IMG_SIZE + 10)
+    planeY.rotation = new Vector3(Math.PI / 2, 0, 0)
     const materialY = new StandardMaterial("planeMaterial", scene)
     materialY.diffuseTexture = rawTextureY
     planeY.material = materialY
 
-    const planeZ = MeshBuilder.CreateGround('planeZ', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
+    const planeZ = MeshBuilder.CreatePlane('planeZ', { width: IMG_SIZE, height: IMG_SIZE }, scene)
     planeZ.position = new Vector3(IMG_SIZE + 10, 0, IMG_SIZE + 10)
+    planeZ.rotation = new Vector3(Math.PI / 2, 0, 0)
     const materialZ = new StandardMaterial("planeMaterial", scene)
     materialZ.diffuseTexture = rawTextureZ
     planeZ.material = materialZ
@@ -466,18 +409,10 @@ const initScene = async () => {
     const workGroupSizeColY = IMG_SIZE
 
     const logN = Math.log2(IMG_SIZE)
-    const half = logN / 2
+    const half = IMG_SIZE / 2
 
     /** 第一步 计算 omega 和 uTime ，得到 textureHTilde */
     const Code_Phillips_Texture = `
-      @group(0) @binding(0) var samplerSrc: sampler;
-      @group(0) @binding(1) var src: texture_2d<f32>;
-      @group(0) @binding(2) var phillipsTexture: texture_storage_2d<rgba32float, write>;
-      @group(0) @binding(3) var<uniform> uTime: f32;
-
-      @group(1) @binding(0) var samplerFft: sampler;
-      @group(1) @binding(1) var fftK: texture_2d<f32>;
-      
       // 复数乘法
       fn complexMultiply(a: vec2<f32>, b: vec2<f32>) -> vec2<f32> {
         var result: vec2<f32>;
@@ -490,7 +425,16 @@ const initScene = async () => {
       fn dispersion(k: vec2<f32>) -> f32 {
         return sqrt(9.8 * length(k));
       }
- 
+
+      @group(0) @binding(0) var samplerSrc: sampler;
+      @group(0) @binding(1) var src: texture_2d<f32>;
+      // WebGPU 对浮点纹理的采样有严格限制： rgba32float 格式的纹理默认是 unfilterable（不可过滤的），不能用于线性过滤采样。所以用 rgba16float
+      @group(0) @binding(2) var phillipsTexture: texture_storage_2d<rgba16float, write>; 
+      @group(0) @binding(3) var<uniform> uTime: f32;
+
+      @group(1) @binding(0) var samplerFft: sampler;
+      @group(1) @binding(1) var fftK: texture_2d<f32>;
+      
       @compute @workgroup_size(1, 1, 1)
       fn main(
         @builtin(global_invocation_id) global_id: vec3<u32>,
@@ -524,17 +468,24 @@ const initScene = async () => {
 
     /** 第二步 计算 row ，得到 textureRow */
     const Code_Row = `
+      fn complexMultiply(a: vec4<f32>, b: vec4<f32>) -> vec4<f32> {
+        var result: vec4<f32>;
+        result.x = a.x * b.x - a.y * b.y;  // 实部
+        result.y = a.x * b.y + a.y * b.x;  // 虚部
+        return result;
+      }
+
       @group(0) @binding(0) var samplerSrc: sampler;
       @group(0) @binding(1) var src: texture_2d<f32>;
-      @group(0) @binding(2) var rowTexture: texture_storage_2d<rgba32float, write>;
-
+      @group(0) @binding(2) var rowTexture: texture_storage_2d<rgba16float, write>;
       @group(1) @binding(0) var samplerW: sampler;
+
       @group(1) @binding(1) var wData: texture_2d<f32>;
 
       var<workgroup> sharedData: array<vec4<f32>, ${IMG_SIZE}u>;
+      var<workgroup> tempData: array<vec4<f32>, ${IMG_SIZE}u>;
 
       @compute @workgroup_size(${workGroupSizeRowX}, ${workGroupSizeRowY}, 1)
-
       fn main(
         @builtin(global_invocation_id) global_id: vec3<u32>,
         @builtin(local_invocation_id) local_id: vec3<u32>
@@ -546,17 +497,18 @@ const initScene = async () => {
         let w_dims: vec2<f32> = vec2<f32>(textureDimensions(wData, 0));
         let w_texture: vec4<f32> = textureSampleLevel(wData, samplerW, vec2<f32>(global_id.xy) / w_dims, 0.0);
 
-        var color = vec4<f32>(0.0, 0.0, 0.0, 1.0);
-
         // 该行存入到 sharedData 中
-        // 使用 global_id.x 作为索引，因为要存储列数据
-        sharedData[global_id.x] = textureLoad(src, vec2<i32>(global_id.x, global_id.y), 0);
-        workgroupBarrier();
+        // 使用 global_id.x 作为索引，因为要存储行数据
+        sharedData[global_id.x] = textureLoad(src, vec2<i32>(i32(global_id.x), i32(global_id.y)), 0);
 
-        var tempArr: array<vec4<f32>, ${IMG_SIZE}>;
+        
         // 开始计算
         for (var m = 0u; m < ${logN}u; m++) {
-          var indexIn = 0u;
+          tempData[global_id.x] = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+          
+          workgroupBarrier();
+
+          var inputIndex = 0u;
           var step = 1u << m; // 等于pow
           var blockSize = 1u << (m + 1u);
           var blockNum = ${IMG_SIZE}u / blockSize;
@@ -564,31 +516,63 @@ const initScene = async () => {
 
           for (var n = 0u; n < blockNum; n++) {
             for(var k = 0u; k < kFor; k++) {
-              var inputData1 = sharedData[indexIn];
-              var inputData2 = sharedData[indexIn];
+              var inputData1 = sharedData[inputIndex];
+              var inputData2 = sharedData[inputIndex + ${half}u];
+
+              var outputIndex1 = 2u * (inputIndex - (inputIndex % (1u << m)) + (inputIndex % (1u << m)));
+              var outputIndex2 = outputIndex1 + step;
+
+              var indexW = k * (1u << (3u - (m + 1u)));
+              // 第0行的第几个
+              var w = textureLoad(wData, vec2<i32>(i32(0.0), i32(indexW)), 0);
+
+              var p1 = inputData1;
+              var p2 = complexMultiply(inputData2, w);
+
+              tempData[outputIndex1] = p1 + p2;
+              tempData[outputIndex2] = p1 - p2;
+
+              inputIndex = inputIndex + 1u;
             }
           }
+
+          workgroupBarrier();
+
+          // 交换
+          sharedData[global_id.x] = tempData[global_id.x];
         }
 
         workgroupBarrier();
 
-        textureStore(rowTexture, vec2<i32>(global_id.xy), sharedData[global_id.x]);
+        // // 使用 clamp 函数，将值限制在 [0, 1] 范围内
+        // // var color = vec4<f32>(clamp(sharedData[global_id.x].r, 0.0, 1.0), clamp(sharedData[global_id.x].g, 0.0, 1.0), 0.0, 1.0);
+        var color = vec4<f32>(sharedData[global_id.x].r, sharedData[global_id.x].g, 0.0, 1.0);
+
+        textureStore(rowTexture, vec2<i32>(global_id.xy), color);
       }
     `
 
+
     /** 第三步 计算 col ，得到 textureCol */
     const Code_Col = `
+      fn complexMultiply(a: vec4<f32>, b: vec4<f32>) -> vec4<f32> {
+        var result: vec4<f32>;
+        result.x = a.x * b.x - a.y * b.y;  // 实部
+        result.y = a.x * b.y + a.y * b.x;  // 虚部
+        return result;
+      }
+
       @group(0) @binding(0) var samplerSrc: sampler;
       @group(0) @binding(1) var src: texture_2d<f32>;
-      @group(0) @binding(2) var colTexture: texture_storage_2d<rgba32float, write>;
+      @group(0) @binding(2) var colTexture: texture_storage_2d<rgba16float, write>;
 
       @group(1) @binding(0) var samplerW: sampler;
       @group(1) @binding(1) var wData: texture_2d<f32>;
 
       var<workgroup> sharedData: array<vec4<f32>, ${IMG_SIZE}>;
+      var<workgroup> tempData: array<vec4<f32>, ${IMG_SIZE}u>;
 
       @compute @workgroup_size(${workGroupSizeColX}, ${workGroupSizeColY}, 1)
-
       fn main(
         @builtin(global_invocation_id) global_id: vec3<u32>,
         @builtin(local_invocation_id) local_id: vec3<u32>
@@ -599,18 +583,58 @@ const initScene = async () => {
         let w_dims: vec2<f32> = vec2<f32>(textureDimensions(wData, 0));
         let w_texture: vec4<f32> = textureSampleLevel(wData, samplerW, vec2<f32>(global_id.xy) / w_dims, 0.0);
 
-        var color = vec4<f32>(0.0, 0.0, 0.0, 1.0);
-
         // 该列存入到 sharedData 中
         // 使用 global_id.y 作为索引，因为要存储列数据
-        sharedData[global_id.y] = textureLoad(src, vec2<i32>(global_id.x, global_id.y), 0);
-        workgroupBarrier();
+        sharedData[global_id.y] = textureLoad(src, vec2<i32>(i32(global_id.x), i32(global_id.y)), 0);
+
 
         // 开始计算
+        for (var m = 0u; m < ${logN}u; m++) {
+          tempData[global_id.y] = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+          
+          workgroupBarrier();
+
+          var inputIndex = 0u;
+          var step = 1u << m; // 等于pow
+          var blockSize = 1u << (m + 1u);
+          var blockNum = ${IMG_SIZE}u / blockSize;
+          var kFor = blockSize / 2u;
+
+          for (var n = 0u; n < blockNum; n++) {
+            for(var k = 0u; k < kFor; k++) {
+              var inputData1 = sharedData[inputIndex];
+              var inputData2 = sharedData[inputIndex + ${half}u];
+
+              var outputIndex1 = 2u * (inputIndex - (inputIndex % (1u << m)) + (inputIndex % (1u << m)));
+              var outputIndex2 = outputIndex1 + step;
+
+              var indexW = k * (1u << (3u - (m + 1u)));
+              // 第0行的第几个
+              var w = textureLoad(wData, vec2<i32>(i32(0.0), i32(indexW)), 0);
+
+              var p1 = inputData1;
+              var p2 = complexMultiply(inputData2, w);
+
+              tempData[outputIndex1] = p1 + p2;
+              tempData[outputIndex2] = p1 - p2;
+
+              inputIndex = inputIndex + 1u;
+            }
+          }
+
+          workgroupBarrier();
+
+          // 交换
+          sharedData[global_id.y] = tempData[global_id.y];
+        }
 
         workgroupBarrier();
 
-        textureStore(colTexture, vec2<i32>(global_id.xy), sharedData[global_id.x]);
+        // // 使用 clamp 函数，将值限制在 [0, 1] 范围内
+        // // var color = vec4<f32>(clamp(sharedData[global_id.y].r, 0.0, 1.0), clamp(sharedData[global_id.y].g, 0.0, 1.0), 0.0, 1.0);
+        var color = vec4<f32>(sharedData[global_id.y].r, sharedData[global_id.y].g, 0.0, 1.0);
+
+        textureStore(colTexture, vec2<i32>(global_id.xy), color);
       }
     `
 
@@ -647,19 +671,8 @@ const initScene = async () => {
       }
     `
 
-    const phillips = MeshBuilder.CreateGround('phillips', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
-    const phillipsTexture = RawTexture.CreateRGBAStorageTexture(
-      null, 
-      IMG_SIZE, 
-      IMG_SIZE, 
-      scene, 
-      false, 
-      false, 
-      Texture.BILINEAR_SAMPLINGMODE, 
-      Constants.TEXTURETYPE_FLOAT
-    )
 
-    const finalSea = MeshBuilder.CreateGround('finalSea', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
+    // const finalSea = MeshBuilder.CreateGround('finalSea', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
     // const finalSeaTexture = RawTexture.CreateRGBAStorageTexture(
     //   null, 
     //   IMG_SIZE, 
@@ -669,43 +682,6 @@ const initScene = async () => {
     //   false, 
     //   Texture.BILINEAR_SAMPLINGMODE, 
     //   Constants.TEXTURETYPE_FLOAT
-    // )
-
-    const shaderPhillips = new ComputeShader(
-      'shaderPhillips', 
-      engine, 
-      { computeSource: Code_Phillips_Texture }, 
-      { bindingsMapping: {
-          'src': { group: 0, binding: 1 },
-          'phillipsTexture': { group: 0, binding: 2 },
-          'uTime': { group: 0, binding: 3 },
-          'fftK': { group: 1, binding: 1 },
-        }
-      }
-    )
-
-    const shaderRow = new ComputeShader(
-      'shaderRow', 
-      engine, 
-      { computeSource: Code_Row }, 
-      { bindingsMapping: {
-          'src': { group: 0, binding: 1 },
-          'rowTexture': { group: 0, binding: 2 },
-          'wData': { group: 1, binding: 1 },
-        }
-      }
-    )
-
-    // const shaderCol = new ComputeShader(
-    //   'shaderCol', 
-    //   engine, 
-    //   { computeSource: Code_Col }, 
-    //   { bindingsMapping: {
-    //       'src': { group: 0, binding: 1 },
-    //       'colTexture': { group: 0, binding: 2 },
-    //       'wData': { group: 1, binding: 1 },
-    //     }
-    //   }
     // )
 
     // const seaShader = new ShaderMaterial(
@@ -725,17 +701,84 @@ const initScene = async () => {
     const uniformBuffer = new UniformBuffer(engine)
     uniformBuffer.addUniform('uTime', 4)
 
+
+    // phillips 相关
+    const phillips = MeshBuilder.CreatePlane('phillips', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+    // const phillipsTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.BILINEAR_SAMPLINGMODE, Constants.TEXTURETYPE_FLOAT)
+    const phillipsTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.BILINEAR_SAMPLINGMODE, Constants.TEXTURETYPE_HALF_FLOAT)
+    const shaderPhillips = new ComputeShader(
+      'shaderPhillips', 
+      engine, 
+      { computeSource: Code_Phillips_Texture }, 
+      { bindingsMapping: {
+          'src': { group: 0, binding: 1 },
+          'phillipsTexture': { group: 0, binding: 2 },
+          'uTime': { group: 0, binding: 3 },
+          'fftK': { group: 1, binding: 1 },
+        }
+      }
+    )
     shaderPhillips.setTexture('src', rawTextureFft)
     shaderPhillips.setTexture('fftK', rawTextureFftK)
     shaderPhillips.setStorageTexture('phillipsTexture', phillipsTexture)
-
-    const mat = new StandardMaterial('mat', scene)
-    mat.diffuseTexture = phillipsTexture
-    phillips.material = mat
+    const phillipsMat = new StandardMaterial('phillipsMat', scene)
+    phillipsMat.diffuseTexture = phillipsTexture
+    phillips.material = phillipsMat
     phillips.position = new Vector3(0, 0, IMG_SIZE * 2 + 20)
+    phillips.rotation = new Vector3(Math.PI / 2, 0, 0)
 
 
-   
+
+    // row 相关
+    const rowGround = MeshBuilder.CreatePlane('phillips', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+    // const rowTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.NEAREST_SAMPLINGMODE, Constants.TEXTURETYPE_FLOAT)
+    const rowTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.NEAREST_SAMPLINGMODE, Constants.TEXTURETYPE_HALF_FLOAT)
+    const shaderRow = new ComputeShader(
+      'shaderRow', 
+      engine, 
+      { computeSource: Code_Row }, 
+      { bindingsMapping: {
+          'src': { group: 0, binding: 1 },
+          'rowTexture': { group: 0, binding: 2 },
+          'wData': { group: 1, binding: 1 },
+        }
+      }
+    )
+    shaderRow.setTexture('src', phillipsTexture)
+    shaderRow.setTexture('wData', rawTextureW)
+    shaderRow.setStorageTexture('rowTexture', rowTexture)
+    const rowMat = new StandardMaterial('rowMat', scene)
+    rowMat.diffuseTexture = rowTexture
+    rowGround.material = rowMat
+    rowGround.position = new Vector3(0, 0, -(IMG_SIZE + 20))
+    rowGround.rotation = new Vector3(Math.PI / 2, 0, 0)
+
+
+
+    // col 相关
+    const colGround = MeshBuilder.CreateGround('col', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
+    // const colTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.NEAREST_SAMPLINGMODE, Constants.TEXTURETYPE_FLOAT)
+    const colTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.NEAREST_SAMPLINGMODE, Constants.TEXTURETYPE_HALF_FLOAT)
+    const shaderCol = new ComputeShader(
+      'shaderCol', 
+      engine, 
+      { computeSource: Code_Col }, 
+      { bindingsMapping: {
+          'src': { group: 0, binding: 1 },
+          'colTexture': { group: 0, binding: 2 },
+          'wData': { group: 1, binding: 1 },
+        }
+      }
+    )
+    shaderCol.setTexture('src', rowTexture)
+    shaderCol.setTexture('wData', rawTextureW)
+    shaderCol.setStorageTexture('colTexture', colTexture)
+    const colMat = new StandardMaterial('colMat', scene)
+    colMat.diffuseTexture = colTexture
+    colGround.material = colMat
+    colGround.position = new Vector3(0, 0, 0)
+    
+
 
     scene.registerBeforeRender(async() => {
       uTime += 0.02
@@ -744,9 +787,17 @@ const initScene = async () => {
 
       shaderPhillips.setUniformBuffer('uTime', uniformBuffer)
       
+      // 计算 Phillips 纹理
       await shaderPhillips.dispatchWhenReady(phillipsTexture.getSize().width, phillipsTexture.getSize().height, 1)
+      
+      // 计算 row 纹理
+      await shaderRow.dispatchWhenReady(IMG_SIZE / workGroupSizeRowX, IMG_SIZE / workGroupSizeRowY, 1)
+
+      // 计算 col 纹理
+      await shaderCol.dispatchWhenReady(IMG_SIZE / workGroupSizeColX, IMG_SIZE / workGroupSizeColY, 1)
     })
   }
+
 
   const runAnimate = () => {
     engine.runRenderLoop(function() {
@@ -762,7 +813,7 @@ const initScene = async () => {
   createAxis()
   createGui()
   const { rawTextureX, rawTextureY, rawTextureZ, rawTextureFft, rawTextureFftK, rawTextureW } = createXyzTexture(scene)
-  createXyzPlane({ rawTextureX, rawTextureY, rawTextureZ })
+  createXyzPlane({ rawTextureX, rawTextureY, rawTextureZ, rawTextureW })
   ifftComputed(rawTextureFft, rawTextureFftK, rawTextureW)
   runAnimate()
 
