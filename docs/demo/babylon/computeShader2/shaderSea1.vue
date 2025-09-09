@@ -564,7 +564,7 @@ const initScene = async () => {
 
       @group(0) @binding(0) var samplerSrc: sampler;
       @group(0) @binding(1) var src: texture_2d<f32>;
-      @group(0) @binding(2) var colTexture: texture_storage_2d<rgba16float, write>;
+      @group(0) @binding(2) var colTexture: texture_storage_2d<rgba32float, write>;
 
       @group(1) @binding(0) var samplerW: sampler;
       @group(1) @binding(1) var wData: texture_2d<f32>;
@@ -633,6 +633,12 @@ const initScene = async () => {
         // // 使用 clamp 函数，将值限制在 [0, 1] 范围内
         // // var color = vec4<f32>(clamp(sharedData[global_id.y].r, 0.0, 1.0), clamp(sharedData[global_id.y].g, 0.0, 1.0), 0.0, 1.0);
         var color = vec4<f32>(sharedData[global_id.y].r, sharedData[global_id.y].g, 0.0, 1.0);
+
+        var epsilon = 1e-6; // 避免除以零
+        var scale = 100.0;  // 缩放因子
+        var logR = log(abs(sharedData[global_id.y].r) + epsilon) * scale;
+        var logG = log(abs(sharedData[global_id.y].g) + epsilon) * scale;
+        color = vec4<f32>(logR, logG, 0.0, 1.0);
 
         textureStore(colTexture, vec2<i32>(global_id.xy), color);
       }
@@ -757,8 +763,8 @@ const initScene = async () => {
 
     // col 相关
     const colGround = MeshBuilder.CreateGround('col', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
-    // const colTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.NEAREST_SAMPLINGMODE, Constants.TEXTURETYPE_FLOAT)
-    const colTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.NEAREST_SAMPLINGMODE, Constants.TEXTURETYPE_HALF_FLOAT)
+    const colTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.NEAREST_SAMPLINGMODE, Constants.TEXTURETYPE_FLOAT)
+    // const colTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.NEAREST_SAMPLINGMODE, Constants.TEXTURETYPE_HALF_FLOAT)
     const shaderCol = new ComputeShader(
       'shaderCol', 
       engine, 
