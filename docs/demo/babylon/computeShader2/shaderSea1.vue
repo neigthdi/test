@@ -11,7 +11,7 @@
     <div><a target="_blank" href="/math/fft.html">蝶形变换的 W_[N_k]</a></div>
     <div>一、法向量没计算（关系到光的反射、左手坐标系和右手坐标系的叉积计算相反）</div>
     <div>二、泡沫没计算（雅可比行列式）</div>
-    <div>三、未进行代码优化（1：一片漆黑，值太小）</div>
+    <div>三、未进行代码优化（1：一片漆黑，值太小；2：w的计算是否正确）</div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
@@ -171,6 +171,8 @@ const initScene = async () => {
   const TWO_PI = 2 * PI
   const G = 9.8
   const IMG_SIZE = 128
+  const logN = Math.log2(IMG_SIZE)
+  const half = IMG_SIZE / 2
 
   // 复数乘法
   function complexMultiply(a, b) {
@@ -268,7 +270,6 @@ const initScene = async () => {
     const zData = new Uint8Array(IMG_SIZE * IMG_SIZE * 4)
     const fftData = new Uint8Array(IMG_SIZE * IMG_SIZE * 4)
     const fftK = new Float32Array(IMG_SIZE * IMG_SIZE * 4) // 32位浮点数数组。每个元素占用4个字节。常用于科学计算、图形渲染中需要小数精度的场景。
-    const wData = new Float32Array(IMG_SIZE * IMG_SIZE * 4)
    
     for (let y = 0; y < IMG_SIZE; y++) {
       for (let x = 0; x < IMG_SIZE; x++) {
@@ -344,18 +345,17 @@ const initScene = async () => {
         zData[index + 1] = KzHTilde.y
         zData[index + 2] = 0
         zData[index + 3] = 255
-
-        // 旋转W的数据
-        const angle = (2 * Math.PI * x) / IMG_SIZE;
-        const re  = Math.cos(angle)
-        const im  = Math.sin(angle)
-        wData[index] = re
-        wData[index + 1] = im
-        wData[index + 2] = 0
-        wData[index + 3] = 0
-
       }
     }
+
+
+    const wData = new Float32Array(IMG_SIZE * 4);
+    for (let i = 0; i < IMG_SIZE; i++) {
+      const angle = (-2 * Math.PI * i) / IMG_SIZE
+      wData[i * 4] = Math.cos(angle)     // re
+      wData[i * 4 + 1] = Math.sin(angle) // im
+    }
+    const rawTextureW = new RawTexture(wData, IMG_SIZE, 1, Constants.TEXTUREFORMAT_RGBA, scene, false, false, Constants.TEXTURE_NEAREST_SAMPLINGMODE)
 
     const rawTextureY = new RawTexture(yData, IMG_SIZE, IMG_SIZE, Constants.TEXTUREFORMAT_RGBA, scene, false, false, Constants.TEXTURE_NEAREST_SAMPLINGMODE)
 
@@ -366,15 +366,6 @@ const initScene = async () => {
     const rawTextureFft = new RawTexture(fftData, IMG_SIZE, IMG_SIZE, Constants.TEXTUREFORMAT_RGBA, scene, false, false, Constants.TEXTURE_NEAREST_SAMPLINGMODE)
 
     const rawTextureFftK = new RawTexture(fftK, IMG_SIZE, IMG_SIZE, Constants.TEXTUREFORMAT_RGBA, scene, false, false, Constants.TEXTURE_NEAREST_SAMPLINGMODE)
-
-    const rawTextureW = new RawTexture(wData, IMG_SIZE, IMG_SIZE, Constants.TEXTUREFORMAT_RGBA, scene, false, false, Constants.TEXTURE_NEAREST_SAMPLINGMODE)
-    const rawTextureStorageW = RawTexture.CreateRGBAStorageTexture(wData, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.NEAREST_SAMPLINGMODE, Constants.TEXTURETYPE_FLOAT)
-    const planeW = MeshBuilder.CreatePlane('planeW', { width: IMG_SIZE, height: IMG_SIZE }, scene)
-    planeW.position = new Vector3(2 * IMG_SIZE + 20, 0, IMG_SIZE + 10)
-    planeW.rotation = new Vector3(Math.PI / 2, 0, 0)
-    const materialW = new StandardMaterial("planeMaterial", scene)
-    materialW.diffuseTexture = rawTextureStorageW
-    planeW.material = materialW
 
     return { rawTextureY, rawTextureX, rawTextureZ, rawTextureFft, rawTextureFftK, rawTextureW }
   }
@@ -407,9 +398,6 @@ const initScene = async () => {
     const workGroupSizeRowY = 1
     const workGroupSizeColX = 1
     const workGroupSizeColY = IMG_SIZE
-
-    const logN = Math.log2(IMG_SIZE)
-    const half = IMG_SIZE / 2
 
     /** 第一步 计算 omega 和 uTime ，得到 textureHTilde */
     const Code_Phillips_Texture = `
@@ -522,9 +510,11 @@ const initScene = async () => {
               var outputIndex1 = 2u * (inputIndex - (inputIndex % (1u << m)) + (inputIndex % (1u << m)));
               var outputIndex2 = outputIndex1 + step;
 
-              var indexW = k * (1u << (3u - (m + 1u)));
-              // 第0行的第几个
-              var w = textureLoad(wData, vec2<i32>(i32(0.0), i32(indexW)), 0);
+              var indexW = k * (1u << (${logN}u - m - 1u));
+              var w = textureLoad(wData, vec2<i32>(i32(indexW), 0), 0);
+              // var w = textureLoad(wData, vec2<i32>(i32(global_id.x), i32(indexW)), 0);
+              // var angle = 2.0 * 3.1415926535 * f32(indexW) / f32(${IMG_SIZE});
+              // var w = vec4<f32>(cos(angle), sin(angle), 0.0, 0.0);
 
               var p1 = inputData1;
               var p2 = complexMultiply(inputData2, w);
@@ -608,9 +598,11 @@ const initScene = async () => {
               var outputIndex1 = 2u * (inputIndex - (inputIndex % (1u << m)) + (inputIndex % (1u << m)));
               var outputIndex2 = outputIndex1 + step;
 
-              var indexW = k * (1u << (3u - (m + 1u)));
-              // 第0行的第几个
-              var w = textureLoad(wData, vec2<i32>(i32(0.0), i32(indexW)), 0);
+              var indexW = k * (1u << (${logN}u - m - 1u));
+              var w = textureLoad(wData, vec2<i32>(i32(indexW), 0), 0);
+              // var w = textureLoad(wData, vec2<i32>(i32(global_id.x), i32(indexW)), 0);
+              // var angle = 2.0 * 3.1415926535 * f32(indexW) / f32(${IMG_SIZE});
+              // var w = vec4<f32>(cos(angle), sin(angle), 0.0, 0.0);
 
               var p1 = inputData1;
               var p2 = complexMultiply(inputData2, w);
@@ -633,12 +625,6 @@ const initScene = async () => {
         // // 使用 clamp 函数，将值限制在 [0, 1] 范围内
         // // var color = vec4<f32>(clamp(sharedData[global_id.y].r, 0.0, 1.0), clamp(sharedData[global_id.y].g, 0.0, 1.0), 0.0, 1.0);
         var color = vec4<f32>(sharedData[global_id.y].r, sharedData[global_id.y].g, 0.0, 1.0);
-
-        var epsilon = 1e-6; // 避免除以零
-        var scale = 100.0;  // 缩放因子
-        var logR = log(abs(sharedData[global_id.y].r) + epsilon) * scale;
-        var logG = log(abs(sharedData[global_id.y].g) + epsilon) * scale;
-        color = vec4<f32>(logR, logG, 0.0, 1.0);
 
         textureStore(colTexture, vec2<i32>(global_id.xy), color);
       }
@@ -710,8 +696,9 @@ const initScene = async () => {
 
     // phillips 相关
     const phillips = MeshBuilder.CreatePlane('phillips', { width: IMG_SIZE, height: IMG_SIZE }, scene)
-    // const phillipsTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.BILINEAR_SAMPLINGMODE, Constants.TEXTURETYPE_FLOAT)
-    const phillipsTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.BILINEAR_SAMPLINGMODE, Constants.TEXTURETYPE_HALF_FLOAT)
+    // 对于 FFT 计算，通常使用 nearest 模式更合适，因为 FFT 是离散的
+    // const phillipsTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.NEAREST_SAMPLINGMODE, Constants.TEXTURETYPE_FLOAT)
+    const phillipsTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.NEAREST_SAMPLINGMODE, Constants.TEXTURETYPE_HALF_FLOAT)
     const shaderPhillips = new ComputeShader(
       'shaderPhillips', 
       engine, 
@@ -783,7 +770,9 @@ const initScene = async () => {
     colMat.diffuseTexture = colTexture
     colGround.material = colMat
     colGround.position = new Vector3(0, 0, 0)
-    
+
+
+
 
 
     scene.registerBeforeRender(async() => {
@@ -801,6 +790,12 @@ const initScene = async () => {
 
       // 计算 col 纹理
       await shaderCol.dispatchWhenReady(IMG_SIZE / workGroupSizeColX, IMG_SIZE / workGroupSizeColY, 1)
+
+      // 查看像素值
+      // if(uTime > 0.1 && uTime < 0.14) {
+      //   const phillipsTexturePixels = await phillipsTexture.readPixels()
+      //   console.log(phillipsTexturePixels)
+      // }
     })
   }
 
