@@ -349,7 +349,7 @@ const initScene = async () => {
     }
 
 
-    const wData = new Float32Array(IMG_SIZE * 4);
+    const wData = new Float32Array(IMG_SIZE * 4)
     for (let i = 0; i < IMG_SIZE; i++) {
       const angle = (-2 * Math.PI * i) / IMG_SIZE
       wData[i * 4] = Math.cos(angle)     // re
@@ -512,7 +512,6 @@ const initScene = async () => {
 
               var indexW = k * (1u << (${logN}u - m - 1u));
               var w = textureLoad(wData, vec2<i32>(i32(indexW), 0), 0);
-              // var w = textureLoad(wData, vec2<i32>(i32(global_id.x), i32(indexW)), 0);
               // var angle = 2.0 * 3.1415926535 * f32(indexW) / f32(${IMG_SIZE});
               // var w = vec4<f32>(cos(angle), sin(angle), 0.0, 0.0);
 
@@ -534,8 +533,8 @@ const initScene = async () => {
 
         workgroupBarrier();
 
-        // // 使用 clamp 函数，将值限制在 [0, 1] 范围内
-        // // var color = vec4<f32>(clamp(sharedData[global_id.x].r, 0.0, 1.0), clamp(sharedData[global_id.x].g, 0.0, 1.0), 0.0, 1.0);
+        // 使用 clamp 函数，将值限制在 [0, 1] 范围内
+        // var color = vec4<f32>(clamp(sharedData[global_id.x].r, 0.0, 1.0), clamp(sharedData[global_id.x].g, 0.0, 1.0), 0.0, 1.0);
         var color = vec4<f32>(sharedData[global_id.x].r, sharedData[global_id.x].g, 0.0, 1.0);
 
         textureStore(rowTexture, vec2<i32>(global_id.xy), color);
@@ -559,7 +558,7 @@ const initScene = async () => {
       @group(1) @binding(0) var samplerW: sampler;
       @group(1) @binding(1) var wData: texture_2d<f32>;
 
-      var<workgroup> sharedData: array<vec4<f32>, ${IMG_SIZE}>;
+      var<workgroup> sharedData: array<vec4<f32>, ${IMG_SIZE}u>;
       var<workgroup> tempData: array<vec4<f32>, ${IMG_SIZE}u>;
 
       @compute @workgroup_size(${workGroupSizeColX}, ${workGroupSizeColY}, 1)
@@ -600,7 +599,6 @@ const initScene = async () => {
 
               var indexW = k * (1u << (${logN}u - m - 1u));
               var w = textureLoad(wData, vec2<i32>(i32(indexW), 0), 0);
-              // var w = textureLoad(wData, vec2<i32>(i32(global_id.x), i32(indexW)), 0);
               // var angle = 2.0 * 3.1415926535 * f32(indexW) / f32(${IMG_SIZE});
               // var w = vec4<f32>(cos(angle), sin(angle), 0.0, 0.0);
 
@@ -622,8 +620,8 @@ const initScene = async () => {
 
         workgroupBarrier();
 
-        // // 使用 clamp 函数，将值限制在 [0, 1] 范围内
-        // // var color = vec4<f32>(clamp(sharedData[global_id.y].r, 0.0, 1.0), clamp(sharedData[global_id.y].g, 0.0, 1.0), 0.0, 1.0);
+        // 使用 clamp 函数，将值限制在 [0, 1] 范围内
+        // var color = vec4<f32>(clamp(sharedData[global_id.y].r, 0.0, 1.0), clamp(sharedData[global_id.y].g, 0.0, 1.0), 0.0, 1.0);
         var color = vec4<f32>(sharedData[global_id.y].r, sharedData[global_id.y].g, 0.0, 1.0);
 
         textureStore(colTexture, vec2<i32>(global_id.xy), color);
