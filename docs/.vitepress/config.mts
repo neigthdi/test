@@ -106,7 +106,6 @@ function sidebarBase() {
       collapsible: true,
       items: [
         { text: '着色器', link: '/other/shader' },
-        { text: 'textureFormats', link: '/other/textureFormats' },
         { text: '钩子', link: '/other/hook' },
         { text: '存储', link: '/other/storage' },
         { text: 'layerMask', link: '/other/layerMask' },
@@ -132,6 +131,7 @@ function sidebarBase() {
       items: [
         { text: 'computeShader', link: '/wgsl/computeShaderIntroduce' },
         { text: 'workgroupSize', link: '/wgsl/workgroupSize' },
+        { text: 'textureFormats', link: '/other/textureFormats' },
         { text: '存储类别', link: '/wgsl/storageClass' },
         { text: '内置变量', link: '/wgsl/builtInVar' },
       ]

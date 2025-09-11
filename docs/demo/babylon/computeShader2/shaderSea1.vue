@@ -11,7 +11,7 @@
     <div><a target="_blank" href="/math/fft.html">蝶形变换的 W_[N_k]</a></div>
     <div>一、法向量没计算（关系到光的反射、左手坐标系和右手坐标系的叉积计算相反）</div>
     <div>二、泡沫没计算（雅可比行列式）</div>
-    <div>三、未进行代码优化（1：一片漆黑，值太小；2：w的计算是否正确）</div>
+    <div>三、存在问题（1：一片漆黑，值太小；2：在使用rgba32float时，能否通过“双纹理”方案来存储和读取【ProceduralTexture？】）</div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
@@ -351,9 +351,9 @@ const initScene = async () => {
 
     const wData = new Float32Array(IMG_SIZE * 4)
     for (let i = 0; i < IMG_SIZE; i++) {
-      const angle = (-2 * Math.PI * i) / IMG_SIZE
+      const angle = (2 * Math.PI * i) / IMG_SIZE
       wData[i * 4] = Math.cos(angle)     // re
-      wData[i * 4 + 1] = Math.sin(angle) // im
+      wData[i * 4 + 1] = -Math.sin(angle) // im
     }
     const rawTextureW = new RawTexture(wData, IMG_SIZE, 1, Constants.TEXTUREFORMAT_RGBA, scene, false, false, Constants.TEXTURE_NEAREST_SAMPLINGMODE)
 
@@ -492,9 +492,11 @@ const initScene = async () => {
         
         // 开始计算
         for (var m = 0u; m < ${logN}u; m++) {
+          workgroupBarrier(); // 同步点①：确保所有线程完成上一轮数据写入
+
           tempData[global_id.x] = vec4<f32>(0.0, 0.0, 0.0, 0.0);
           
-          workgroupBarrier();
+          workgroupBarrier(); // 同步点②：确保初始化完成
 
           var inputIndex = 0u;
           var step = 1u << m; // 等于pow
@@ -513,7 +515,7 @@ const initScene = async () => {
               var indexW = k * (1u << (${logN}u - m - 1u));
               var w = textureLoad(wData, vec2<i32>(i32(indexW), 0), 0);
               // var angle = 2.0 * 3.1415926535 * f32(indexW) / f32(${IMG_SIZE});
-              // var w = vec4<f32>(cos(angle), sin(angle), 0.0, 0.0);
+              // w = vec4<f32>(cos(angle), -sin(angle), 0.0, 0.0);
 
               var p1 = inputData1;
               var p2 = complexMultiply(inputData2, w);
@@ -521,17 +523,19 @@ const initScene = async () => {
               tempData[outputIndex1] = p1 + p2;
               tempData[outputIndex2] = p1 - p2;
 
+              workgroupBarrier(); // 同步点③：确保所有蝶形运算完成
+
               inputIndex = inputIndex + 1u;
             }
           }
 
-          workgroupBarrier();
+          workgroupBarrier(); // 同步点④：确保所有运算完成
 
-          // 交换
           sharedData[global_id.x] = tempData[global_id.x];
-        }
 
-        workgroupBarrier();
+          workgroupBarrier(); // 同步点⑤：确保交换完成
+
+        }
 
         // 使用 clamp 函数，将值限制在 [0, 1] 范围内
         // var color = vec4<f32>(clamp(sharedData[global_id.x].r, 0.0, 1.0), clamp(sharedData[global_id.x].g, 0.0, 1.0), 0.0, 1.0);
@@ -579,9 +583,11 @@ const initScene = async () => {
 
         // 开始计算
         for (var m = 0u; m < ${logN}u; m++) {
+          workgroupBarrier(); // 同步点①：确保所有线程完成上一轮数据写入
+
           tempData[global_id.y] = vec4<f32>(0.0, 0.0, 0.0, 0.0);
           
-          workgroupBarrier();
+          workgroupBarrier(); // 同步点②：确保初始化完成
 
           var inputIndex = 0u;
           var step = 1u << m; // 等于pow
@@ -600,7 +606,7 @@ const initScene = async () => {
               var indexW = k * (1u << (${logN}u - m - 1u));
               var w = textureLoad(wData, vec2<i32>(i32(indexW), 0), 0);
               // var angle = 2.0 * 3.1415926535 * f32(indexW) / f32(${IMG_SIZE});
-              // var w = vec4<f32>(cos(angle), sin(angle), 0.0, 0.0);
+              // w = vec4<f32>(cos(angle), -sin(angle), 0.0, 0.0);
 
               var p1 = inputData1;
               var p2 = complexMultiply(inputData2, w);
@@ -608,17 +614,18 @@ const initScene = async () => {
               tempData[outputIndex1] = p1 + p2;
               tempData[outputIndex2] = p1 - p2;
 
+              workgroupBarrier(); // 同步点③：确保所有蝶形运算完成
+
               inputIndex = inputIndex + 1u;
             }
           }
 
-          workgroupBarrier();
+          workgroupBarrier(); // 同步点④：确保所有运算完成
 
-          // 交换
           sharedData[global_id.y] = tempData[global_id.y];
-        }
 
-        workgroupBarrier();
+          workgroupBarrier(); // 同步点⑤：确保交换完成
+        }
 
         // 使用 clamp 函数，将值限制在 [0, 1] 范围内
         // var color = vec4<f32>(clamp(sharedData[global_id.y].r, 0.0, 1.0), clamp(sharedData[global_id.y].g, 0.0, 1.0), 0.0, 1.0);
@@ -721,7 +728,7 @@ const initScene = async () => {
 
 
     // row 相关
-    const rowGround = MeshBuilder.CreatePlane('phillips', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+    const rowGround = MeshBuilder.CreatePlane('row', { width: IMG_SIZE, height: IMG_SIZE }, scene)
     // const rowTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.NEAREST_SAMPLINGMODE, Constants.TEXTURETYPE_FLOAT)
     const rowTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.NEAREST_SAMPLINGMODE, Constants.TEXTURETYPE_HALF_FLOAT)
     const shaderRow = new ComputeShader(
@@ -747,7 +754,7 @@ const initScene = async () => {
 
 
     // col 相关
-    const colGround = MeshBuilder.CreateGround('col', { width: IMG_SIZE, height: IMG_SIZE, subdivisions: IMG_SIZE }, scene)
+    const colGround = MeshBuilder.CreatePlane('col', { width: IMG_SIZE, height: IMG_SIZE }, scene)
     const colTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.NEAREST_SAMPLINGMODE, Constants.TEXTURETYPE_FLOAT)
     // const colTexture = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.NEAREST_SAMPLINGMODE, Constants.TEXTURETYPE_HALF_FLOAT)
     const shaderCol = new ComputeShader(
@@ -768,6 +775,8 @@ const initScene = async () => {
     colMat.diffuseTexture = colTexture
     colGround.material = colMat
     colGround.position = new Vector3(0, 0, 0)
+    colGround.rotation = new Vector3(Math.PI / 2, 0, 0)
+
 
 
 
@@ -791,8 +800,8 @@ const initScene = async () => {
 
       // 查看像素值
       // if(uTime > 0.1 && uTime < 0.14) {
-      //   const phillipsTexturePixels = await phillipsTexture.readPixels()
-      //   console.log(phillipsTexturePixels)
+      //   const pixels = await rowTexture.readPixels()
+      //   console.log(pixels)
       // }
     })
   }
