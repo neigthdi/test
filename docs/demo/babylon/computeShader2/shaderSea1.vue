@@ -11,7 +11,7 @@
     <div><a target="_blank" href="/math/fft.html">蝶形变换的 W_[N_k]</a></div>
     <div>一、法向量没计算（关系到光的反射、左手坐标系和右手坐标系的叉积计算相反）</div>
     <div>二、泡沫没计算（雅可比行列式）</div>
-    <div>三、存在问题（1：一片漆黑，值太小；2：在使用rgba32float时，能否通过“双纹理”方案来存储和读取【ProceduralTexture？】）</div>
+    <div>三、存在问题（1：一片漆黑，值太小；2：在使用rgba32float时，能否通过“双纹理”方案来存储和读取【ProceduralTexture】？；3：不可用Uint8Array，有空继续改）</div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
@@ -768,7 +768,7 @@ const initScene = async () => {
         }
       }
     )
-    shaderCol.setTexture('src', rowTexture)
+    shaderCol.setTexture('src', phillipsTexture)
     shaderCol.setTexture('wData', rawTextureW)
     shaderCol.setStorageTexture('colTexture', colTexture)
     const colMat = new StandardMaterial('colMat', scene)
@@ -799,10 +799,10 @@ const initScene = async () => {
       await shaderCol.dispatchWhenReady(IMG_SIZE / workGroupSizeColX, IMG_SIZE / workGroupSizeColY, 1)
 
       // 查看像素值
-      // if(uTime > 0.1 && uTime < 0.14) {
-      //   const pixels = await rowTexture.readPixels()
-      //   console.log(pixels)
-      // }
+       if(uTime > 0.2 && uTime < 0.24) {
+         const pixels = await colTexture.readPixels()
+         console.log(pixels)
+      }
     })
   }
 
