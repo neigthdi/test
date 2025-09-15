@@ -83,13 +83,13 @@
 						kNorm = normalize(k);
 					}
 					let wNorm = normalize(windDir);
-					let dotByKnormWnorm = dot(kNorm, wNorm);
+					let dotNormKW = dot(kNorm, wNorm);
 					
 					var phi = A * exp(-1.0 / (kLen2 * L2)) / kLen4; // 基础 Phillips 谱
 					
-					phi *= dotByKnormWnorm * dotByKnormWnorm; // 风向对齐项
+					phi *= dotNormKW * dotNormKW; // 风向对齐项
 					
-					if (dotByKnormWnorm > 0.0) { // 仅保留与风向同方向的波
+					if (dotNormKW > 0.0) { // 仅保留与风向同方向的波
 						phi *= windV;
 					}
 					
