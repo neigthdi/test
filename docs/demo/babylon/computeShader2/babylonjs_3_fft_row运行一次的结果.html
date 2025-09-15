@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<script src="https://preview.babylonjs.com/babylon.js"></script>
+		<script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+		<title></title>
+	</head>
+	<body>
+		<canvas id="shaderSea1" style="width: 800px;height: 800px;"></canvas>
+		<script>
+			const TWO_PI = 6.283185307179586
+			const G = 9.8
+
+			// 复数乘法
+			function complexMultiply(a, b) {
+				return {
+					x: a.x * b.x - a.y * b.y, // 实部
+					y: a.x * b.y + a.y * b.x // 虚部
+				}
+			}
+
+			// 色散关系函数
+			function dispersion(k) {
+				return Math.sqrt(G * vectorLength(k))
+			}
+
+			// 计算向量长度（模）
+			function vectorLength(v) {
+				return Math.sqrt(v.x * v.x + v.y * v.y)
+			}
+
+			// 归一化向量
+			function normalize(v) {
+				let len = vectorLength(v)
+				return { x: v.x / len, y: v.y / len }
+			}
+
+			// 点积计算
+			function dot(a, b) {
+				return a.x * b.x + a.y * b.y
+			}
+
+			// 快速随机值生成函数
+			function randValueFast(uv, seed) {
+				return fract(Math.sin(dot(uv, { x: 12.9898, y: 78.233 }) + seed) * 43758.5453)
+			}
+
+			// fract函数
+			function fract(x) {
+				return x - Math.floor(x)
+			}
+
+			// 计算两个相互独立的高斯随机数
+			function gauss(uv) {
+				let u1 = randValueFast(uv, 1753.0)
+				let u2 = randValueFast(uv, 3571.0)
+
+				if (u1 < 1e-6) {
+					u1 = 1e-6
+				}
+
+				let g1 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(TWO_PI * u2)
+				let g2 = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(TWO_PI * u2)
+
+				return { x: g1, y: g2 }
+			}
+
+			// 菲利普频谱计算，输入波数 K
+			function phillips(K) {
+				let W = { x: 1.0, y: -1.0 } // 风的方向向量
+				let V = 10.0 // 风速
+				let A = 10.0 // 振幅参数
+
+				let L = V * V / G // 最大波长
+				let L2 = L * L
+
+				let kLen = Math.max(0.0001, vectorLength(K))
+				let kLen2 = kLen * kLen
+				let kLen4 = kLen2 * kLen2
+
+				let K_norm
+				if (K.x === 0 && K.y === 0) {
+					K_norm = { x: 0, y: 0 }
+				} else {
+					K_norm = normalize(K)
+				}
+
+				let W_norm = normalize(W)
+				let dot_KW = dot(K_norm, W_norm)
+
+				// 基础 Phillips 谱
+				let phi = A * Math.exp(-1.0 / (kLen2 * L2)) / kLen4
+
+				// 风向对齐项
+				phi *= dot_KW * dot_KW
+
+				// 仅保留与风向同方向的波
+				if (dot_KW > 0.0) {
+					phi *= V
+				}
+
+				// 衰减因子（减少长波）
+				// let l = 0.001 * L
+				// let kSqr = dot(K, K)
+				// phi *= Math.exp(l * l * -kSqr)
+
+				return phi
+			}
+		</script>
+
+		<script>
+			let IMG_SIZE = 128
+			let logN = Math.log2(IMG_SIZE)
+			let fftData = new Uint32Array(IMG_SIZE * IMG_SIZE * 4)
+			let rowData = new Uint8Array(IMG_SIZE * IMG_SIZE * 4)
+			let sharedData = []
+
+			for (let y = 0; y < IMG_SIZE; y++) {
+				let row = []
+				for (let x = 0; x < IMG_SIZE; x++) {
+					let index = (x + y * IMG_SIZE) * 4
+					let gaussValue1 = gauss({ x: x + 3, y: y + 5 })
+					let gaussValue2 = gauss({ x: x + 7, y: y + 11 })
+
+					let nx = x - IMG_SIZE / 2
+					let ny = y - IMG_SIZE / 2
+
+					let K = {
+						x: TWO_PI * nx / IMG_SIZE,
+						y: TWO_PI * ny / IMG_SIZE
+					}
+
+					let phillipsRes1 = Math.sqrt(phillips(K) * 0.5)
+					let h0k = {
+						x: gaussValue1.x * phillipsRes1,
+						y: gaussValue1.y * phillipsRes1
+					}
+
+					let phillipsRes2 = Math.sqrt(phillips({ x: K.x * -1, y: K.y * -1 }) * 0.5)
+					let h0kConj = {
+						x: gaussValue2.x * phillipsRes2,
+						y: gaussValue2.y * phillipsRes2 * -1
+					}
+
+					let omega = dispersion(K)
+					let c = Math.cos(omega)
+					let s = Math.sin(omega)
+					let h1 = complexMultiply(h0k, { x: c, y: s })
+					let h2 = complexMultiply(h0kConj, { x: c, y: s * -1 })
+
+					let H_Tilde = {
+						x: h1.x + h2.x,
+						y: h1.y + h2.y
+					}
+
+					fftData[index] = H_Tilde.x
+					fftData[index + 1] = H_Tilde.y
+					fftData[index + 2] = 0
+					fftData[index + 3] = 255
+
+					row.push({
+						x: H_Tilde.x,
+						y: H_Tilde.y,
+						z: 0,
+						w: 1
+					})
+				}
+				sharedData.push(row)
+			}
+
+
+			let tempData = []
+			let wData = []
+			for (let i = 0; i < IMG_SIZE; i++) {
+				let angle = (2 * Math.PI * i) / IMG_SIZE
+				let re = Math.cos(angle)
+				let im = Math.sin(angle)
+				wData.push({ x: re, y: im === 0 ? 0 : -1 * im, z: 0, w: 0 })
+			}
+
+
+			for (let q = 0; q < sharedData.length; q++) {
+				let row = []
+				sharedData[q].forEach(v => {
+					row.push({ ...v })
+				})
+
+				for (var m = 0; m < logN; m++) {
+					var step = 1 << m
+					var blockSize = 1 << (m + 1)
+					var blockNum = IMG_SIZE / blockSize
+					var kFor = blockSize / 2
+					var inputIndex = 0
+
+
+					for (var n = 0; n < blockNum; n++) {
+						for (var k = 0; k < kFor; k++) {
+							var inputData1 = row[inputIndex]
+							var inputData2 = row[inputIndex + (IMG_SIZE / 2)]
+
+							var outputIndex1 = 2 * (inputIndex - (inputIndex % (1 << m))) + (inputIndex % (1 << m))
+							var outputIndex2 = outputIndex1 + step
+
+							var indexW = k * (1 << (logN - m - 1))
+							var w = wData[indexW]
+
+							var p1 = inputData1
+							var p2 = complexMultiply(inputData2, w)
+
+
+							tempData[outputIndex1] = { x: p1.x + p2.x, y: p1.y + p2.y, z: 0, w: 1 }
+							tempData[outputIndex2] = { x: p1.x - p2.x, y: p1.y - p2.y, z: 0, w: 1 }
+
+
+							inputIndex = inputIndex + 1
+						}
+					}
+
+					row = []
+					tempData.forEach(v => {
+						row.push({ ...v })
+					})
+					tempData = []
+				}
+
+				sharedData[q] = row
+			}
+
+
+			for (let y = 0; y < IMG_SIZE; y++) {
+				for (let x = 0; x < IMG_SIZE; x++) {
+					const item = sharedData[y][x]
+					let index = (x + y * IMG_SIZE) * 4
+					rowData[index] = item[0]
+					rowData[index + 1] = item[1]
+					rowData[index + 2] = item[2]
+					rowData[index + 3] = item[3]
+				}
+			}
+
+
+			console.log(sharedData)
+			console.log(rowData)
+		</script>
+
+
+		<script>
+			let init = async () => {
+				let ele = document.getElementById('shaderSea1')
+				let engine = new BABYLON.WebGPUEngine(ele)
+				await engine.initAsync()
+				let scene = new BABYLON.Scene(engine)
+				scene.useRightHandedSystem = false
+				let camera = new BABYLON.ArcRotateCamera('camera', -Math.PI / 1.5, Math.PI / 2.2, 15, new BABYLON.Vector3(0, 0,
+					0), scene)
+				camera.upperBetaLimit = Math.PI / 2.2
+				camera.wheelPrecision = 1.5
+				camera.panningSensibility = 8
+				camera.attachControl(ele, true)
+				camera.setPosition(new BABYLON.Vector3(0, 560, -560))
+				let light = new BABYLON.HemisphericLight('light', new BABYLON.Vector3(40, 40, 40), scene)
+				light.direction = new BABYLON.Vector3(1.0, 0.0, 1.0)
+				light.diffuse = new BABYLON.Color3(1.0, 0.95, 0.8)
+				engine.runRenderLoop(function() {
+					if (scene && scene.activeCamera) {
+						scene.render()
+					}
+				})
+
+
+				// let textureTest = new BABYLON.RawTexture(fftData, IMG_SIZE, IMG_SIZE, BABYLON.Constants.TEXTUREFORMAT_RGBA,
+				// 	scene, false,
+				// 	false, BABYLON.Constants.TEXTURE_NEAREST_SAMPLINGMODE)
+				// let planeTest = BABYLON.MeshBuilder.CreatePlane('planeTest', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+				// let planeMatTest = new BABYLON.StandardMaterial('planeMatTest', scene)
+				// planeMatTest.diffuseTexture = textureTest
+				// planeTest.material = planeMatTest
+				// planeTest.rotation = new BABYLON.Vector3(Math.PI / 2, 0, 0)
+				
+				
+				
+				
+				let textureRow = new BABYLON.RawTexture(rowData, IMG_SIZE, IMG_SIZE, BABYLON.Constants.TEXTUREFORMAT_RGBA,
+					scene, false,
+					false, BABYLON.Constants.TEXTURE_NEAREST_SAMPLINGMODE)
+				let planeRow = BABYLON.MeshBuilder.CreatePlane('planeRow', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+				let planeMatRow = new BABYLON.StandardMaterial('planeMatRow', scene)
+				planeMatRow.diffuseTexture = textureRow
+				planeRow.material = planeMatRow
+				planeRow.rotation = new BABYLON.Vector3(Math.PI / 2, 0, 0)
+			}
+			init()
+		</script>
+	</body>
+</html>

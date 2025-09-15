@@ -11,7 +11,7 @@
     <div><a target="_blank" href="/math/fft.html">蝶形变换的 W_[N_k]</a></div>
     <div>一、法向量没计算（关系到光的反射、左手坐标系和右手坐标系的叉积计算相反）</div>
     <div>二、泡沫没计算（雅可比行列式）</div>
-    <div>三、存在问题（1：一片漆黑，值太小；2：在使用rgba32float时，能否通过“双纹理”方案来存储和读取？【ProceduralTexture】；3：不可用Uint8Array？【有空继续改】）</div>
+    <div>三、不知道效果是否正确</div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
@@ -257,9 +257,9 @@ const initScene = async () => {
     }
  
     // 衰减因子（减少长波）
-    const l = 0.001 * L
-    const kSqr = dot(K, K)
-    phi *= Math.exp(l * l * -kSqr)
+    // const l = 0.001 * L
+    // const kSqr = dot(K, K)
+    // phi *= Math.exp(l * l * -kSqr)
  
     return phi
   }
@@ -509,7 +509,7 @@ const initScene = async () => {
               var inputData1 = sharedData[inputIndex];
               var inputData2 = sharedData[inputIndex + ${half}u];
 
-              var outputIndex1 = 2u * (inputIndex - (inputIndex % (1u << m)) + (inputIndex % (1u << m)));
+              var outputIndex1 = 2u * (inputIndex - (inputIndex % (1u << m))) + (inputIndex % (1u << m));
               var outputIndex2 = outputIndex1 + step;
 
               var indexW = k * (1u << (${logN}u - m - 1u));
@@ -600,7 +600,7 @@ const initScene = async () => {
               var inputData1 = sharedData[inputIndex];
               var inputData2 = sharedData[inputIndex + ${half}u];
 
-              var outputIndex1 = 2u * (inputIndex - (inputIndex % (1u << m)) + (inputIndex % (1u << m)));
+              var outputIndex1 = 2u * (inputIndex - (inputIndex % (1u << m))) + (inputIndex % (1u << m));
               var outputIndex2 = outputIndex1 + step;
 
               var indexW = k * (1u << (${logN}u - m - 1u));
