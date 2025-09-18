@@ -551,7 +551,7 @@ const initScene = async () => {
     colGround.rotation = new Vector3(Math.PI / 2, 0, 0)
 
 
-    Effect.ShadersStore['seaVertexShader'] = `
+    BABYLON.Effect.ShadersStore['seaVertexShader'] = `
       precision highp float;
       
       attribute vec2 uv;
@@ -566,36 +566,141 @@ const initScene = async () => {
       }
     `
 
-    Effect.ShadersStore['seaFragmentShader'] = `
-      // 类似波浪的使用smoothstep？
-    
-      precision highp float;
+      // 方案一：4 点双线性
+      // precision highp float;
+      // uniform sampler2D uSampler;
+      // uniform float uGridCount;
+      // uniform vec2 uResolution;
       
+      // varying vec2 vUV;
+      
+      // void main() {
+      // 	vec2 uv = vUV;
+        
+      // 	vec4 baseColor = texture(uSampler, uv);
+      // 	vec4 color = baseColor;
+        
+      // 	vec2 pixel = uv * uResolution;
+      // 	vec2 grid = floor(pixel); // 向下取整，即当前index【0 ~ 127】
+      // 	vec2 local = fract(pixel); // 取小数
+        
+      // 	vec4 c00 = texture(uSampler, (grid + vec2(0, 0)) / uResolution);
+      // 	vec4 c10 = texture(uSampler, (grid + vec2(1, 0)) / uResolution);
+      // 	vec4 c01 = texture(uSampler, (grid + vec2(0, 1)) / uResolution);
+      // 	vec4 c11 = texture(uSampler, (grid + vec2(1, 1)) / uResolution);
+        
+      // 	// 使用局部坐标做双线性插值
+      // 	color = mix(mix(c00, c10, local.x), mix(c01, c11, local.x), local.y);
+        
+      // 	gl_FragColor = color;
+      // }
+      
+      // 方案二：用 3×3，但 smoothstep 平滑权重
+      // precision highp float;
+      
+      // uniform sampler2D uSampler;
+      // uniform float uGridCount;
+      // uniform vec2 uResolution;
+      
+      // varying vec2 vUV;
+      
+      // void main() {
+      // 	vec2 uv = vUV;
+      // 	vec2 pixel = uv * uResolution;
+      // 	vec2 grid = floor(pixel);
+      // 	vec2 local = fract(pixel); // 当前像素在格子内的局部坐标 [0,1]
+              
+      // 	vec4 sum = vec4(0.0);
+      // 	float totalWeight = 0.0;
+              
+      // 	// 3×3 邻域
+      // 	for (int dy = -1; dy <= 1; dy++) {
+      // 		for (int dx = -1; dx <= 1; dx++) {
+      // 			ivec2 neighbor = ivec2(grid) + ivec2(dx, dy);
+          
+      // 			// 边界 clamp
+      // 			neighbor = clamp(neighbor, ivec2(0), ivec2(int(uGridCount) - 1));
+          
+      // 			// vec4 texelFetch(sampler2D sampler, ivec2 coords, int lod);
+      // 			// coords 是 整数坐标，从 (0, 0) 到 (width-1, height-1)
+      // 			// lod 是 mipmap 层级，通常为 0
+      // 			// webgpu的textureSampleLevel
+      // 			vec4 color = texelFetch(uSampler, neighbor, 0);
+          
+      // 			// 距离权重（中心为1，边缘递减）
+      // 			vec2 offset = vec2(dx, dy) + (0.5 - local); // 偏移到局部坐标系
+      // 			float dist = length(offset);
+      // 			float w = smoothstep(1.5, 0.0, dist);   // 0 外缘  1 中心
+      // 			sum += color * w;
+      // 		}
+      // 	}
+              
+      // 	vec4 color = sum / totalWeight;
+      // 	gl_FragColor = color;
+      // }
+      
+    BABYLON.Effect.ShadersStore['seaFragmentShader'] = `
+      // 方案三： 5×5 高阶 B-spline 核
+      precision highp float;
+
       uniform sampler2D uSampler;
       uniform float uGridCount;
       uniform vec2 uResolution;
       
       varying vec2 vUV;
       
+      // 一维三次 B-spline 核
+      // k(x) = 1/6*( (x+2)^3 - 4*(x+1)^3 + 6*x^3 - 4*(x-1)^3 )  当 |x|<2
+      // 下面把 1/6 提前乘了，返回 4 个权重
+      // ---------------------
+      // 三次 B-spline 的数学表达式
+      // k(x) = 1/6 · [ (x+2)³ - 4(x+1)³ + 6x³ - 4(x-1)³ ]
+      // 支撑域 x∈[-2,2]，共 4 格。
+      // 把 x 轴平移 +2，使 t=0 对应核最左边，t=1 对应核最右边，于是
+      // v = {x, x-1, x-2, x-3} 正好给出 4 个整数偏移 处的权重值
+      // ---------------------
+      // clamp 是为了防止数值溢出，后面按公式算出 4 个权重，总和为 1（常数重构性）
+      // 返回的 vec4 就是
+      // wx = [w-1, w0, w1, w2]
+      // 对应 左二、左一、右一、右二 四个像素对当前点的贡献权重
+      vec4 bSplineWeights(float t) { // t 在 [0,1]
+        float x = t + 2.0; // 向左平移，方便计算
+        vec4 v = vec4(x, x-1.0, x-2.0, x-3.0);
+        v = clamp(v, 0.0, 4.0);
+        vec4 k = (v*v*v) - 4.0*clamp(v-1.0,0.0,4.0)*clamp(v-1.0,0.0,4.0)*clamp(v-1.0,0.0,4.0)
+                + 6.0*clamp(v-2.0,0.0,4.0)*clamp(v-2.0,0.0,4.0)*clamp(v-2.0,0.0,4.0)
+                - 4.0*clamp(v-3.0,0.0,4.0)*clamp(v-3.0,0.0,4.0)*clamp(v-3.0,0.0,4.0);
+        return k * (1.0/6.0);
+      }
+      
       void main() {
         vec2 uv = vUV;
-        
-        vec4 baseColor = texture(uSampler, uv);
-        vec4 color = baseColor;
-        
-        vec2 pixel = uv * uResolution;
-        vec2 grid = floor(pixel); // 向下取整，即当前index【0 ~ 127】
-        vec2 local = fract(pixel); // 取小数
-        
-        vec4 c00 = texture(uSampler, (grid + vec2(0, 0)) / uResolution);
-        vec4 c10 = texture(uSampler, (grid + vec2(1, 0)) / uResolution);
-        vec4 c01 = texture(uSampler, (grid + vec2(0, 1)) / uResolution);
-        vec4 c11 = texture(uSampler, (grid + vec2(1, 1)) / uResolution);
-        
-        // 使用局部坐标做双线性插值
-        color = mix(mix(c00, c10, local.x), mix(c01, c11, local.x), local.y);
-        
-        gl_FragColor = color;
+        vec2 pix = uv * uResolution; // 转到像素坐标
+        vec2 base = floor(pix - 0.5) + 0.5; // 采样中心对齐到像素中心
+        vec2 f = pix - base; // 局部偏移 [-0.5,0.5] → 映射到 [0,1]
+    
+        // 预计算 1D 权重，计算两个方向的 1D 权重
+        // f.x∈[−0.5,0.5] → 加 1 后正好落在 [0.5,1.5]，覆盖核支撑域
+        vec4 wx = bSplineWeights(f.x + 1.0);  // 因为核支持 [-2,2]，这里把 t 平移
+        vec4 wy = bSplineWeights(f.y + 1.0);
+
+        // 4×4 高斯-赛德尔累加
+        ivec2 g0 = ivec2(base) + ivec2(-1, -1); // 左上角起始
+    
+        // 循环 dx=0…3, dy=0…3 → 对应 以 g0 为起点的 4×4 邻域（就是 5×5 区域里真正有用的 16 个 texel）
+        vec4 sum = vec4(0.0);
+        for(int dy = 0; dy < 4; dy ++){
+          vec4 row = vec4(0.0);
+
+          // 先沿 x 方向累加出 4 条「扫描线」结果，再沿 y 方向把这 4 条线按 wy 混合——** separable 2D 卷积**
+          // 复杂度 O(4+4) 而不是 O(16)
+          for(int dx = 0; dx < 4; dx ++){
+            ivec2 tc = clamp(g0 + ivec2(dx, dy), ivec2(0), ivec2(int(uGridCount) - 1));
+            row += texelFetch(uSampler, tc, 0) * wx[dx];
+          }
+          sum += row * wy[dy];
+        }
+        gl_FragColor = sum;
       }
     `
     
