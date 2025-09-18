@@ -83,13 +83,13 @@
 						kNorm = normalize(k);
 					}
 					let wNorm = normalize(windDir);
-					let dotNormKW = dot(kNorm, wNorm);
+					let dotByKnormWnorm = dot(kNorm, wNorm);
 					
 					var phi = A * exp(-1.0 / (kLen2 * L2)) / kLen4; // 基础 Phillips 谱
 					
-					phi *= dotNormKW * dotNormKW; // 风向对齐项
+					phi *= dotByKnormWnorm * dotByKnormWnorm; // 风向对齐项
 					
-					if (dotNormKW > 0.0) { // 仅保留与风向同方向的波
+					if (dotByKnormWnorm > 0.0) { // 仅保留与风向同方向的波
 						phi *= windV;
 					}
 					
@@ -330,11 +330,13 @@
 					// 使用 clamp 函数，将值限制在 [0, 1] 范围内
 					// var color = vec4<f32>(clamp(sharedData[global_id.y].r, 0.0, 1.0), clamp(sharedData[global_id.y].g, 0.0, 1.0), 0.0, 1.0);
 					var color = vec4<f32>(sharedData[global_id.y].r, sharedData[global_id.y].g, 0.0, 1.0);
+					// var color = vec4<f32>(sharedData[global_id.y].r, 0.0, 0.0, 1.0);
 				
 					textureStore(colTexture, vec2<i32>(global_id.xy), color);
 				}
 			`
 		</script>
+
 
 		<script>
 			let init = async () => {
@@ -349,7 +351,7 @@
 				camera.wheelPrecision = 1.5
 				camera.panningSensibility = 8
 				camera.attachControl(ele, true)
-				camera.setPosition(new BABYLON.Vector3(0, 560, -560))
+				camera.setPosition(new BABYLON.Vector3(0, IMG_SIZE, -IMG_SIZE))
 				let light = new BABYLON.HemisphericLight('light', new BABYLON.Vector3(40, 40, 40), scene)
 				light.direction = new BABYLON.Vector3(1.0, 0.0, 1.0)
 				light.diffuse = new BABYLON.Color3(1.0, 0.95, 0.8)
@@ -377,7 +379,6 @@
 
 				// phillips 相关
 				let phillips = BABYLON.MeshBuilder.CreatePlane('phillips', { width: IMG_SIZE, height: IMG_SIZE }, scene)
-
 				let phillipsTexture = BABYLON.RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false,
 					false,
 					BABYLON.Texture.NEAREST_SAMPLINGMODE, BABYLON.Constants.TEXTURETYPE_HALF_FLOAT)
@@ -395,7 +396,7 @@
 				let phillipsMat = new BABYLON.StandardMaterial('phillipsMat', scene)
 				phillipsMat.diffuseTexture = phillipsTexture
 				phillips.material = phillipsMat
-				phillips.position = new BABYLON.Vector3(-IMG_SIZE - 20, 0, 0)
+				phillips.position = new BABYLON.Vector3(-IMG_SIZE - 20, 0, -IMG_SIZE - 20)
 				phillips.rotation = new BABYLON.Vector3(Math.PI / 2, 0, 0)
 
 
@@ -421,7 +422,7 @@
 				let rowMat = new BABYLON.StandardMaterial('rowMat', scene)
 				rowMat.diffuseTexture = rowTexture
 				rowGround.material = rowMat
-				rowGround.position = new BABYLON.Vector3(0, 0, 0)
+				rowGround.position = new BABYLON.Vector3(0, 0, -IMG_SIZE - 20)
 				rowGround.rotation = new BABYLON.Vector3(Math.PI / 2, 0, 0)
 
 
@@ -447,29 +448,108 @@
 				let colMat = new BABYLON.StandardMaterial('colMat', scene)
 				colMat.diffuseTexture = colTexture
 				colGround.material = colMat
-				colGround.position = new BABYLON.Vector3(IMG_SIZE + 20, 0, 0)
+				colGround.position = new BABYLON.Vector3(IMG_SIZE + 20, 0, -IMG_SIZE - 20)
 				colGround.rotation = new BABYLON.Vector3(Math.PI / 2, 0, 0)
+
+
+
+
+
+				BABYLON.Effect.ShadersStore['seaVertexShader'] = `
+					precision highp float;
+					
+					attribute vec2 uv;
+					attribute vec3 position;
+					uniform mat4 worldViewProjection;
+					
+					varying vec2 vUV;
+			
+					void main(void) {
+						vUV = uv;
+						gl_Position = worldViewProjection * vec4(position, 1.0);
+					}
+				`
+
+				BABYLON.Effect.ShadersStore['seaFragmentShader'] = `
+					// 类似波浪的使用smoothstep？
+				
+					precision highp float;
+					
+					uniform sampler2D uSampler;
+					uniform float uGridCount;
+					uniform vec2 uResolution;
+					
+					varying vec2 vUV;
+					
+					void main() {
+						vec2 uv = vUV;
+						
+						vec4 baseColor = texture(uSampler, uv);
+						vec4 color = baseColor;
+						
+						vec2 pixel = uv * uResolution;
+						vec2 grid = floor(pixel); // 向下取整，即当前index【0 ~ 127】
+						vec2 local = fract(pixel); // 取小数
+						
+						vec4 c00 = texture(uSampler, (grid + vec2(0, 0)) / uResolution);
+						vec4 c10 = texture(uSampler, (grid + vec2(1, 0)) / uResolution);
+						vec4 c01 = texture(uSampler, (grid + vec2(0, 1)) / uResolution);
+						vec4 c11 = texture(uSampler, (grid + vec2(1, 1)) / uResolution);
+						
+						// 使用局部坐标做双线性插值
+						color = mix(mix(c00, c10, local.x), mix(c01, c11, local.x), local.y);
+						
+						gl_FragColor = color;
+					}
+				`
+				
+				
+				const material = new BABYLON.ShaderMaterial(
+					'sea',
+					scene, {
+						vertex: 'sea',
+						fragment: 'sea'
+					}, {
+						attributes: ['position', 'uv'],
+						uniforms: ['worldViewProjection', 'uSampler', 'uGridCount', 'uResolution'],
+						samplers: ['uSampler'],
+					}
+				)
+
+				const test = BABYLON.MeshBuilder.CreateGround('test', {
+					width: IMG_SIZE,
+					height: IMG_SIZE,
+					subdivisions: IMG_SIZE
+				}, scene)
+				test.material = material
+				test.position = new BABYLON.Vector3(0, 0, 0)
+				material.setFloat('uGridCount', IMG_SIZE)
+				material.setVector2('uResolution', new BABYLON.Vector2(IMG_SIZE, IMG_SIZE))
+				material.setTexture('uSampler', colTexture)
+
+
+
 
 				console.log('wData', wData)
 				let a = 0
 
 				scene.registerBeforeRender(async () => {
 					a++
-					uTime += 0.02
+					uTime += 0.01
 					uniformBuffer.updateFloat('uTime', uTime)
 					uniformBuffer.update()
 
 					shaderPhillips.setUniformBuffer('uTime', uniformBuffer)
 
 					// 计算 Phillips 纹理
-					await shaderPhillips.dispatchWhenReady(phillipsTexture.getSize().width / 8, phillipsTexture.getSize()
-						.height / 8, 1)
+					await shaderPhillips.dispatchWhenReady(IMG_SIZE / 8, IMG_SIZE / 8, 1)
 
 					// 计算 row 纹理
 					await shaderRow.dispatchWhenReady(IMG_SIZE / workGroupSizeRowX, IMG_SIZE / workGroupSizeRowY, 1)
 
 					// 计算 col 纹理
 					await shaderCol.dispatchWhenReady(IMG_SIZE / workGroupSizeColX, IMG_SIZE / workGroupSizeColY, 1)
+
 
 					// if (a > 12 && a < 14) {
 					// 	const pixels = await phillipsTexture.readPixels()

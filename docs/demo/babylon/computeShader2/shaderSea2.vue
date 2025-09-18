@@ -20,6 +20,7 @@ import {
   Color4,
   ArcRotateCamera,
   Vector3,
+  Vector2,
   Color3,
   StandardMaterial,
   RawTexture,
@@ -549,8 +550,80 @@ const initScene = async () => {
     colGround.position = new Vector3(IMG_SIZE + 20, 0, 0)
     colGround.rotation = new Vector3(Math.PI / 2, 0, 0)
 
-    let add = 0
 
+    Effect.ShadersStore['seaVertexShader'] = `
+      precision highp float;
+      
+      attribute vec2 uv;
+      attribute vec3 position;
+      uniform mat4 worldViewProjection;
+      
+      varying vec2 vUV;
+  
+      void main(void) {
+        vUV = uv;
+        gl_Position = worldViewProjection * vec4(position, 1.0);
+      }
+    `
+
+    Effect.ShadersStore['seaFragmentShader'] = `
+      // 类似波浪的使用smoothstep？
+    
+      precision highp float;
+      
+      uniform sampler2D uSampler;
+      uniform float uGridCount;
+      uniform vec2 uResolution;
+      
+      varying vec2 vUV;
+      
+      void main() {
+        vec2 uv = vUV;
+        
+        vec4 baseColor = texture(uSampler, uv);
+        vec4 color = baseColor;
+        
+        vec2 pixel = uv * uResolution;
+        vec2 grid = floor(pixel); // 向下取整，即当前index【0 ~ 127】
+        vec2 local = fract(pixel); // 取小数
+        
+        vec4 c00 = texture(uSampler, (grid + vec2(0, 0)) / uResolution);
+        vec4 c10 = texture(uSampler, (grid + vec2(1, 0)) / uResolution);
+        vec4 c01 = texture(uSampler, (grid + vec2(0, 1)) / uResolution);
+        vec4 c11 = texture(uSampler, (grid + vec2(1, 1)) / uResolution);
+        
+        // 使用局部坐标做双线性插值
+        color = mix(mix(c00, c10, local.x), mix(c01, c11, local.x), local.y);
+        
+        gl_FragColor = color;
+      }
+    `
+    
+    
+    const material = new ShaderMaterial(
+      'sea',
+      scene, {
+        vertex: 'sea',
+        fragment: 'sea'
+      }, {
+        attributes: ['position', 'uv'],
+        uniforms: ['worldViewProjection', 'uSampler', 'uGridCount', 'uResolution'],
+        samplers: ['uSampler'],
+      }
+    )
+
+    const sea = MeshBuilder.CreateGround('sea', {
+      width: IMG_SIZE,
+      height: IMG_SIZE,
+      subdivisions: IMG_SIZE
+    }, scene)
+    sea.material = material
+    sea.position = new Vector3(IMG_SIZE + 20, 0, IMG_SIZE + 20)
+    material.setFloat('uGridCount', IMG_SIZE)
+    material.setVector2('uResolution', new Vector2(IMG_SIZE, IMG_SIZE))
+    material.setTexture('uSampler', colTexture)
+
+    let add = 0
 
     scene.registerBeforeRender(async () => {
       add++

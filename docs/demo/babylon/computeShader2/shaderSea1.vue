@@ -11,7 +11,7 @@
     <div><a target="_blank" href="/math/fft.html">蝶形变换的 W_[N_k]</a></div>
     <div>一、法向量没计算（关系到光的反射、左手坐标系和右手坐标系的叉积计算相反）</div>
     <div>二、泡沫没计算（雅可比行列式）</div>
-    <div>三、不知道效果是否正确</div>
+    <div>三、不知道效果是否正确（phillips使用ShaderMaterial试试？）</div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
