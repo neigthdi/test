@@ -323,7 +323,7 @@
         // shaderRow.setTexture('src', srcTexture)
         // shaderRow.setStorageTexture('dest', texRow)
         await shaderRow.dispatchWhenReady(imgSize / workGroupSizeRowX, imgSize / workGroupSizeRowY, 1)
-        // shaderRow.dispatchW(imgSize / workGroupSizeRowX, imgSize / workGroupSizeRowY, 1)
+        // shaderRow.dispatch(imgSize / workGroupSizeRowX, imgSize / workGroupSizeRowY, 1)
 
         // shaderCol.setTexture('src', texRow)
         // shaderCol.setStorageTexture('dest', texCol)
