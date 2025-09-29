@@ -10,6 +10,7 @@
       <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/64726720">fft海面模拟(二)</a></div>
       <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/65156063">fft海面模拟(三)</a></div>
       <div><a target="_blank" href="https://zhuanlan.zhihu.com/p/208511211">详尽的快速傅里叶变换推导</a></div>
+      <div><a target="_blank" href="https://blog.csdn.net/qq_45523399/article/details/127876812">实现FFT海洋</a></div>
       <div><a target="_blank" href="/math/fft.html">蝶形变换的 W_[N_k]</a></div>
       <div>Phillips计算（<span class="color-blue">完成</span>）</div>
       <div>逆row计算（<span class="color-blue">完成</span>）</div>
@@ -844,7 +845,7 @@ const initScene = async () => {
           }
 
           float smoothedHeight = heightSum / kernelSum;
-          pos.y = smoothedHeight * 20.0;
+          pos.y = smoothedHeight * 40.0;
 
           vec4 x = texture2D(displacementX, uv);
           vec4 z = texture2D(displacementZ, uv);
@@ -892,7 +893,7 @@ const initScene = async () => {
             heightSum += hSample.x * weights[i];
           }
 
-          float smoothedHeight = heightSum / kernelSum;
+          float smoothedHeight = heightSum / kernelSum * 10.0;
           
           vec3 deepWaterColor = vec3(0.0, 0.549, 0.996); // 海水的深蓝色
           vec3 shallowWaterColor = vec3(0.3, 0.7, 1.0); // 天空的浅天蓝色
