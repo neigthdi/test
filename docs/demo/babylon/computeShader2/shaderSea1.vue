@@ -14,7 +14,8 @@
       <div>Phillips计算（<span class="color-blue">完成</span>）</div>
       <div>逆row计算（<span class="color-blue">完成</span>）</div>
       <div>逆col计算（<span class="color-blue">完成</span>）</div>
-      <div>shaderMaterial--海浪高度、位移【col计算完毕，点都是离散的，要如何操作才能变成连续的灰度色值】（<span class="color-red">未完成</span>）</div>
+      <div>shaderMaterial--海浪高度、位移【col计算完毕，点都是离散的，要如何操作才能变成连续的灰度色值，是分别对h、x、z求导？】（<span class="color-red">未完成</span>）</div>
+      <div>按照风向的移动（<span class="color-red">未完成</span>）</div>
       <div>光照法线（<span class="color-red">未完成</span>）</div>
       <div>泡沫--雅可比行列式算（<span class="color-red">未完成</span>）</div>
     </div>
@@ -97,9 +98,10 @@ let wData = new Float32Array(IMG_SIZE * 4)
 let wInverseData = new Float32Array(IMG_SIZE * 4)
 
 const codeTexturePhillips = () => {
-  return`
+  return `
     const TWO_PI: f32 = 6.283185307179586;
-								
+    const PI: f32 = 3.14159265359;
+          
     // 复数乘法
     fn complexMultiply(a: vec2<f32>, b: vec2<f32>) -> vec2<f32> {
       var result: vec2<f32>;
@@ -131,6 +133,31 @@ const codeTexturePhillips = () => {
       return vec2<f32>(mag * cos(ang), mag * sin(ang));
     }
     
+    fn donelanBannerDirectionalSpreading(k: vec2<f32>) -> f32 {
+      let kLen = length(k);
+      if(kLen < 1e-6) { return 0.0; } // 排除 k=0
+      
+      let G = 9.8;
+      var wind = vec2<f32>(1.0, -1.0);
+      var betaS = 0.0;
+      var omega = 0.855 * G / length(wind);
+      var ratio = dispersion(k) / omega;
+      
+      // 计算 betaS（方向分布参数）
+      if (ratio < 0.95) {
+        betaS = 2.61 * pow(ratio, 1.3);
+      } else if (ratio < 1.6) {
+        betaS = 2.28 * pow(ratio, -1.3);
+      } else {
+        var  epsilon = -0.4 + 0.8393 * exp(-0.567 * log(ratio * ratio));
+        betaS = pow(10.0, epsilon);
+      }
+      
+      var theta = atan2(k.y, k.x) - atan2(wind.y, wind.x);
+      
+      return  betaS / max(1e-7, 2.0 * tanh(betaS * PI) * pow(cosh(betaS * theta), 2.0));
+    }
+    
     // phillips图谱
     fn phillips(k: vec2<f32>) -> f32 {
       let kLen = length(k);
@@ -146,11 +173,10 @@ const codeTexturePhillips = () => {
       let L = windSpeed * windSpeed / G; // 最大波长
       let L2 = L * L;
       
-      
       // 基础 Phillips
       var P = A * exp(-1.0 / (kLen2 * L2)) / kLen4;
       
-      // 方向锁定  cos²θ
+      // 方向锁定 cos²θ
       let cosTheta = (dot(normalize(k), windDir));
       
       P *= cosTheta * cosTheta;
@@ -176,23 +202,27 @@ const codeTexturePhillips = () => {
       let gaussValue2 = gauss(vec2<f32>(x + 1.4142, y + 1.7321));
       
       let size = f32(${IMG_SIZE});
-      let nx = x - size * 0.5;
-      let ny = y - size * 0.5;
       
-      let k = vec2<f32>(TWO_PI * nx / size, TWO_PI * ny / size);
+      // 都是为了平移到中间
+      // let nx = x - size * 0.5;
+      // let ny = y - size * 0.5;
+      // let k = vec2<f32>(TWO_PI * nx / size, TWO_PI * ny / size);
       
-      var h0k = vec2<f32>(gaussValue1 * sqrt(phillips(k) * 0.5));
-      var h0kConj = vec2<f32>(gaussValue2 * sqrt(phillips(-k) * 0.5));
+      let k = vec2<f32>(TWO_PI * x / size - PI, TWO_PI * y / size - PI);
+      
+      var h0k = vec2<f32>(gaussValue1 * sqrt(abs(phillips(k) * donelanBannerDirectionalSpreading(k)) * 0.5));
+      var h0kConj = vec2<f32>(gaussValue2 * sqrt(abs(phillips(-k) * donelanBannerDirectionalSpreading(-k)) * 0.5));
       h0kConj.y *= -1.0;
       
-      let omega = dispersion(k) * uTime;
+      var time = uTime;
+      let omega = dispersion(k) * time;
       let c = cos(omega);
       let s = sin(omega);
       
       let h1 = complexMultiply(h0k, vec2<f32>(c, s));
       let h2 = complexMultiply(h0kConj, vec2<f32>(c, -s));
       
-      let hTildeY = vec2<f32>(h1.x + h2.x, h1.y + h2.y); // 这个是y的
+      let hTildeY = vec2<f32>(h1 + h2); // 这个是y的
       
       // 下面是计算x和z的
       var hTildeX = vec2<f32>(0.0);
@@ -208,7 +238,7 @@ const codeTexturePhillips = () => {
       textureStore(phillipsTextureX, vec2<i32>(global_id.xy), vec4<f32>(hTildeX.r, hTildeX.g, 0.0, 1.0));
       textureStore(phillipsTextureZ, vec2<i32>(global_id.xy), vec4<f32>(hTildeZ.r, hTildeZ.g, 0.0, 1.0));
     }
-    `
+  `
   }
 
 const codeRow = (isInverse) => {
@@ -267,7 +297,6 @@ const codeRow = (isInverse) => {
       sharedDataZ[local_id.x] = textureLoad(phillipsTextureZ, vec2<i32>(i32(local_id.x), i32(global_id.y)), 0);
       
       workgroupBarrier(); // 确保写入
-    
       
       // 开始计算
       for (var m = 0u; m < ${logN}u; m++) {
@@ -286,6 +315,7 @@ const codeRow = (isInverse) => {
         var kFor = blockSize / 2u;
     
         for (var n = 0u; n < blockNum; n++) {
+          workgroupBarrier(); // 确保所有运算完成
           for(var k = 0u; k < kFor; k++) {
             var inputDataY1 = sharedDataY[inputIndex];
             var inputDataY2 = sharedDataY[inputIndex + ${half}u];
@@ -405,7 +435,6 @@ const codeCol = (isInverse) => {
       
       workgroupBarrier(); // 确保写入
     
-    
       // 开始计算
       for (var m = 0u; m < ${logN}u; m++) {
         workgroupBarrier(); // 确保所有线程完成上一轮数据写入
@@ -423,6 +452,7 @@ const codeCol = (isInverse) => {
         var kFor = blockSize / 2u;
     
         for (var n = 0u; n < blockNum; n++) {
+          workgroupBarrier(); // 确保所有运算完成
           for(var k = 0u; k < kFor; k++) {
             var inputDataY1 = sharedDataY[inputIndex];
             var inputDataY2 = sharedDataY[inputIndex + ${half}u];
@@ -478,9 +508,9 @@ const codeCol = (isInverse) => {
       let outX = sharedDataX[local_id.y] * scale;
       let outZ = sharedDataZ[local_id.y] * scale;
       
-      textureStore(colTextureY, vec2<i32>(i32(global_id.x), i32(local_id.y)), vec4<f32>(outY.x, outY.y, 0.0, 1.0));
-      textureStore(colTextureX, vec2<i32>(i32(global_id.x), i32(local_id.y)), vec4<f32>(outX.x, outX.y, 0.0, 1.0));
-      textureStore(colTextureZ, vec2<i32>(i32(global_id.x), i32(local_id.y)), vec4<f32>(outZ.x, outZ.y, 0.0, 1.0));
+      textureStore(colTextureY, vec2<i32>(i32(global_id.x), i32(global_id.y)), vec4<f32>(outY.x, outY.y, 0.0, 1.0));
+      textureStore(colTextureX, vec2<i32>(i32(global_id.x), i32(global_id.y)), vec4<f32>(outX.x, outX.y, 0.0, 1.0));
+      textureStore(colTextureZ, vec2<i32>(i32(global_id.x), i32(global_id.y)), vec4<f32>(outZ.x, outZ.y, 0.0, 1.0));
     }
   `
 }
@@ -771,68 +801,131 @@ const initScene = async () => {
 
         attribute vec3 position;
         attribute vec2 uv;
-        
+
         uniform mat4 worldViewProjection;
         uniform sampler2D heightMap;
         uniform sampler2D displacementX;
         uniform sampler2D displacementZ;
         uniform float uGridCount;
+        uniform float uEnergyScale;
 
         varying vec3 vColor;
         varying vec2 vUv;
-        
+
         void main() {
           vUv = uv;
-          
-          vec4 h = texture2D(heightMap, uv);
+
+          vec3 pos = position;
+
+          float sigma = 1.0;
+          vec2 offsets[25];
+          for (int i = -2; i <= 2; ++i) {
+            for (int j = -2; j <= 2; ++j) {
+              offsets[(i + 2) * 5 + (j + 2)] = vec2(i, j);
+            }
+          }
+
+          float weights[25];
+          for (int i = 0; i < 25; ++i) {
+            float x = offsets[i].x;
+            float y = offsets[i].y;
+            weights[i] = exp(-(x * x + y * y) / (2.0 * sigma * sigma));
+          }
+
+          float kernelSum = 0.0;
+          float heightSum = 0.0;
+          vec2 texSize = textureSize(heightMap, 0);
+
+          for (int i = 0; i < 25; ++i) {
+            vec2 offset = offsets[i] / texSize;
+            vec4 hSample = texture2D(heightMap, uv + offset) * uEnergyScale;
+            kernelSum += weights[i];
+            heightSum += hSample.x * weights[i];
+          }
+
+          float smoothedHeight = heightSum / kernelSum;
+          pos.y = smoothedHeight * 20.0;
+
           vec4 x = texture2D(displacementX, uv);
           vec4 z = texture2D(displacementZ, uv);
-          vec3 pos = position;
-          // pos.y += length(h.xy) * 128.0;
-          // pos.x += length(x.xy) * 128.0;
-          // pos.z += length(z.xy) * 128.0;
-          
+          pos.x += x.x * uEnergyScale;
+          pos.z += z.x * uEnergyScale;
+
           gl_Position = worldViewProjection * vec4(pos, 1.0);
         }
       `,
       fragmentSource: `
         precision highp float;
-        
+
         uniform sampler2D heightMap;
-        
+        uniform float uEnergyScale;
+        uniform float uGridCount;
+
         varying vec3 vColor;
         varying vec2 vUv;
 
         void main(){
-          vec4 h = texture2D(heightMap, vUv);
-          float r = length(h.xy) * 128.0;
-          gl_FragColor = vec4(r, 0.0, 0.0, 1.0);
+          // 高斯滤波的核
+          float sigma = 1.0;
+          vec2 offsets[25];
+          for (int i = -2; i <= 2; ++i) {
+            for (int j = -2; j <= 2; ++j) {
+              offsets[(i + 2) * 5 + (j + 2)] = vec2(i, j);
+            }
+          }
+
+          float weights[25];
+          for (int i = 0; i < 25; ++i) {
+            float x = offsets[i].x;
+            float y = offsets[i].y;
+            weights[i] = exp(-(x * x + y * y) / (2.0 * sigma * sigma));
+          }
+
+          float kernelSum = 0.0;
+          float heightSum = 0.0;
+          vec2 texSize = textureSize(heightMap, 0);
+
+          for (int i = 0; i < 25; ++i) {
+            vec2 offset = offsets[i] / texSize;
+            vec4 hSample = texture2D(heightMap, vUv + offset) * uEnergyScale;
+            kernelSum += weights[i];
+            heightSum += hSample.x * weights[i];
+          }
+
+          float smoothedHeight = heightSum / kernelSum;
+          
+          vec3 deepWaterColor = vec3(0.0, 0.549, 0.996); // 海水的深蓝色
+          vec3 shallowWaterColor = vec3(0.3, 0.7, 1.0); // 天空的浅天蓝色
+          float depthFactor = clamp(smoothedHeight, 0.0, 1.0);
+          vec3 waterColor = mix(deepWaterColor, shallowWaterColor, depthFactor);
+          // gl_FragColor = vec4(waterColor, 1.0);
+          gl_FragColor = vec4(smoothedHeight, smoothedHeight, smoothedHeight, 1.0);
         }
       `
     }, {
       attributes: ['position', 'uv'],
-      uniforms: ['worldViewProjection', 'heightMap', 'displacementX', 'displacementZ', 'uGridCount'],
+      uniforms: ['worldViewProjection', 'heightMap', 'displacementX', 'displacementZ', 'uGridCount', 'uEnergyScale'],
       samplers: ['heightMap', 'displacementZ', 'displacementX'],
     })
     oceanMat.setTexture('heightMap', colTextureInverseY)
     oceanMat.setTexture('displacementX', colTextureInverseX)
     oceanMat.setTexture('displacementZ', colTextureInverseZ)
     oceanMat.setFloat('uGridCount', IMG_SIZE)
-    // 创建一张 IMG_SIZE * 2, 的平面（细分必须 = 纹理分辨率）
+    oceanMat.setFloat('uEnergyScale', IMG_SIZE)
+    const oceanSize = 1024
     const ocean = MeshBuilder.CreateGround('ocean', {
-      width: IMG_SIZE * 1,
-      height: IMG_SIZE * 1,
+      width: oceanSize,
+      height: oceanSize,
       subdivisions: IMG_SIZE - 1
     }, scene)
     ocean.material = oceanMat
-    ocean.position = new Vector3(0, 20, 0)
- 
+    ocean.position = new Vector3(0, 0, oceanSize * 0.75)
 
 
 
 
     scene.registerBeforeRender(async () => {
-      uTime += 0.02
+      uTime += 0.005
       uniformBuffer.updateFloat('uTime', uTime)
       uniformBuffer.update()
 
