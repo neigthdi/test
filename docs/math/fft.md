@@ -1,3 +1,5 @@
+## 正fft算法
+······
 复数乘法
 ```javascript
 (a+bi)×(c+di) = ac + adi + bci + bdi^2
@@ -322,4 +324,245 @@ console.log(OutputData)
 //       "y": -9.6568
 //   }
 // ]
+```
+```javascript
+let list = []
+
+function complexMultiply(a, b) {
+  return {
+    x: a.x * b.x - a.y * b.y, // 实部
+    y: a.x * b.y + a.y * b.x // 虚部
+  }
+}
+
+function complexAdd(a, b) {
+  return {
+    x: a.x + b.x, // 实部
+    y: a.y + b.y // 虚部
+  }
+}
+
+function complexSubtraction(a, b) {
+  return {
+    x: a.x - b.x, // 实部
+    y: a.y - b.y // 虚部
+  }
+}
+list = [
+  18.981624193185777,
+  21.72065757030428,
+  16.447474387356934,
+  22.993932387133217,
+  18.106364793791336,
+  13.05106293427047,
+  15.893983477237896,
+  19.42478727038987,
+  17.166599707321495,
+  9.866400314345183,
+  7.59787385910128,
+  14.567197303499817,
+  14.70930597077771,
+  7.896936476775536,
+  12.900951861540339,
+  7.4406024047751345,
+  18.981624193185777,
+  21.72065757030428,
+  16.447474387356934,
+  22.993932387133217,
+  18.106364793791336,
+  13.05106293427047,
+  15.893983477237896,
+  19.42478727038987,
+  17.166599707321495,
+  9.866400314345183,
+  7.59787385910128,
+  14.567197303499817,
+  14.70930597077771,
+  7.896936476775536,
+  12.900951861540339,
+  7.4406024047751345
+]
+let size = list.length
+let OutputData = []
+let logRes = Math.log2(size)
+let tempArray = new Array(size)
+let dataW = []
+let half = size / 2
+
+for (let i = 0; i < size; i++) {
+  OutputData.push({
+    x: list[i],
+    y: 0
+  })
+
+  let angle = (2 * Math.PI * i) / size
+  let rePositiveInverse = Math.cos(angle)
+  let imPositiveInverse = -Math.sin(angle)
+  dataW.push({
+    x: rePositiveInverse,
+    y: imPositiveInverse
+  })
+}
+
+
+for (var m = 0; m < logRes; m++) {
+
+  var indexIn = 0
+  var step = 1 << m
+  var blockSize = 1 << (m + 1)
+  var blockNum = size / blockSize
+  var kFor = blockSize / 2
+
+  for (var n = 0; n < blockNum; n++) {
+    for (var k = 0; k < kFor; k++) {
+      var inputData1 = OutputData[indexIn]
+      var inputData2 = OutputData[indexIn + half]
+
+      var outputIndex1 = 2 * (indexIn - (indexIn % Math.pow(2, m))) + (indexIn % Math.pow(2, m))
+      var outputIndex2 = outputIndex1 + step
+
+      var indexW = k * (1 << (logRes - m - 1))
+      var w = dataW[indexW]
+      var p1 = inputData1
+      var p2 = complexMultiply(inputData2, w)
+
+      tempArray[outputIndex1] = complexAdd(p1, p2)
+      tempArray[outputIndex2] = complexSubtraction(p1, p2)
+
+      indexIn++
+    }
+  }
+  OutputData = []
+  for(let i =0 ;i<size;i++){
+    OutputData.push({...tempArray[i]})
+  }
+  tempArray = []
+}
+
+console.log(OutputData)
+```
+
+## 逆fft算法
+```javascript
+// 逆fft需要修改
+// 1、旋转因子
+// 2、归一化，即for (let i = 0; i < size; i++) { OutputData[i].x /= size; OutputData[i].y /= size; }
+let list = []
+
+function complexMultiply(a, b) {
+  return {
+    x: a.x * b.x - a.y * b.y, // 实部
+    y: a.x * b.y + a.y * b.x // 虚部
+  }
+}
+
+function complexAdd(a, b) {
+  return {
+    x: a.x + b.x, // 实部
+    y: a.y + b.y // 虚部
+  }
+}
+
+function complexSubtraction(a, b) {
+  return {
+    x: a.x - b.x, // 实部
+    y: a.y - b.y // 虚部
+  }
+}
+list = [
+  18.981624193185777,
+  21.72065757030428,
+  16.447474387356934,
+  22.993932387133217,
+  18.106364793791336,
+  13.05106293427047,
+  15.893983477237896,
+  19.42478727038987,
+  17.166599707321495,
+  9.866400314345183,
+  7.59787385910128,
+  14.567197303499817,
+  14.70930597077771,
+  7.896936476775536,
+  12.900951861540339,
+  7.4406024047751345,
+  18.981624193185777,
+  21.72065757030428,
+  16.447474387356934,
+  22.993932387133217,
+  18.106364793791336,
+  13.05106293427047,
+  15.893983477237896,
+  19.42478727038987,
+  17.166599707321495,
+  9.866400314345183,
+  7.59787385910128,
+  14.567197303499817,
+  14.70930597077771,
+  7.896936476775536,
+  12.900951861540339,
+  7.4406024047751345
+]
+let size = list.length
+let OutputData = []
+let logRes = Math.log2(size)
+let tempArray = new Array(size)
+let dataW = []
+let half = size / 2
+
+for (let i = 0; i < size; i++) {
+  OutputData.push({
+    x: list[i],
+    y: 0
+  })
+
+  let angle = (2 * Math.PI * i) / size
+  let rePositiveInverse = Math.cos(angle)
+  let imPositiveInverse = Math.sin(angle)
+  dataW.push({
+    x: rePositiveInverse,
+    y: imPositiveInverse
+  })
+}
+
+for (var m = 0; m < logRes; m++) {
+
+  var indexIn = 0
+  var step = 1 << m
+  var blockSize = 1 << (m + 1)
+  var blockNum = size / blockSize
+  var kFor = blockSize / 2
+
+  for (var n = 0; n < blockNum; n++) {
+    for (var k = 0; k < kFor; k++) {
+      var inputData1 = OutputData[indexIn]
+      var inputData2 = OutputData[indexIn + half]
+
+      var outputIndex1 = 2 * (indexIn - (indexIn % Math.pow(2, m))) + (indexIn % Math.pow(2, m))
+      var outputIndex2 = outputIndex1 + step
+
+      var indexW = k * (1 << (logRes - m - 1))
+      var w = dataW[indexW]
+      var p1 = inputData1
+      var p2 = complexMultiply(inputData2, w)
+
+      tempArray[outputIndex1] = complexAdd(p1, p2)
+      tempArray[outputIndex2] = complexSubtraction(p1, p2)
+
+      indexIn++
+    }
+  }
+  OutputData = []
+  for(let i =0 ;i<size;i++){
+    OutputData.push({...tempArray[i]})
+  }
+  tempArray = []
+}
+
+// 在最终输出前加入归一化操作
+for (let i = 0; i < size; i++) {
+  OutputData[i].x /= size;
+  OutputData[i].y /= size; // 如果只需要实部结果，可以保留 x，将 y 置为零
+}
+console.log(OutputData)
 ```

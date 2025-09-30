@@ -15,7 +15,6 @@
       <div>Phillips计算（<span class="color-blue">完成</span>）</div>
       <div>逆row计算（<span class="color-blue">完成</span>）</div>
       <div>逆col计算（<span class="color-blue">完成</span>）</div>
-      <div>shaderMaterial--海浪高度、位移【col计算完毕，点都是离散的，要如何操作才能变成连续的灰度色值，是分别对h、x、z求导？】（<span class="color-red">未完成</span>）</div>
       <div>按照风向的移动（<span class="color-red">未完成</span>）</div>
       <div>光照法线（<span class="color-red">未完成</span>）</div>
       <div>泡沫--雅可比行列式算（<span class="color-red">未完成</span>）</div>
@@ -66,8 +65,6 @@ import {
   StandardMaterial,
   RawTexture,
   Constants,
-  ComputeShader,
-  UniformBuffer,
   Texture,
 } from 'babylonjs'
 import {
@@ -185,10 +182,11 @@ const codeTexturePhillips = () => {
       return P;
     }
     
-    @group(0) @binding(1) var phillipsTextureY: texture_storage_2d<rgba16float, write>;
-    @group(0) @binding(2) var phillipsTextureX: texture_storage_2d<rgba16float, write>;
-    @group(0) @binding(3) var phillipsTextureZ: texture_storage_2d<rgba16float, write>;
-    @group(0) @binding(4) var<uniform> uTime: f32;
+    struct Params { uTime:f32, pad:f32, pad2:f32, pad3:f32 };   // 16 字节对齐
+    @group(0) @binding(1) var phillipsTextureY: texture_storage_2d<rgba32float, write>;
+    @group(0) @binding(2) var phillipsTextureX: texture_storage_2d<rgba32float, write>;
+    @group(0) @binding(3) var phillipsTextureZ: texture_storage_2d<rgba32float, write>;
+    @group(0) @binding(4) var<uniform> param: Params;
     
     @compute @workgroup_size(${phillipsGroupSize}, ${phillipsGroupSize}, 1)
     fn main(
@@ -205,18 +203,19 @@ const codeTexturePhillips = () => {
       let size = f32(${IMG_SIZE});
       
       // 都是为了平移到中间
-      // let nx = x - size * 0.5;
-      // let ny = y - size * 0.5;
-      // let k = vec2<f32>(TWO_PI * nx / size, TWO_PI * ny / size);
+      let nx = x - size * 0.5;
+      let ny = y - size * 0.5;
+      let k = vec2<f32>(TWO_PI * nx / size, TWO_PI * ny / size);
       
-      let k = vec2<f32>(TWO_PI * x / size - PI, TWO_PI * y / size - PI);
+      // let k = vec2<f32>(TWO_PI * x / size - PI, TWO_PI * y / size - PI);
       
-      var h0k = vec2<f32>(gaussValue1 * sqrt(abs(phillips(k) * donelanBannerDirectionalSpreading(k)) * 0.5));
-      var h0kConj = vec2<f32>(gaussValue2 * sqrt(abs(phillips(-k) * donelanBannerDirectionalSpreading(-k)) * 0.5));
+      // var h0k = vec2<f32>(gaussValue1 * sqrt(phillips(k) * donelanBannerDirectionalSpreading(k) * 0.5));
+      // var h0kConj = vec2<f32>(gaussValue2 * sqrt(phillips(-k) * donelanBannerDirectionalSpreading(-k) * 0.5));
+      var h0k = vec2<f32>(gaussValue1 * sqrt(phillips(k) * 0.5));
+      var h0kConj = vec2<f32>(gaussValue2 * sqrt(phillips(-k) * 0.5));
       h0kConj.y *= -1.0;
       
-      var time = uTime;
-      let omega = dispersion(k) * time;
+      let omega = dispersion(k) * param.uTime;
       let c = cos(omega);
       let s = sin(omega);
       
@@ -251,20 +250,14 @@ const codeRow = (isInverse) => {
       return result;
     }
     
-    @group(0) @binding(0) var samplerSrcY: sampler;
-    @group(0) @binding(1) var phillipsTextureY: texture_2d<f32>;
-    @group(0) @binding(2) var rowTextureY: texture_storage_2d<rgba16float, write>;
+    @group(0) @binding(1) var phillipsTextureY : texture_2d<f32>;
+    @group(0) @binding(2) var phillipsTextureX : texture_2d<f32>;
+    @group(0) @binding(3) var phillipsTextureZ : texture_2d<f32>;
+    @group(0) @binding(4) var wData : texture_2d<f32>;
+    @group(0) @binding(5) var rowTextureY : texture_storage_2d<rgba32float, write>;
+    @group(0) @binding(6) var rowTextureX : texture_storage_2d<rgba32float, write>;
+    @group(0) @binding(7) var rowTextureZ : texture_storage_2d<rgba32float, write>;
     
-    @group(1) @binding(0) var samplerSrcX: sampler;
-    @group(1) @binding(1) var phillipsTextureX: texture_2d<f32>;
-    @group(1) @binding(2) var rowTextureX: texture_storage_2d<rgba16float, write>;
-    
-    @group(2) @binding(0) var samplerSrcZ: sampler;
-    @group(2) @binding(1) var phillipsTextureZ: texture_2d<f32>;
-    @group(2) @binding(2) var rowTextureZ: texture_storage_2d<rgba16float, write>;
-    
-    @group(3) @binding(0) var samplerW: sampler;
-    @group(3) @binding(1) var wData: texture_2d<f32>;
       
     var<workgroup> sharedDataY: array<vec4<f32>, ${IMG_SIZE}u>;
     var<workgroup> tempDataY: array<vec4<f32>, ${IMG_SIZE}u>;
@@ -278,19 +271,7 @@ const codeRow = (isInverse) => {
       @builtin(global_invocation_id) global_id: vec3<u32>,
       @builtin(local_invocation_id) local_id: vec3<u32>
     ) {
-    
-      let phillipsTexture_y_dims: vec2<f32> = vec2<f32>(textureDimensions(phillipsTextureY, 0));
-      let phillipsTexture_y_texture: vec4<f32> = textureSampleLevel(phillipsTextureY, samplerSrcY, vec2<f32>(global_id.xy) / phillipsTexture_y_dims, 0.0);
       
-      let phillipsTexture_x_dims: vec2<f32> = vec2<f32>(textureDimensions(phillipsTextureX, 0));
-      let phillipsTexture_x_texture: vec4<f32> = textureSampleLevel(phillipsTextureX, samplerSrcX, vec2<f32>(global_id.xy) / phillipsTexture_x_dims, 0.0);
-      
-      let phillipsTexture_z_dims: vec2<f32> = vec2<f32>(textureDimensions(phillipsTextureZ, 0));
-      let phillipsTexture_z_texture: vec4<f32> = textureSampleLevel(phillipsTextureZ, samplerSrcZ, vec2<f32>(global_id.xy) / phillipsTexture_z_dims, 0.0);
-    
-      let w_dims: vec2<f32> = vec2<f32>(textureDimensions(wData, 0));
-      let w_texture: vec4<f32> = textureSampleLevel(wData, samplerW, vec2<f32>(global_id.xy) / w_dims, 0.0);
-    
       // 该行存入到 sharedDataY 中
       // 使用 global_id.x 作为索引，因为要存储行数据
       sharedDataY[local_id.x] = textureLoad(phillipsTextureY, vec2<i32>(i32(local_id.x), i32(global_id.y)), 0);
@@ -389,20 +370,13 @@ const codeCol = (isInverse) => {
       return result;
     }
     
-    @group(0) @binding(0) var samplerSrcY: sampler;
-    @group(0) @binding(1) var rowTextureY: texture_2d<f32>;
-    @group(0) @binding(2) var colTextureY: texture_storage_2d<rgba32float, write>;
-    
-    @group(1) @binding(0) var samplerSrcX: sampler;
-    @group(1) @binding(1) var rowTextureX: texture_2d<f32>;
-    @group(1) @binding(2) var colTextureX: texture_storage_2d<rgba32float, write>;
-    
-    @group(2) @binding(0) var samplerSrcZ: sampler;
-    @group(2) @binding(1) var rowTextureZ: texture_2d<f32>;
-    @group(2) @binding(2) var colTextureZ: texture_storage_2d<rgba32float, write>;
-    
-    @group(3) @binding(0) var samplerW: sampler;
-    @group(3) @binding(1) var wData: texture_2d<f32>;
+    @group(0) @binding(1) var rowTextureY : texture_2d<f32>;
+    @group(0) @binding(2) var rowTextureX : texture_2d<f32>;
+    @group(0) @binding(3) var rowTextureZ : texture_2d<f32>;
+    @group(0) @binding(4) var wData : texture_2d<f32>;
+    @group(0) @binding(5) var colTextureY : texture_storage_2d<rgba32float, write>;
+    @group(0) @binding(6) var colTextureX : texture_storage_2d<rgba32float, write>;
+    @group(0) @binding(7) var colTextureZ : texture_storage_2d<rgba32float, write>;
     
     var<workgroup> sharedDataY: array<vec4<f32>, ${IMG_SIZE}u>;
     var<workgroup> tempDataY: array<vec4<f32>, ${IMG_SIZE}u>;
@@ -416,17 +390,6 @@ const codeCol = (isInverse) => {
       @builtin(global_invocation_id) global_id: vec3<u32>,
       @builtin(local_invocation_id) local_id: vec3<u32>
     ) {
-      let src_y_dims: vec2<f32> = vec2<f32>(textureDimensions(rowTextureY, 0));
-      let src_y_texture: vec4<f32> = textureSampleLevel(rowTextureY, samplerSrcY, vec2<f32>(global_id.xy) / src_y_dims, 0.0);
-      
-      let src_x_dims: vec2<f32> = vec2<f32>(textureDimensions(rowTextureX, 0));
-      let src_x_texture: vec4<f32> = textureSampleLevel(rowTextureX, samplerSrcX, vec2<f32>(global_id.xy) / src_x_dims, 0.0);
-      
-      let src_z_dims: vec2<f32> = vec2<f32>(textureDimensions(rowTextureZ, 0));
-      let src_z_texture: vec4<f32> = textureSampleLevel(rowTextureZ, samplerSrcZ, vec2<f32>(global_id.xy) / src_z_dims, 0.0);
-    
-      let w_dims: vec2<f32> = vec2<f32>(textureDimensions(wData, 0));
-      let w_texture: vec4<f32> = textureSampleLevel(wData, samplerW, vec2<f32>(global_id.xy) / w_dims, 0.0);
     
       // 该列存入到 sharedData 中
       // 使用 global_id.y 作为索引，因为要存储列数据
@@ -630,172 +593,283 @@ const initScene = async () => {
     zPanel.linkWithMesh(zBox)
   }
 
-  const createSea = () => {
+
+
+  let device = engine._device
+  let windows = window as any
+  let usage = windows.GPUTextureUsage.STORAGE_BINDING | windows.GPUTextureUsage.TEXTURE_BINDING | windows.GPUTextureUsage.COPY_SRC |
+    windows.GPUTextureUsage.COPY_DST
+
+  let uniformBuf = device.createBuffer({
+    size: 16,
+    usage: windows.GPUBufferUsage.UNIFORM | windows.GPUBufferUsage.COPY_DST
+  })
+  const createSea = async () => {
+    /** w 的开始 */
     for (let i = 0; i < IMG_SIZE; i++) {
       let angle = (2 * Math.PI * i) / IMG_SIZE
-
-      // 正傅里叶旋转因子
-      // let rePositive = Math.cos(angle)
-      // let imPositive = -Math.sin(angle)
-      // wData[i * 4] = rePositive // re
-      // wData[i * 4 + 1] = imPositive // im
-      // wData[i * 4 + 2] = 0
-      // wData[i * 4 + 3] = 1
-
-      // 逆傅里叶旋转因子
-      let rePositiveInverse = Math.cos(angle)
-      let imPositiveInverse = Math.sin(angle)
-      wInverseData[i * 4] = rePositiveInverse // re
-      wInverseData[i * 4 + 1] = imPositiveInverse // im
+      let re = Math.cos(angle)
+      let im = Math.sin(angle)
+      wInverseData[i * 4] = re // re
+      wInverseData[i * 4 + 1] = im // im
       wInverseData[i * 4 + 2] = 0
       wInverseData[i * 4 + 3] = 1
     }
-
-    const rawTextureW = new RawTexture(wData, IMG_SIZE, 1, Constants.TEXTUREFORMAT_RGBA, scene, false, false, Constants.TEXTURE_LINEAR_LINEAR)
-    const rawTextureInverseW = new RawTexture(wInverseData, IMG_SIZE, 1, Constants.TEXTUREFORMAT_RGBA, scene, false, false, Constants.TEXTURE_LINEAR_LINEAR)
-
-    const uniformBuffer = new UniformBuffer(engine)
-    uniformBuffer.addUniform('uTime', 4)
-
-    // phillips 相关
-    const phillipsY = MeshBuilder.CreatePlane('phillipsY', { width: IMG_SIZE, height: IMG_SIZE }, scene)
-    const phillipsX = MeshBuilder.CreatePlane('phillipsX', { width: IMG_SIZE, height: IMG_SIZE }, scene)
-    const phillipsZ = MeshBuilder.CreatePlane('phillipsZ', { width: IMG_SIZE, height: IMG_SIZE }, scene)
-
-    const phillipsTextureY = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_HALF_FLOAT)
-    const phillipsTextureX = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_HALF_FLOAT)
-    const phillipsTextureZ = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_HALF_FLOAT)
-
-    const shaderPhillips = new ComputeShader(
-      'shaderPhillips',
-      engine, { computeSource: codeTexturePhillips() }, {
-        bindingsMapping: {
-          'phillipsTextureY': { group: 0, binding: 1 },
-          'phillipsTextureX': { group: 0, binding: 2 },
-          'phillipsTextureZ': { group: 0, binding: 3 },
-          'uTime': { group: 0, binding: 4 },
-        }
-      }
+    // 创建 staging buffer 并把数据写进去
+    let wBufferSize = wInverseData.byteLength
+    let wStagingBuffer = device.createBuffer({
+      size: wBufferSize,
+      usage: windows.GPUBufferUsage.COPY_SRC,
+      mappedAtCreation: true,
+    })
+    new Float32Array(wStagingBuffer.getMappedRange()).set(wInverseData)
+    wStagingBuffer.unmap()
+    // 创建目标纹理（128×1，rgba32float，每 texel 4×float）
+    let textureW = device.createTexture({ size: [IMG_SIZE, 1], format: 'rgba32float', usage })
+    // 把 buffer 拷进纹理
+    let commandEncoderWriteW = device.createCommandEncoder()
+    commandEncoderWriteW.copyBufferToTexture({
+        buffer: wStagingBuffer,
+        bytesPerRow: IMG_SIZE * 4 * 4 // 每行字节数 = 128×4×4
+      }, { texture: textureW, origin: { x: 0, y: 0 } },
+      [IMG_SIZE, 1, 1] // 拷贝尺寸
     )
-    shaderPhillips.setStorageTexture('phillipsTextureY', phillipsTextureY)
-    shaderPhillips.setStorageTexture('phillipsTextureX', phillipsTextureX)
-    shaderPhillips.setStorageTexture('phillipsTextureZ', phillipsTextureZ)
-
-    const phillipsMatY = new StandardMaterial('phillipsMatY', scene)
-    phillipsMatY.diffuseTexture = phillipsTextureY
-    phillipsY.material = phillipsMatY
-    phillipsY.position = new Vector3(-IMG_SIZE - 20, 0, IMG_SIZE + 20)
-    phillipsY.rotation = new Vector3(Math.PI / 2, 0, 0)
-    const phillipsMatX = new StandardMaterial('phillipsMatX', scene)
-    phillipsMatX.diffuseTexture = phillipsTextureX
-    phillipsX.material = phillipsMatX
-    phillipsX.position = new Vector3(-IMG_SIZE - 20, 0, 0)
-    phillipsX.rotation = new Vector3(Math.PI / 2, 0, 0)
-    const phillipsMatZ = new StandardMaterial('phillipsMatZ', scene)
-    phillipsMatZ.diffuseTexture = phillipsTextureZ
-    phillipsZ.material = phillipsMatZ
-    phillipsZ.position = new Vector3(-IMG_SIZE - 20, 0, -IMG_SIZE - 20)
-    phillipsZ.rotation = new Vector3(Math.PI / 2, 0, 0)
-
-
-    // 逆 row 相关
-    const rowGroundInverseY = MeshBuilder.CreatePlane('rowY', { width: IMG_SIZE, height: IMG_SIZE }, scene)
-    const rowGroundInverseX = MeshBuilder.CreatePlane('rowX', { width: IMG_SIZE, height: IMG_SIZE }, scene)
-    const rowGroundInverseZ = MeshBuilder.CreatePlane('rowZ', { width: IMG_SIZE, height: IMG_SIZE }, scene)
-
-    const rowTextureInverseY = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_HALF_FLOAT)
-    const rowTextureInverseX = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_HALF_FLOAT)
-    const rowTextureInverseZ = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_HALF_FLOAT)
-
-    const shaderRowInverse = new ComputeShader(
-      'shaderRowInverse',
-      engine, { computeSource: codeRow(true) }, {
-        bindingsMapping: {
-          'phillipsTextureY': { group: 0, binding: 1 },
-          'rowTextureY': { group: 0, binding: 2 },
-          'phillipsTextureX': { group: 1, binding: 1 },
-          'rowTextureX': { group: 1, binding: 2 },
-          'phillipsTextureZ': { group: 2, binding: 1 },
-          'rowTextureZ': { group: 2, binding: 2 },
-          'wData': { group: 3, binding: 1 },
-        }
-      }
+    // 提交命令
+    device.queue.submit([commandEncoderWriteW.finish()])
+    // 读取数据到 rawTextureW
+    let readBackBufferW = device.createBuffer({
+      size: IMG_SIZE * 1 * 4 * 4, // 128×1×4×float
+      usage: windows.GPUBufferUsage.COPY_DST | windows.GPUBufferUsage.MAP_READ
+    })
+    let commandEncoderReadW = device.createCommandEncoder()
+    commandEncoderReadW.copyTextureToBuffer({ texture: textureW, origin: { x: 0, y: 0 } }, {
+        buffer: readBackBufferW,
+        bytesPerRow: IMG_SIZE * 4 * 4
+      },
+      [IMG_SIZE, 1, 1]
     )
-    shaderRowInverse.setTexture('phillipsTextureY', phillipsTextureY)
-    shaderRowInverse.setTexture('phillipsTextureX', phillipsTextureX)
-    shaderRowInverse.setTexture('phillipsTextureZ', phillipsTextureZ)
-    shaderRowInverse.setTexture('wData', rawTextureInverseW)
-    shaderRowInverse.setStorageTexture('rowTextureY', rowTextureInverseY)
-    shaderRowInverse.setStorageTexture('rowTextureX', rowTextureInverseX)
-    shaderRowInverse.setStorageTexture('rowTextureZ', rowTextureInverseZ)
-
-    const rowMatInverseY = new StandardMaterial('rowMatInverseY', scene)
-    rowMatInverseY.diffuseTexture = rowTextureInverseY
-    rowGroundInverseY.material = rowMatInverseY
-    rowGroundInverseY.position = new Vector3(0, 0, IMG_SIZE + 20)
-    rowGroundInverseY.rotation = new Vector3(Math.PI / 2, 0, 0)
-    const rowMatInverseX = new StandardMaterial('rowMatInverseX', scene)
-    rowMatInverseX.diffuseTexture = rowTextureInverseX
-    rowGroundInverseX.material = rowMatInverseX
-    rowGroundInverseX.position = new Vector3(0, 0, 0)
-    rowGroundInverseX.rotation = new Vector3(Math.PI / 2, 0, 0)
-    const rowMatInverseZ = new StandardMaterial('rowMatInverseZ', scene)
-    rowMatInverseZ.diffuseTexture = rowTextureInverseZ
-    rowGroundInverseZ.material = rowMatInverseZ
-    rowGroundInverseZ.position = new Vector3(0, 0, -IMG_SIZE - 20)
-    rowGroundInverseZ.rotation = new Vector3(Math.PI / 2, 0, 0)
-
-
-    // 逆 col 相关
-    const colGroundInverseY = MeshBuilder.CreatePlane('col', { width: IMG_SIZE, height: IMG_SIZE }, scene)
-    const colGroundInverseX = MeshBuilder.CreatePlane('col', { width: IMG_SIZE, height: IMG_SIZE }, scene)
-    const colGroundInverseZ = MeshBuilder.CreatePlane('col', { width: IMG_SIZE, height: IMG_SIZE }, scene)
-    const colTextureInverseY = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_FLOAT)
-    const colTextureInverseX = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_FLOAT)
-    const colTextureInverseZ = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_FLOAT)
-
-
-    const shaderColInverse = new ComputeShader(
-      'shaderColInverse',
-      engine, { computeSource: codeCol(true) }, {
-        bindingsMapping: {
-          'rowTextureY': { group: 0, binding: 1 },
-          'colTextureY': { group: 0, binding: 2 },
-          'rowTextureX': { group: 1, binding: 1 },
-          'colTextureX': { group: 1, binding: 2 },
-          'rowTextureZ': { group: 2, binding: 1 },
-          'colTextureZ': { group: 2, binding: 2 },
-          'wData': { group: 3, binding: 1 },
-        }
-      }
+    device.queue.submit([commandEncoderReadW.finish()])
+    await readBackBufferW.mapAsync(windows.GPUMapMode.READ)
+    let wData = new Float32Array(readBackBufferW.getMappedRange())
+    let rawTextureW = new RawTexture(
+      wData,
+      IMG_SIZE,
+      1,
+      Constants.TEXTUREFORMAT_RGBA,
+      scene,
+      false, // no mipmaps
+      false, // not invertY
+      Texture.LINEAR_LINEAR,
+      Constants.TEXTURETYPE_FLOAT
     )
-    shaderColInverse.setTexture('rowTextureY', rowTextureInverseY)
-    shaderColInverse.setTexture('rowTextureX', rowTextureInverseX)
-    shaderColInverse.setTexture('rowTextureZ', rowTextureInverseZ)
-    shaderColInverse.setTexture('wData', rawTextureInverseW)
-    shaderColInverse.setStorageTexture('colTextureY', colTextureInverseY)
-    shaderColInverse.setStorageTexture('colTextureX', colTextureInverseX)
-    shaderColInverse.setStorageTexture('colTextureZ', colTextureInverseZ)
-
-    const colMatInverseY = new StandardMaterial('colMatInverseY', scene)
-    colMatInverseY.diffuseTexture = colTextureInverseY
-    colGroundInverseY.material = colMatInverseY
-    colGroundInverseY.position = new Vector3(IMG_SIZE + 20, 0, IMG_SIZE + 20)
-    colGroundInverseY.rotation = new Vector3(Math.PI / 2, 0, 0)
-    const colMatInverseX = new StandardMaterial('colMatInverseX', scene)
-    colMatInverseX.diffuseTexture = colTextureInverseX
-    colGroundInverseX.material = colMatInverseX
-    colGroundInverseX.position = new Vector3(IMG_SIZE + 20, 0, 0)
-    colGroundInverseX.rotation = new Vector3(Math.PI / 2, 0, 0)
-    const colMatInverseZ = new StandardMaterial('colMatInverseZ', scene)
-    colMatInverseZ.diffuseTexture = colTextureInverseZ
-    colGroundInverseZ.material = colMatInverseZ
-    colGroundInverseZ.position = new Vector3(IMG_SIZE + 20, 0, -IMG_SIZE - 20)
-    colGroundInverseZ.rotation = new Vector3(Math.PI / 2, 0, 0)
+    let planeW = MeshBuilder.CreatePlane('planeW', {
+      width: IMG_SIZE,
+      height: 1
+    }, scene)
+    let matW = new StandardMaterial('matW', scene)
+    matW.diffuseTexture = rawTextureW
+    planeW.material = matW
+    planeW.rotation = new Vector3(Math.PI / 2, 0, 0)
+    planeW.position = new Vector3(0, 0, IMG_SIZE + 20)
+    /** w 的结束 */
 
 
 
 
+
+
+
+
+    /** phillips 的开始 */
+    let phillipsY = device.createTexture({ size: [IMG_SIZE, IMG_SIZE], format: 'rgba32float', usage })
+    let phillipsX = device.createTexture({ size: [IMG_SIZE, IMG_SIZE], format: 'rgba32float', usage })
+    let phillipsZ = device.createTexture({ size: [IMG_SIZE, IMG_SIZE], format: 'rgba32float', usage })
+    let writePhillipsModule = device.createShaderModule({
+      code: codeTexturePhillips()
+    })
+    let writePhillipsPipeline = device.createComputePipeline({
+      layout: 'auto',
+      compute: { module: writePhillipsModule, entryPoint: 'main' }
+    })
+    let bindGroupPhillips = device.createBindGroup({
+      layout: writePhillipsPipeline.getBindGroupLayout(0),
+      entries: [
+        { binding: 1, resource: phillipsY.createView() },
+        { binding: 2, resource: phillipsX.createView() },
+        { binding: 3, resource: phillipsZ.createView() },
+        { binding: 4, resource: { buffer: uniformBuf } },
+      ]
+    })
+
+    let planeY = MeshBuilder.CreatePlane('planeY', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+    let rawPlaneY = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_FLOAT)
+    let matY = new StandardMaterial('matY', scene)
+    matY.diffuseTexture = rawPlaneY
+    planeY.material = matY
+    planeY.rotation = new Vector3(Math.PI / 2, 0, 0)
+    planeY.position = new Vector3(-IMG_SIZE - 20, 0, 0)
+
+    let planeX = MeshBuilder.CreatePlane('planeX', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+    let rawPlaneX = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_FLOAT)
+    let matX = new StandardMaterial('matX', scene)
+    matX.diffuseTexture = rawPlaneX
+    planeX.material = matX
+    planeX.rotation = new Vector3(Math.PI / 2, 0, 0)
+    planeX.position = new Vector3(0, 0, 0)
+
+    let planeZ = MeshBuilder.CreatePlane('planeZ', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+    let rawPlaneZ = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_FLOAT)
+    let matZ = new StandardMaterial('matZ', scene)
+    matZ.diffuseTexture = rawPlaneZ
+    planeZ.material = matZ
+    planeZ.rotation = new Vector3(Math.PI / 2, 0, 0)
+    planeZ.position = new Vector3(IMG_SIZE + 20, 0, 0)
+    /** phillips 的结束 */
+
+
+
+    
+
+
+
+    
+    /** row 的开始 */
+    let rowY = device.createTexture({ size: [IMG_SIZE, IMG_SIZE], format: 'rgba32float', usage })
+    let rowX = device.createTexture({ size: [IMG_SIZE, IMG_SIZE], format: 'rgba32float', usage })
+    let rowZ = device.createTexture({ size: [IMG_SIZE, IMG_SIZE], format: 'rgba32float', usage })
+    let writeRowModule = device.createShaderModule({
+      code: codeRow(true)
+    })
+    let writeRowPipeline = device.createComputePipeline({
+      layout: 'auto',
+      compute: { module: writeRowModule, entryPoint: 'main' }
+    })
+    let bindGroupRow = device.createBindGroup({
+      layout: writeRowPipeline.getBindGroupLayout(0),
+      entries: [
+        { binding: 1, resource: phillipsY.createView() },
+        { binding: 2, resource: phillipsX.createView() },
+        { binding: 3, resource: phillipsZ.createView() },
+        { binding: 4, resource: textureW.createView() },
+        { binding: 5, resource: rowY.createView() },
+        { binding: 6, resource: rowX.createView() },
+        { binding: 7, resource: rowZ.createView() },
+      ]
+    })
+
+    let planeRowY = MeshBuilder.CreatePlane('planeRowY', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+    let rawRowY = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_FLOAT)
+    let matRowY = new StandardMaterial('matRowY', scene)
+    matRowY.diffuseTexture = rawRowY
+    planeRowY.material = matRowY
+    planeRowY.rotation = new Vector3(Math.PI / 2, 0, 0)
+    planeRowY.position = new Vector3(-IMG_SIZE - 20, 0, -IMG_SIZE - 20)
+
+    let planeRowX = MeshBuilder.CreatePlane('planeRowX', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+    let rawRowX = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_FLOAT)
+    let matRowX = new StandardMaterial('matRowX', scene)
+    matRowX.diffuseTexture = rawRowX
+    planeRowX.material = matRowX
+    planeRowX.rotation = new Vector3(Math.PI / 2, 0, 0)
+    planeRowX.position = new Vector3(0, 0, -IMG_SIZE - 20)
+
+    let planeRowZ = MeshBuilder.CreatePlane('planeRowZ', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+    let rawRowZ = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_FLOAT)
+    let matRowZ = new StandardMaterial('matRowZ', scene)
+    matRowZ.diffuseTexture = rawRowZ
+    planeRowZ.material = matRowZ
+    planeRowZ.rotation = new Vector3(Math.PI / 2, 0, 0)
+    planeRowZ.position = new Vector3(IMG_SIZE + 20, 0, -IMG_SIZE - 20)
+    /** row 的结束 */
+
+
+
+
+
+
+
+    
+    /** col 的开始 */
+    let colY = device.createTexture({ size: [IMG_SIZE, IMG_SIZE], format: 'rgba32float', usage })
+    let colX = device.createTexture({ size: [IMG_SIZE, IMG_SIZE], format: 'rgba32float', usage })
+    let colZ = device.createTexture({ size: [IMG_SIZE, IMG_SIZE], format: 'rgba32float', usage })
+    let writeColModule = device.createShaderModule({
+      code: codeCol(true)
+    })
+    let writeColPipeline = device.createComputePipeline({
+      layout: 'auto',
+      compute: { module: writeColModule, entryPoint: 'main' }
+    })
+    let bindGroupCol = device.createBindGroup({
+      layout: writeColPipeline.getBindGroupLayout(0),
+      entries: [
+        { binding: 1, resource: rowY.createView() },
+        { binding: 2, resource: rowX.createView() },
+        { binding: 3, resource: rowZ.createView() },
+        { binding: 4, resource: textureW.createView() },
+        { binding: 5, resource: colY.createView() },
+        { binding: 6, resource: colX.createView() },
+        { binding: 7, resource: colZ.createView() },
+      ]
+    })
+
+    let planeColY = MeshBuilder.CreatePlane('planeColY', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+    let rawColY = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_FLOAT)
+    let matColY = new StandardMaterial('matColY', scene)
+    matColY.diffuseTexture = rawColY
+    planeColY.material = matColY
+    planeColY.rotation = new Vector3(Math.PI / 2, 0, 0)
+    planeColY.position = new Vector3(-IMG_SIZE - 20, 0, (-IMG_SIZE - 20) * 2)
+
+    let planeColX = MeshBuilder.CreatePlane('planeColX', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+    let rawColX = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_FLOAT)
+    let matColX = new StandardMaterial('matColX', scene)
+    matColX.diffuseTexture = rawColX
+    planeColX.material = matColX
+    planeColX.rotation = new Vector3(Math.PI / 2, 0, 0)
+    planeColX.position = new Vector3(0, 0, (-IMG_SIZE - 20) * 2)
+
+    let planeColZ = MeshBuilder.CreatePlane('planeColZ', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+    let rawColZ = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_FLOAT)
+    let matColZ = new StandardMaterial('matColZ', scene)
+    matColZ.diffuseTexture = rawColZ
+    planeColZ.material = matColZ
+    planeColZ.rotation = new Vector3(Math.PI / 2, 0, 0)
+    planeColZ.position = new Vector3(IMG_SIZE + 20, 0, (-IMG_SIZE - 20) * 2)
+    /** col 的结束 */
+
+
+
+
+
+
+
+    
+    let readAndUpdate = async (srcTexture, rawTexture) => {
+      let encoder = device.createCommandEncoder()
+      let buffer = device.createBuffer({
+        size: IMG_SIZE * IMG_SIZE * 4 * 4,
+        usage: windows.GPUBufferUsage.COPY_DST | windows.GPUBufferUsage.MAP_READ
+      })
+      encoder.copyTextureToBuffer({ texture: srcTexture }, {
+        buffer,
+        bytesPerRow: IMG_SIZE * 4 * 4,
+        rowsPerImage: IMG_SIZE
+      }, [IMG_SIZE, IMG_SIZE])
+      device.queue.submit([encoder.finish()])
+      await buffer.mapAsync(windows.GPUMapMode.READ)
+      let data = new Float32Array(buffer.getMappedRange()).slice() // 拷贝一份
+      buffer.unmap()
+      rawTexture.update(data)
+    }
+
+
+
+
+
+
+
+    
     const oceanMat = new ShaderMaterial('oceanMat', scene, {
       vertexSource: `
         precision highp float;
@@ -818,39 +892,39 @@ const initScene = async () => {
 
           vec3 pos = position;
 
-          float sigma = 1.0;
-          vec2 offsets[25];
-          for (int i = -2; i <= 2; ++i) {
-            for (int j = -2; j <= 2; ++j) {
-              offsets[(i + 2) * 5 + (j + 2)] = vec2(i, j);
-            }
-          }
+          // float sigma = 1.0;
+          // vec2 offsets[25];
+          // for (int i = -2; i <= 2; ++i) {
+          //   for (int j = -2; j <= 2; ++j) {
+          //     offsets[(i + 2) * 5 + (j + 2)] = vec2(i, j);
+          //   }
+          // }
 
-          float weights[25];
-          for (int i = 0; i < 25; ++i) {
-            float x = offsets[i].x;
-            float y = offsets[i].y;
-            weights[i] = exp(-(x * x + y * y) / (2.0 * sigma * sigma));
-          }
+          // float weights[25];
+          // for (int i = 0; i < 25; ++i) {
+          //   float x = offsets[i].x;
+          //   float y = offsets[i].y;
+          //   weights[i] = exp(-(x * x + y * y) / (2.0 * sigma * sigma));
+          // }
 
-          float kernelSum = 0.0;
-          float heightSum = 0.0;
-          vec2 texSize = textureSize(heightMap, 0);
+          // float kernelSum = 0.0;
+          // float heightSum = 0.0;
+          // vec2 texSize = textureSize(heightMap, 0);
 
-          for (int i = 0; i < 25; ++i) {
-            vec2 offset = offsets[i] / texSize;
-            vec4 hSample = texture2D(heightMap, uv + offset) * uEnergyScale;
-            kernelSum += weights[i];
-            heightSum += hSample.x * weights[i];
-          }
+          // for (int i = 0; i < 25; ++i) {
+          //   vec2 offset = offsets[i] / texSize;
+          //   vec4 hSample = texture2D(heightMap, uv + offset) * uEnergyScale;
+          //   kernelSum += weights[i];
+          //   heightSum += hSample.x * weights[i];
+          // }
 
-          float smoothedHeight = heightSum / kernelSum;
-          pos.y = smoothedHeight * 40.0;
+          // float smoothedHeight = heightSum / kernelSum;
+          // pos.y = smoothedHeight * 40.0;
 
-          vec4 x = texture2D(displacementX, uv);
-          vec4 z = texture2D(displacementZ, uv);
-          pos.x += x.x * uEnergyScale;
-          pos.z += z.x * uEnergyScale;
+          // vec4 x = texture2D(displacementX, uv);
+          // vec4 z = texture2D(displacementZ, uv);
+          // pos.x += x.x * uEnergyScale;
+          // pos.z += z.x * uEnergyScale;
 
           gl_Position = worldViewProjection * vec4(pos, 1.0);
         }
@@ -908,9 +982,9 @@ const initScene = async () => {
       uniforms: ['worldViewProjection', 'heightMap', 'displacementX', 'displacementZ', 'uGridCount', 'uEnergyScale'],
       samplers: ['heightMap', 'displacementZ', 'displacementX'],
     })
-    oceanMat.setTexture('heightMap', colTextureInverseY)
-    oceanMat.setTexture('displacementX', colTextureInverseX)
-    oceanMat.setTexture('displacementZ', colTextureInverseZ)
+    oceanMat.setTexture('heightMap', rawColY)
+    oceanMat.setTexture('displacementX', rawColX)
+    oceanMat.setTexture('displacementZ', rawColZ)
     oceanMat.setFloat('uGridCount', IMG_SIZE)
     oceanMat.setFloat('uEnergyScale', IMG_SIZE)
     const oceanSize = 1024
@@ -925,20 +999,46 @@ const initScene = async () => {
 
 
 
+
+
+
+    
     scene.registerBeforeRender(async () => {
-      uTime += 0.005
-      uniformBuffer.updateFloat('uTime', uTime)
-      uniformBuffer.update()
+      uTime += 0.01
+      device.queue.writeBuffer(uniformBuf, 0, new Float32Array([uTime, 0, 0, 0]))
+      let phillipsEncoder = device.createCommandEncoder()
+      let phillipsPass = phillipsEncoder.beginComputePass()
+      phillipsPass.setPipeline(writePhillipsPipeline)
+      phillipsPass.setBindGroup(0, bindGroupPhillips)
+      phillipsPass.dispatchWorkgroups(IMG_SIZE / phillipsGroupSize, IMG_SIZE / phillipsGroupSize)
+      phillipsPass.end()
+      device.queue.submit([phillipsEncoder.finish()])
 
-      shaderPhillips.setUniformBuffer('uTime', uniformBuffer)
+      let rowEncoder = device.createCommandEncoder()
+      let rowPass = rowEncoder.beginComputePass()
+      rowPass.setPipeline(writeRowPipeline)
+      rowPass.setBindGroup(0, bindGroupRow)
+      rowPass.dispatchWorkgroups(IMG_SIZE / workGroupSizeRowX, IMG_SIZE / workGroupSizeRowY)
+      rowPass.end()
+      device.queue.submit([rowEncoder.finish()])
 
-      shaderPhillips.dispatchWhenReady(IMG_SIZE / phillipsGroupSize, IMG_SIZE / phillipsGroupSize, 1).then(() => {
-        // 计算 逆 row 纹理
-        shaderRowInverse.dispatchWhenReady(IMG_SIZE / workGroupSizeRowX, IMG_SIZE / workGroupSizeRowY, 1).then(() => {
-          // 计算 逆 col 纹理
-          shaderColInverse.dispatchWhenReady(IMG_SIZE / workGroupSizeColX, IMG_SIZE / workGroupSizeColY, 1)
-        })
-      })
+      let colEncoder = device.createCommandEncoder()
+      let colPass = colEncoder.beginComputePass()
+      colPass.setPipeline(writeColPipeline)
+      colPass.setBindGroup(0, bindGroupCol)
+      colPass.dispatchWorkgroups(IMG_SIZE / workGroupSizeColX, IMG_SIZE / workGroupSizeColY)
+      colPass.end()
+      device.queue.submit([colEncoder.finish()])
+
+      readAndUpdate(phillipsY, rawPlaneY)
+      readAndUpdate(phillipsX, rawPlaneX)
+      readAndUpdate(phillipsZ, rawPlaneZ)
+      readAndUpdate(rowY, rawRowY)
+      readAndUpdate(rowX, rawRowX)
+      readAndUpdate(rowZ, rawRowZ)
+      readAndUpdate(colY, rawColY)
+      readAndUpdate(colX, rawColX)
+      readAndUpdate(colZ, rawColZ)
     })
   }
 
