@@ -55,7 +55,6 @@ import {
   Scene,
   HemisphericLight,
   MeshBuilder,
-  Effect,
   ShaderMaterial,
   Color4,
   ArcRotateCamera,
@@ -88,7 +87,7 @@ let workGroupSizeRowX = IMG_SIZE
 let workGroupSizeRowY = 1
 let workGroupSizeColX = 1
 let workGroupSizeColY = IMG_SIZE
-let customAmplitude = 0.2
+let customAmplitude = 0.8
 let customWindSpeed = 45.223
 let phillipsGroupSize = 16
 
@@ -890,8 +889,7 @@ const initScene = async () => {
 
         void main() {
           // texelCenter 把 uv 从任意小数对齐到“texel 中心”，再让 GPU 做双线性插值，就不会出现“一格一格”的跳变
-          float scaleGridCount = uGridCount * 4.0;
-          vec2 texelCenter = (floor(uv * scaleGridCount) + 0.5) / scaleGridCount;
+          vec2 texelCenter = (floor(uv * uGridCount) + 0.5) / uGridCount;
           vec4 texelSample = texture2D(heightMap,  texelCenter);
           
           vX = abs(texelSample.x);
@@ -922,11 +920,9 @@ const initScene = async () => {
 
         void main() {
           // 简单的颜色渲染
-          vec3 deepWaterColor = vec3(0.0, 0.549, 0.996); // 海水的深蓝色
-          vec3 shallowWaterColor = vec3(0.3, 0.7, 1.0); // 天空的浅天蓝色
-
-
-          // vec3 waterColor = mix(deepWaterColor, shallowWaterColor, abs(vY) * 0.5);
+          // vec3 deepWaterColor = vec3(0.0, 0.549, 0.996); // 海水的深蓝色
+          // vec3 shallowWaterColor = vec3(0.3, 0.7, 1.0); // 天空的浅天蓝色
+          // vec3 waterColor = mix(deepWaterColor, shallowWaterColor, abs(vY));
           // // waterColor = vec3(abs(vY), abs(vY), abs(vY));
           // gl_FragColor = vec4(waterColor, 1.0);
           
@@ -965,20 +961,22 @@ const initScene = async () => {
           vec3 norm = normalize(cross(Tz, Tx));
           
           // 用水体颜色做简单光照【最基础的漫反射光照模型】
-          vec3 base = mix(deepWaterColor, shallowWaterColor, abs(vY) * 0.8); // 调整高度差
+          vec3 deep = vec3(0.0, 0.549, 0.996); // 海水的深蓝色
+          vec3 shallow = vec3(0.3, 0.7, 1.0); // 天空的浅天蓝色
+          vec3 base = mix(deep, shallow, clamp(abs(vY) / 5.0, 0.0, 1.0)); // 调整高度差
           
           // 简单 Lambertian Diffuse
           vec3 L = normalize(uLightDir);
           float NormDotL = max(0.0, dot(norm, L));
           
           // 光照参数（能量守恒范围内）
-          const vec3 kAmbient = vec3(0.15, 0.18, 0.20); // 天空漫反射
-          const vec3 kDirect = vec3(0.85, 0.82, 0.80); // 太阳直射
+          const vec3 kAmbient = vec3(0.15, 0.18, 0.20);	// 天空漫反射
+          const vec3 kDirect = vec3(0.85, 0.82, 0.80);	// 太阳直射
           
           vec3 lighting = kAmbient + kDirect * NormDotL;
           
           vec3 color = base * lighting;
-          color = pow(color, vec3(1.0/0.8));
+          color = pow(color, vec3(1.0 / 2.2));
 
           gl_FragColor = vec4(color, 1.0);
         }
@@ -988,12 +986,7 @@ const initScene = async () => {
       uniforms: ['worldViewProjection', 'heightMap', 'displacementX', 'displacementZ', 'uGridCount', 'uEnergyScale'],
       samplers: ['heightMap', 'displacementZ', 'displacementX'],
     })
-    oceanMat.setTexture('heightMap', rawColY)
-    oceanMat.setTexture('displacementX', rawColX)
-    oceanMat.setTexture('displacementZ', rawColZ)
-    oceanMat.setFloat('uGridCount', IMG_SIZE)
-    oceanMat.setFloat('uEnergyScale', IMG_SIZE)
-    oceanMat.setVector3('uLightDir', new Vector3(0.0, 1.0, 0.0))
+    
     const oceanSize = 1024
     const ocean = MeshBuilder.CreateGround('ocean', {
       width: oceanSize,
@@ -1002,6 +995,13 @@ const initScene = async () => {
     }, scene)
     ocean.material = oceanMat
     ocean.position = new Vector3(0, 0, oceanSize * 0.75)
+
+    oceanMat.setTexture('heightMap', rawColY)
+    oceanMat.setTexture('displacementX', rawColX)
+    oceanMat.setTexture('displacementZ', rawColZ)
+    oceanMat.setFloat('uGridCount', oceanSize)
+    oceanMat.setFloat('uEnergyScale', IMG_SIZE)
+    oceanMat.setVector3('uLightDir', new Vector3(0.0, 1.0, 0.0))
 
 
 
