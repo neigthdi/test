@@ -15,8 +15,7 @@
       <div>Phillips计算（<span class="color-blue">完成</span>）</div>
       <div>逆row计算（<span class="color-blue">完成</span>）</div>
       <div>逆col计算（<span class="color-blue">完成</span>）</div>
-      <div>按照风向的移动（<span class="color-red">未完成</span>）</div>
-      <div>光照法线（<span class="color-red">未完成</span>）</div>
+      <div>光照法线（<span class="color-blue">完成</span>）</div>
       <div>泡沫--雅可比行列式算（<span class="color-red">未完成</span>）</div>
     </div>
     <div class="flex space-between">
@@ -89,7 +88,8 @@ let workGroupSizeRowX = IMG_SIZE
 let workGroupSizeRowY = 1
 let workGroupSizeColX = 1
 let workGroupSizeColY = IMG_SIZE
-let customAmplitude = 0.1
+let customAmplitude = 0.2
+let customWindSpeed = 45.223
 let phillipsGroupSize = 16
 
 let wData = new Float32Array(IMG_SIZE * 4)
@@ -136,7 +136,7 @@ const codeTexturePhillips = () => {
       if(kLen < 1e-6) { return 0.0; } // 排除 k=0
       
       let G = 9.8;
-      var wind = vec2<f32>(1.0, -1.0);
+      var wind = vec2<f32>(0.5, -0.85);
       var betaS = 0.0;
       var omega = 0.855 * G / length(wind);
       var ratio = dispersion(k) / omega;
@@ -163,8 +163,8 @@ const codeTexturePhillips = () => {
       let kLen2 = kLen * kLen;
       let kLen4 = kLen2 * kLen2;
       
-      let windDir = normalize(vec2<f32>(1.0, -1.0)); // 风向向量
-      let windSpeed = 30.5; // 风速
+      let windDir = normalize(vec2<f32>(0.5, -0.85)); // 风向向量
+      let windSpeed = ${customWindSpeed}; // 风速
       let A = ${customAmplitude}; // 振幅参数
       let G = 9.8;
       
@@ -209,10 +209,10 @@ const codeTexturePhillips = () => {
       
       // let k = vec2<f32>(TWO_PI * x / size - PI, TWO_PI * y / size - PI);
       
-      // var h0k = vec2<f32>(gaussValue1 * sqrt(phillips(k) * donelanBannerDirectionalSpreading(k) * 0.5));
-      // var h0kConj = vec2<f32>(gaussValue2 * sqrt(phillips(-k) * donelanBannerDirectionalSpreading(-k) * 0.5));
-      var h0k = vec2<f32>(gaussValue1 * sqrt(phillips(k) * 0.5));
-      var h0kConj = vec2<f32>(gaussValue2 * sqrt(phillips(-k) * 0.5));
+      var h0k = vec2<f32>(gaussValue1 * sqrt(phillips(k) * donelanBannerDirectionalSpreading(k) * 0.5));
+      var h0kConj = vec2<f32>(gaussValue2 * sqrt(phillips(-k) * donelanBannerDirectionalSpreading(-k) * 0.5));
+      // var h0k = vec2<f32>(gaussValue1 * sqrt(phillips(k) * 0.5));
+      // var h0kConj = vec2<f32>(gaussValue2 * sqrt(phillips(-k) * 0.5));
       h0kConj.y *= -1.0;
       
       let omega = dispersion(k) * param.uTime;
@@ -514,7 +514,7 @@ const initScene = async () => {
 
   const createLight = () => {
     const light = new HemisphericLight('light',new Vector3(40, 40, 40), scene)
-    light.direction = new Vector3(1.0, 0.0, 1.0)
+    light.direction = new Vector3(0.0, 1.0, 0.0)
     light.diffuse = new Color3(1.0, 0.95, 0.8)
     return light
   }
@@ -873,7 +873,7 @@ const initScene = async () => {
     const oceanMat = new ShaderMaterial('oceanMat', scene, {
       vertexSource: `
         precision highp float;
-
+			
         attribute vec3 position;
         attribute vec2 uv;
 
@@ -884,97 +884,103 @@ const initScene = async () => {
         uniform float uGridCount;
         uniform float uEnergyScale;
 
-        varying vec3 vColor;
-        varying vec2 vUv;
+        varying float vX;
+        varying float vY;
+        varying float vZ;
 
         void main() {
-          vUv = uv;
+          // texelCenter 把 uv 从任意小数对齐到“texel 中心”，再让 GPU 做双线性插值，就不会出现“一格一格”的跳变
+          float scaleGridCount = uGridCount * 4.0;
+          vec2 texelCenter = (floor(uv * scaleGridCount) + 0.5) / scaleGridCount;
+          vec4 texelSample = texture2D(heightMap,  texelCenter);
+          
+          vX = abs(texelSample.x);
+          vY = abs(texelSample.y);
+          vZ = abs(texelSample.z);
 
           vec3 pos = position;
-
-          // float sigma = 1.0;
-          // vec2 offsets[25];
-          // for (int i = -2; i <= 2; ++i) {
-          //   for (int j = -2; j <= 2; ++j) {
-          //     offsets[(i + 2) * 5 + (j + 2)] = vec2(i, j);
-          //   }
-          // }
-
-          // float weights[25];
-          // for (int i = 0; i < 25; ++i) {
-          //   float x = offsets[i].x;
-          //   float y = offsets[i].y;
-          //   weights[i] = exp(-(x * x + y * y) / (2.0 * sigma * sigma));
-          // }
-
-          // float kernelSum = 0.0;
-          // float heightSum = 0.0;
-          // vec2 texSize = textureSize(heightMap, 0);
-
-          // for (int i = 0; i < 25; ++i) {
-          //   vec2 offset = offsets[i] / texSize;
-          //   vec4 hSample = texture2D(heightMap, uv + offset) * uEnergyScale;
-          //   kernelSum += weights[i];
-          //   heightSum += hSample.x * weights[i];
-          // }
-
-          // float smoothedHeight = heightSum / kernelSum;
-          // pos.y = smoothedHeight * 40.0;
-
-          // vec4 x = texture2D(displacementX, uv);
-          // vec4 z = texture2D(displacementZ, uv);
-          // pos.x += x.x * uEnergyScale;
-          // pos.z += z.x * uEnergyScale;
+          pos.x += vX;
+          pos.z += vZ;
+          pos.y = vY * 5.0;
 
           gl_Position = worldViewProjection * vec4(pos, 1.0);
         }
       `,
       fragmentSource: `
         precision highp float;
-
+			
         uniform sampler2D heightMap;
+        uniform sampler2D displacementX;
+        uniform sampler2D displacementZ;
         uniform float uEnergyScale;
         uniform float uGridCount;
+        uniform vec3 uLightDir;
+        
+        varying float vX;
+        varying float vY;
+        varying float vZ;
 
-        varying vec3 vColor;
-        varying vec2 vUv;
-
-        void main(){
-          // 高斯滤波的核
-          float sigma = 1.0;
-          vec2 offsets[25];
-          for (int i = -2; i <= 2; ++i) {
-            for (int j = -2; j <= 2; ++j) {
-              offsets[(i + 2) * 5 + (j + 2)] = vec2(i, j);
-            }
-          }
-
-          float weights[25];
-          for (int i = 0; i < 25; ++i) {
-            float x = offsets[i].x;
-            float y = offsets[i].y;
-            weights[i] = exp(-(x * x + y * y) / (2.0 * sigma * sigma));
-          }
-
-          float kernelSum = 0.0;
-          float heightSum = 0.0;
-          vec2 texSize = textureSize(heightMap, 0);
-
-          for (int i = 0; i < 25; ++i) {
-            vec2 offset = offsets[i] / texSize;
-            vec4 hSample = texture2D(heightMap, vUv + offset) * uEnergyScale;
-            kernelSum += weights[i];
-            heightSum += hSample.x * weights[i];
-          }
-
-          float smoothedHeight = heightSum / kernelSum * 10.0;
-          
+        void main() {
+          // 简单的颜色渲染
           vec3 deepWaterColor = vec3(0.0, 0.549, 0.996); // 海水的深蓝色
           vec3 shallowWaterColor = vec3(0.3, 0.7, 1.0); // 天空的浅天蓝色
-          float depthFactor = clamp(smoothedHeight, 0.0, 1.0);
-          vec3 waterColor = mix(deepWaterColor, shallowWaterColor, depthFactor);
+
+
+          // vec3 waterColor = mix(deepWaterColor, shallowWaterColor, abs(vY) * 0.5);
+          // // waterColor = vec3(abs(vY), abs(vY), abs(vY));
           // gl_FragColor = vec4(waterColor, 1.0);
-          gl_FragColor = vec4(smoothedHeight, smoothedHeight, smoothedHeight, 1.0);
+          
+          // texelCenter 把 uv 从任意小数对齐到“texel 中心”，再让 GPU 做双线性插值，就不会出现“一格一格”的跳变
+          vec2 texelCenter = (floor(gl_FragCoord.xy) + 0.5) / uGridCount;
+          
+          // 一个 texel 的边长（世界空间 1 个单位）
+          float texel = 1.0 / uGridCount;
+          
+          // 对 height 做中心差分
+          float hx = abs(texture2D(heightMap, texelCenter + vec2(texel, 0.0)).x) - abs(texture2D(heightMap, texelCenter - vec2(texel, 0.0)).x);
+          float hz = abs(texture2D(heightMap, texelCenter + vec2(0.0, texel)).x) - abs(texture2D(heightMap, texelCenter - vec2(0.0, texel)).x);
+          // 中心差分系数 1/(2*texel)
+          hx *= 0.5;
+          hz *= 0.5;
+          
+          // 对 displacementX 做中心差分
+          float dxx = abs(texture2D(displacementX, texelCenter + vec2(texel, 0.0)).x) - abs(texture2D(displacementX, texelCenter - vec2(texel, 0.0)).x);
+          float dxz = abs(texture2D(displacementX, texelCenter + vec2(0.0, texel)).x) - abs(texture2D(displacementX, texelCenter - vec2(0.0, texel)).x);
+          // 中心差分系数 1/(2*texel)
+          dxx *= 0.5;
+          dxz *= 0.5;
+          
+          // 对 displacementZ 做中心差分
+          float dzx = abs(texture2D(displacementZ, texelCenter + vec2(texel, 0.0)).x) - abs(texture2D(displacementZ, texelCenter - vec2(texel, 0.0)).x);
+          float dzz = abs(texture2D(displacementZ, texelCenter + vec2(0.0, texel)).x) - abs(texture2D(displacementZ, texelCenter - vec2(0.0, texel)).x);
+          // 中心差分系数 1/(2*texel)
+          dzx *= 0.5;
+          dzz *= 0.5;
+          
+          // 构造切线向量（世界空间）
+          vec3 Tx = vec3(1.0 + dxx, hx, dzx); // 注意：dx 影响 x、z 两个方向
+          vec3 Tz = vec3(dxz, hz, 1.0 + dzz);
+          
+          // 叉乘得法线并归一化
+          vec3 norm = normalize(cross(Tz, Tx));
+          
+          // 用水体颜色做简单光照【最基础的漫反射光照模型】
+          vec3 base = mix(deepWaterColor, shallowWaterColor, abs(vY) * 0.8); // 调整高度差
+          
+          // 简单 Lambertian Diffuse
+          vec3 L = normalize(uLightDir);
+          float NormDotL = max(0.0, dot(norm, L));
+          
+          // 光照参数（能量守恒范围内）
+          const vec3 kAmbient = vec3(0.15, 0.18, 0.20); // 天空漫反射
+          const vec3 kDirect = vec3(0.85, 0.82, 0.80); // 太阳直射
+          
+          vec3 lighting = kAmbient + kDirect * NormDotL;
+          
+          vec3 color = base * lighting;
+          color = pow(color, vec3(1.0/0.8));
+
+          gl_FragColor = vec4(color, 1.0);
         }
       `
     }, {
@@ -987,6 +993,7 @@ const initScene = async () => {
     oceanMat.setTexture('displacementZ', rawColZ)
     oceanMat.setFloat('uGridCount', IMG_SIZE)
     oceanMat.setFloat('uEnergyScale', IMG_SIZE)
+    oceanMat.setVector3('uLightDir', new Vector3(0.0, 1.0, 0.0))
     const oceanSize = 1024
     const ocean = MeshBuilder.CreateGround('ocean', {
       width: oceanSize,
@@ -1004,7 +1011,7 @@ const initScene = async () => {
 
     
     scene.registerBeforeRender(async () => {
-      uTime += 0.01
+      uTime += 0.02
       device.queue.writeBuffer(uniformBuf, 0, new Float32Array([uTime, 0, 0, 0]))
       let phillipsEncoder = device.createCommandEncoder()
       let phillipsPass = phillipsEncoder.beginComputePass()

@@ -730,6 +730,76 @@
 
 
 
+				const oceanMat = new BABYLON.ShaderMaterial('oceanMat', scene, {
+					vertexSource: `
+						precision highp float;
+		
+						attribute vec3 position;
+						attribute vec2 uv;
+		
+						uniform mat4 worldViewProjection;
+						uniform sampler2D heightMap;
+						uniform sampler2D displacementX;
+						uniform sampler2D displacementZ;
+						uniform float uGridCount;
+						uniform float uEnergyScale;
+		
+						varying float vX;
+						varying float vY;
+						varying float vZ;
+		
+						void main() {
+							// texelCenter 把 uv 从任意小数对齐到“texel 中心”，再让 GPU 做双线性插值，就不会出现“一格一格”的跳变
+							vec2 texelCenter = (floor(uv * uGridCount) + 0.5) / uGridCount;
+							vec4 texelSample = texture2D(heightMap,  texelCenter);
+							
+							vX = abs(texelSample.x);
+							vY = abs(texelSample.y);
+							vZ = abs(texelSample.z);
+		
+							vec3 pos = position;
+		
+							gl_Position = worldViewProjection * vec4(pos, 1.0);
+						}
+					`,
+					fragmentSource: `
+						precision highp float;
+		
+						uniform sampler2D heightMap;
+						uniform float uEnergyScale;
+						uniform float uGridCount;
+		
+						varying float vX;
+						varying float vY;
+						varying float vZ;
+		
+						void main(){
+							vec3 color = vec3(abs(vX), abs(vY), abs(vZ));
+							gl_FragColor = vec4(color, 1.0);
+						}
+					`
+				}, {
+					attributes: ['position', 'uv'],
+					uniforms: ['worldViewProjection', 'heightMap', 'displacementX', 'displacementZ', 'uGridCount', 'uEnergyScale'],
+					samplers: ['heightMap', 'displacementZ', 'displacementX'],
+				})
+				oceanMat.setTexture('heightMap', rawColY)
+				oceanMat.setTexture('displacementX', rawColX)
+				oceanMat.setTexture('displacementZ', rawColZ)
+				oceanMat.setFloat('uGridCount', IMG_SIZE * 4)
+				oceanMat.setFloat('uEnergyScale', IMG_SIZE)
+				const oceanSize = 1024
+				const ocean = BABYLON.MeshBuilder.CreateGround('ocean', {
+					width: oceanSize,
+					height: oceanSize,
+					subdivisions: IMG_SIZE - 1
+				}, scene)
+				ocean.material = oceanMat
+				ocean.position = new BABYLON.Vector3(0, 0, oceanSize * 0.75)
+
+
+
+
 
 
 
