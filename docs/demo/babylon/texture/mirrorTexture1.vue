@@ -4,7 +4,7 @@
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     </div>
-    <canvas v-if="isRunning" id="mirrorTexture" class="stage"></canvas>
+    <canvas v-if="isRunning" id="mirrorTexture1" class="stage"></canvas>
   </div>
 </template>
 
@@ -42,7 +42,7 @@ const onTrigger = async () => {
 }
 
 const initScene = async () => {
-  const ele = document.getElementById("mirrorTexture") as any
+  const ele = document.getElementById("mirrorTexture1") as any
 
   ele.addEventListener('wheel', function(event) {
     // 根据需要处理滚动

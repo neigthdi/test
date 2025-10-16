@@ -4,5 +4,8 @@
 ## 折射
 <preview path="../demo/babylon/texture/refractionTexture.vue"></preview>
 
-## 反射
-<preview path="../demo/babylon/texture/mirrorTexture.vue"></preview>
+## 反射 -1
+<preview path="../demo/babylon/texture/mirrorTexture1.vue"></preview>
+
+## 反射 -2【主要是原理】
+<preview path="../demo/babylon/texture/mirrorTexture2.vue"></preview>

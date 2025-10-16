@@ -97,6 +97,7 @@ function sidebarBase() {
       text: '数学',
       collapsible: true,
       items: [
+        { text: '点乘-点积-叉乘-叉积-内积-外积', link: '/math/matrixAndVectorComputation' },
         { text: 'Stockham FFT、W', link: '/math/fft' },
         { text: '位运算符', link: '/math/bitwiseOperation' },
       ]
