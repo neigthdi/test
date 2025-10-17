@@ -204,6 +204,32 @@ const initScene = async () => {
       rrt._mirrorMatrix.multiplyToRef(scene.getViewMatrix(), rrt._transformMatrix)
 
       // 强制设置场景的视图矩阵
+      // scene.setTransformMatrix 是 Babylon.js 中用于手动覆盖场景视图矩阵的低阶 API
+      // 直接把“世界→视图→投影”链条里最上游的视图矩阵（以及可选的投影矩阵）换成你传进去的值
+      // 之后整个场景在那一帧就会按你给的矩阵去渲染
+      // 换句话说：它绕开了 Babylon 自带的相机系统，让你“劫持”了摄像机。
+      // ---------------------------------------------------------------------
+      // 作用：
+      //       “把当前场景里所有后续绘制命令的 viewMatrix（和 projectionMatrix）换成我指定的矩阵，直到我再次调用 setTransformMatrix 或 Babylon 在下一帧自动重置它。”
+      // ---------------------------------------------------------------------
+      // 调用后：场景对象 scene._viewMatrix / scene._projectionMatrix 被立即覆盖
+      // 所有 mesh.getWorldMatrix() 依然正常算世界矩阵，但最终 MVP 里的 V 和 P 就是所给的
+      // ---------------------------------------------------------------------
+      // 什么时候用
+      //       需要把 Babylon 场景嵌入到已有引擎/AR/VR 框架里，而头部姿态矩阵由外部 SDK 给出（如 WebXR、OpenCV、ARKit、Kinect）。
+      //       做离线渲染、截图、立方体贴图生成时，想一次性把 6 个方向的视图矩阵塞进去，而懒得创建 6 个相机。
+      //       做特殊投影（斜投影、非对称视锥、浮雕投影、光场显示）而 Babylon 相机参数 UI 里调不出来。
+      //       做“画中画”分屏、多眼渲染：同一帧里先 setTransformMatrix(eye0View, eye0Proj) 画一遍，再 setTransformMatrix(eye1View, eye1Proj) 画第二遍，只需一个场景、一个相机对象即可。
+      // ---------------------------------------------------------------------
+      // 最小可运行示例：
+      //       // 假设外部已经给你算好了 view / proj
+      //       const customView = BABYLON.Matrix.LookAtLH(eye, target, up);
+      //       const customProj = BABYLON.Matrix.PerspectiveFovLH(fov, aspect, zn, zf);
+      //       // 每帧刷新，劫持摄像机
+      //       scene.registerBeforeRender(() => {
+      //           scene.setTransformMatrix(customView, customProj);
+      //       });
+      // ---------------------------------------------------------------------
       // 参数 1：	视图矩阵已被换成 V' = R·V
       // 参数 2：	投影矩阵保持原样（P）
       // WebGL 侧实际动作：
@@ -300,6 +326,7 @@ const destroy = () => {
     sceneResources = null
   }
 }
+
 
 onMounted(async() => {
   await nextTick()
