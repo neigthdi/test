@@ -67,6 +67,7 @@ const initScene = async () => {
   camera.panningSensibility = 10
   camera.attachControl(ele, true)
   camera.setPosition(new Vector3(0, 30, -200))
+  scene.activeCamera = camera
 
   const createLight = () => {
     const dir = new DirectionalLight('dir', new Vector3(-1, -2, -1), scene)
@@ -88,11 +89,11 @@ const initScene = async () => {
     }, scene)
     box.position.y = 30
 
-    const ground = MeshBuilder.CreateGround('ground', { width: 1000, height: 1000 }, scene)
+    const ground: any = MeshBuilder.CreateGround('ground', { width: 1000, height: 1000 }, scene)
     ground.position.y = 0
 
 
-    let name = 'mirror'
+    const name = 'mirror'
 
     // 在 onBeforeRenderObservable 里，临时保存主场景当前的裁剪平面，以便在 onAfterRenderObservable 里恢复
     // 画镜像时，必须只渲染镜子平面以上的物体（否则会出现“地下”的倒影），因此需要启用 裁剪平面（clipPlane）——即只保留平面一侧的像素
@@ -283,6 +284,7 @@ const initScene = async () => {
       if (rrt._sceneUBO) {
         scene.setSceneUniformBuffer(rrt._currentSceneUBO)
       }
+      
       // 恢复场景的视图矩阵
       // 之前做了什么：onBeforeRender 里手动调了 scene.setTransformMatrix(R·V, P)，把视图矩阵换成了“反射视角”。
       // 现在做什么：updateTransformMatrix() 让 Babylon 重新计算：主相机的视图矩阵 V × 投影矩阵 P，恢复成正常视角。

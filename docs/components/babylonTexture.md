@@ -7,5 +7,8 @@
 ## 反射 -1
 <preview path="../demo/babylon/texture/mirrorTexture1.vue"></preview>
 
-## 反射 -2【主要是原理】
+## 反射 -2【主要是原理】【StandardMaterial】
 <preview path="../demo/babylon/texture/mirrorTexture2.vue"></preview>
+
+## 反射 -3【主要是原理】【ShaderMaterial】
+<preview path="../demo/babylon/texture/mirrorTexture3.vue"></preview>
