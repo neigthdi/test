@@ -95,7 +95,7 @@ mvp
 
 #### 一个物体的三维坐标向量(position)，乘以模型视图矩阵(modelView)后，能够得到它在视图坐标系中的位置，也就是它相对于摄像机的坐标位置。
 
-#### ----------------------------------------------------------------------------------------------
+---
 
 #### 以下这个是获取到 xyz 的位置
 
@@ -120,3 +120,21 @@ position 是相对于正方体的锚点而言的
 ```javascript
 gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0)
 ```
+
+---
+
+uniform mat4 world;  
+uniform mat4 worldViewProjection;
+
+| 名字 | 含义 | 在 CPU 端通常怎么算 | 在着色器里起什么作用 |
+|---|---|---|---|
+| **world** | 把顶点从“模型局部空间”转到“世界空间” | 由场景图/引擎根据模型的缩放-旋转-平移直接算出，每帧可能变一次 | 当你需要在世界坐标系下做计算（光照、法线变换、环境反射、世界位置采样等）时才用它：<br>`vec4 worldPos = world * vec4(position, 1.0);` |
+| **worldViewProjection** | 把顶点一次性从“模型局部空间”转到“裁剪空间”（齐次裁剪坐标） | 由 CPU 先把 world、view、projection 三个矩阵乘在一起，再传进来：<br>`wvp = P * V * W` | 只做顶点最终输出，不参与光照：<br>`gl_Position = worldViewProjection * vec4(position, 1.0);` |
+
+一句话区别：  
+**world** 只负责“模型→世界”，给你在世界坐标系里干活用；  
+**worldViewProjection** 是“模型→世界→视图→投影”的合并捷径，唯一目的就是快速算出 `gl_Position`，让 GPU 走后续裁剪-光栅流程。
+
+因此：
+- 需要世界坐标位置/法线/向量 → 用 `world`；
+- 只想把顶点甩到裁剪空间 → 用 `worldViewProjection`，省掉在 VS 里再乘三遍矩阵。

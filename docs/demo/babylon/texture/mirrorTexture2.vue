@@ -4,6 +4,7 @@
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
     </div>
+    <div>巧妙的创建镜像世界，把view变成镜像世界的矩阵，并不是真的new一个相机来观察</div>
     <canvas v-if="isRunning" id="mirrorTexture2" class="stage"></canvas>
   </div>
 </template>
@@ -92,7 +93,16 @@ const initScene = async () => {
 
 
     let name = 'mirror'
-    // 在 onBeforeRenderObservable 里，临时保存主场景当前的裁剪平面，以便在 onAfterRenderObservable 里恢复。
+
+    // 在 onBeforeRenderObservable 里，临时保存主场景当前的裁剪平面，以便在 onAfterRenderObservable 里恢复
+    // 画镜像时，必须只渲染镜子平面以上的物体（否则会出现“地下”的倒影），因此需要启用 裁剪平面（clipPlane）——即只保留平面一侧的像素
+    // saveClipPlane 就是用来 临时保存场景原来的裁剪平面，以便在画完镜像后再恢复回去，避免影响后续正常渲染
+    // 渲染镜像前
+    //       saveClipPlane = scene.clipPlane   // 备份
+    //       scene.clipPlane = rrt.mirrorPlane // 设为镜面平面，启用裁剪
+    // 渲染镜像后
+    //         scene.clipPlane = saveClipPlane   // 还原备份，恢复现场
+    // saveClipPlane 起到“现场保护”作用，保证镜像渲染不会破坏场景原有的裁剪状态。
     let saveClipPlane: any = null
 
     const rrt: any = new RenderTargetTexture('mirror', { width: 1000, height: 1000 }, scene, false, true)
@@ -108,6 +118,8 @@ const initScene = async () => {
 
     // 告诉 RenderTargetTexture：只画这个物体，别的都不画
     rrt.renderList.push(box)
+
+    scene.customRenderTargets.push(rrt)
 
     // 防止主场景和反射场景之间的 Uniform 数据冲突
     if (engine.supportsUniformBuffers) {
