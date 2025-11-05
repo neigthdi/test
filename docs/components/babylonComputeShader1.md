@@ -1,5 +1,5 @@
-<!-- ## 测试
-<preview path="../demo/babylon/computeShader1/test.vue"></preview> -->
+## 学习wgsl的传参-1
+<preview path="../demo/babylon/computeShader1/learnWgsl1.vue"></preview>
 
 ## 给ground设置图片材质-1
 <preview path="../demo/babylon/computeShader1/setTextureToGround1.vue"></preview>

@@ -2,57 +2,63 @@
   "hash": "94248b45",
   "configHash": "31f27b00",
   "lockfileHash": "5e636d06",
-  "browserHash": "c8686f70",
+  "browserHash": "ab4a9819",
   "optimized": {
     "vue": {
       "src": "../../../../node_modules/.pnpm/vue@3.3.4/node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "36e85836",
+      "fileHash": "0ae77ea6",
       "needsInterop": false
     },
     "vitepress > @vue/devtools-api": {
       "src": "../../../../node_modules/.pnpm/@vue+devtools-api@7.6.8/node_modules/@vue/devtools-api/dist/index.js",
       "file": "vitepress___@vue_devtools-api.js",
-      "fileHash": "e7345a94",
+      "fileHash": "bf39e070",
       "needsInterop": false
     },
     "vitepress > @vueuse/core": {
       "src": "../../../../node_modules/.pnpm/@vueuse+core@11.3.0_vue@3.5.13/node_modules/@vueuse/core/index.mjs",
       "file": "vitepress___@vueuse_core.js",
-      "fileHash": "904b6d31",
+      "fileHash": "f56c2cca",
       "needsInterop": false
     },
     "@vitepress-demo-preview/component": {
       "src": "../../../../node_modules/.pnpm/@vitepress-demo-preview+component@2.3.2_vitepress@1.5.0_vue@3.3.4/node_modules/@vitepress-demo-preview/component/dist/preview-component.js",
       "file": "@vitepress-demo-preview_component.js",
-      "fileHash": "31ee3f99",
+      "fileHash": "0e9c8e94",
       "needsInterop": false
     },
     "katex": {
       "src": "../../../../node_modules/.pnpm/katex@0.16.22/node_modules/katex/dist/katex.mjs",
       "file": "katex.js",
-      "fileHash": "d57996af",
+      "fileHash": "df81c508",
       "needsInterop": false
     },
     "babylonjs-loaders": {
       "src": "../../../../node_modules/.pnpm/babylonjs-loaders@8.32.0/node_modules/babylonjs-loaders/babylonjs.loaders.min.js",
       "file": "babylonjs-loaders.js",
-      "fileHash": "583e8403",
+      "fileHash": "2ea73900",
       "needsInterop": true
     },
     "babylonjs": {
       "src": "../../../../node_modules/.pnpm/babylonjs@8.32.0/node_modules/babylonjs/babylon.js",
       "file": "babylonjs.js",
-      "fileHash": "355074dd",
+      "fileHash": "b5b8be1d",
+      "needsInterop": true
+    },
+    "babylonjs-gui": {
+      "src": "../../../../node_modules/.pnpm/babylonjs-gui@8.32.0/node_modules/babylonjs-gui/babylon.gui.min.js",
+      "file": "babylonjs-gui.js",
+      "fileHash": "bbdbce0e",
       "needsInterop": true
     }
   },
   "chunks": {
-    "chunk-CZWJT7L5": {
-      "file": "chunk-CZWJT7L5.js"
-    },
     "chunk-67UUJLDS": {
       "file": "chunk-67UUJLDS.js"
+    },
+    "chunk-CZWJT7L5": {
+      "file": "chunk-CZWJT7L5.js"
     },
     "chunk-BUSYA2B4": {
       "file": "chunk-BUSYA2B4.js"
