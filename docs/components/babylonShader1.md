@@ -9,3 +9,6 @@
 
 ## 粒子的颜色变换
 <preview path="../demo/babylon/shader1/shaderParticle.vue"></preview>
+
+## 管道-1
+<preview path="../demo/babylon/shader1/shaderPipe1.vue"></preview>
