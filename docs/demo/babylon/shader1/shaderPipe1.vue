@@ -242,7 +242,7 @@ const initScene = async () => {
       
       uniform float uLen;
       uniform float uCurInd;
-      uniform float uTotal;
+      // uniform float uTotal;
       
       varying vec2 vUV;
       
@@ -282,7 +282,7 @@ const initScene = async () => {
         fragment: 'customs'
       }, {
         attributes: ['position', 'uv'],
-        uniforms: ['worldViewProjection', 'uLen', 'uCurInd', 'uTotal']
+        uniforms: ['worldViewProjection', 'uLen', 'uCurInd', /** 'uTotal' */]
       }
     )
 
@@ -291,7 +291,7 @@ const initScene = async () => {
     let curInd = 0.0
     shaderMaterial.setFloat('uLen', 0.2)
     shaderMaterial.setFloat('uCurInd', curInd)
-    shaderMaterial.setFloat('uTotal', pipe.getTotalIndices())
+    // shaderMaterial.setFloat('uTotal', pipe.getTotalIndices())
 
     pipe.material = shaderMaterial
 
