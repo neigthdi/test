@@ -12,3 +12,6 @@
 
 ## 管道-1
 <preview path="../demo/babylon/shader1/shaderPipe1.vue"></preview>
+
+## 管道-2
+<preview path="../demo/babylon/shader1/shaderPipe2.vue"></preview>
