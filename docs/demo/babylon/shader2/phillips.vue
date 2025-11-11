@@ -74,7 +74,7 @@
     camera.setPosition(new Vector3(160, 160, -160))
   
     const createLight = () => {
-      const light = new HemisphericLight('light',new Vector3(40, 40, 40), scene)
+      const light = new HemisphericLight('light', new Vector3(40, 40, 40), scene)
       light.direction = new Vector3(1.0, 0.0, 1.0)
       light.diffuse = new Color3(1.0, 0.95, 0.8)
       return light

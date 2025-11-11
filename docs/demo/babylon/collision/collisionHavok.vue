@@ -69,7 +69,7 @@ const initScene = async () => {
   scene.enablePhysics(new Vector3(0, -9.8, 0), havokPlugin)
 
   const createLight = () => {
-    const light = new HemisphericLight('light',new Vector3(0, 1, 0), scene)
+    const light = new HemisphericLight('light', new Vector3(0, 1, 0), scene)
     light.intensity = 0.7
     return light
   }

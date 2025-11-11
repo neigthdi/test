@@ -70,7 +70,7 @@ const initScene = async () => {
   camera.setPosition(new Vector3(20, 20, 20))
 
   const createLight = () => {
-    const light = new HemisphericLight('light',new Vector3(1, 1, 0), scene)
+    const light = new HemisphericLight('light', new Vector3(1, 1, 0), scene)
     return light
   }
 

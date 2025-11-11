@@ -157,7 +157,7 @@ const initScene = async () => {
   }
 
   const createLight = () => {
-    const light = new HemisphericLight('light',new Vector3(0, 1, 0), scene)
+    const light = new HemisphericLight('light', new Vector3(0, 1, 0), scene)
     light.intensity = 0.7
     return light
   }

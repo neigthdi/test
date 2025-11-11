@@ -60,10 +60,10 @@ const initScene = async () => {
   const camera =  new UniversalCamera('UniversalCamera', new Vector3(0, 3, -30), scene)
 
   const createLight = () => {
-    const light1 = new HemisphericLight('light',new Vector3(0, -1, 0), scene)
+    const light1 = new HemisphericLight('light', new Vector3(0, -1, 0), scene)
     light1.intensity = 0.25
 
-    const light2 = new HemisphericLight('light',new Vector3(0, 1, -1), scene)
+    const light2 = new HemisphericLight('light', new Vector3(0, 1, -1), scene)
     light2.intensity = 0.5
   }
 

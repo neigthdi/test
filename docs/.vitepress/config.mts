@@ -151,6 +151,7 @@ function sidebarBase() {
         { text: '纹理', link: '/components/babylonTexture.md' },
         { text: '几何体相关', link: '/components/babylonGeometry.md' },
         { text: 'RPG相关', link: '/components/babylonRpg.md' },
+        { text: '后处理', link: '/components/babylonPostProcess.md' },
         { text: 'shader1', link: '/components/babylonShader1.md' },
         { text: 'shader2', link: '/components/babylonShader2.md' },
         { text: 'computeShader1', link: '/components/babylonComputeShader1.md' },
