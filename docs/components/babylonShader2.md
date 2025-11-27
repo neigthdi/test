@@ -4,6 +4,9 @@
 ## 水面倒影
 <preview path="../demo/babylon/shader2/shaderWaterReflection.vue"></preview>
 
+## 模拟云
+<preview path="../demo/babylon/shader2/cloud.vue"></preview>
+
 ## 菲利普频谱
 <preview path="../demo/babylon/shader2/phillips.vue"></preview>
 

@@ -31,7 +31,7 @@ import {
 const fps = ref(0)
 const isRunning = ref(false)
 
-let sceneResources, adt
+ let sceneResources: any, adt: any
 
 const onTrigger = async () => {
   if (!isRunning.value) {
@@ -47,7 +47,7 @@ const onTrigger = async () => {
 const initScene = async () => {
   const ele = document.getElementById("learnWgsl1") as any
 
-  ele.addEventListener('wheel', function(event) {
+  ele.addEventListener('wheel', function(event: any) {
     // 根据需要处理滚动
     // 例如，可以修改相机的半径或角度
     event.preventDefault() // 阻止默认滚动行为

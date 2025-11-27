@@ -42,7 +42,7 @@ const onTrigger = async () => {
 const initScene = async () => {
   const ele = document.getElementById("animationDoorCamera") as any
 
-  ele.addEventListener('wheel', function(event) {
+  ele.addEventListener('wheel', function(event: any) {
     // 根据需要处理滚动
     // 例如，可以修改相机的半径或角度
     event.preventDefault() // 阻止默认滚动行为

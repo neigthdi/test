@@ -4,9 +4,11 @@
 ***
 
 #### ---- AI是利器，但知识唯有深悟，方能内化。{ style="color: #ff1a30;"}
-#### ---- 好奇与创新，进步的阶梯。 { style="color: #3cbbff;"}
+#### ---- 好奇、探索、创新。 { style="color: #3cbbff;"}
 ***
 
-#### 未完成：1、computeShader的海洋；2、shaderToy的海洋倒影{ style="color: #d400f0ff;"}
+#### 未完成：{ style="color: #d400f0ff;"}
+ - 1、computeShader的海洋【海浪的雅可比行列式】{ style="color: #d400f0ff;"}
+ - 2、shaderToy的海洋倒影{ style="color: #d400f0ff;"}
+ - 3、山上的云朵{ style="color: #d400f0ff;"}
 ***
-最后更新时间：2025-11-11 17:33

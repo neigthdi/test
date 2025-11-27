@@ -51,7 +51,7 @@ const endPoint = ref<any>({})
 const collectionMesh = ref<any>([])
 const saveMaterial = ref<any>([])
 
-let sceneResources, adt
+ let sceneResources: any, adt: any
 
 const onTrigger = async () => {
   if (!isRunning.value) {
@@ -70,7 +70,7 @@ const initScene = async () => {
   const boxWidth = Number(window.getComputedStyle(customBox).width.split('px')[0])
   const boxHeight = Number(window.getComputedStyle(customBox).height.split('px')[0])
 
-  ele.addEventListener('wheel', function(event) {
+  ele.addEventListener('wheel', function(event: any) {
     // 根据需要处理滚动
     // 例如，可以修改相机的半径或角度
     event.preventDefault() // 阻止默认滚动行为
