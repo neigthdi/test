@@ -107,6 +107,7 @@ function sidebarBase() {
       collapsible: true,
       items: [
         { text: '着色器', link: '/other/shader' },
+        { text: '噪音', link: '/other/noise' },
         { text: '钩子', link: '/other/hook' },
         { text: '存储', link: '/other/storage' },
         { text: 'layerMask', link: '/other/layerMask' },
