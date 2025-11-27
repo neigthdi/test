@@ -1,4 +1,4 @@
-## perlin 和 fbm 是不一样的
+## perlin和fbm【二者是不一样的】
 具体内容网址：【https://www.cnblogs.com/xiaowangba/p/6314642.html】      
 
 ***
@@ -10,7 +10,7 @@
 | 基于晶格的方法（Lattice based）| 又可细分为两种：<br>第一种是 [梯度噪声（Gradient noise](https://en.wikipedia.org/wiki/Gradient_noise)），包括 [Perlin噪声](https://en.wikipedia.org/wiki/Perlin_noise)， [Simplex噪声](https://en.wikipedia.org/wiki/Simplex_noise)， [Wavelet噪声](https://en.wikipedia.org/wiki/Wavelet_noise) 等；<br>第二种是 [Value噪声（Value noise）](https://en.wikipedia.org/wiki/Value_noise)。|
 | 基于点的方法（Point based）| [Worley噪声](https://en.wikipedia.org/wiki/Worley_noise)|
 
-需要注意的是，一些文章经常会把Perlin噪声、Value噪声与 [分形噪声（Fractal noise）](https://en.wikipedia.org/wiki/Pink_noise) 弄混，这实际在概念上是有些不一样的。分形噪声会把多个不同振幅、不同频率的octave相叠加，得到一个更加自然的噪声。而这些octave则对应了不同的来源，它可以是Gradient噪声（例如Perlin噪声）或Value噪声，也可以是一个简单的 [白噪声](https://en.wikipedia.org/wiki/White_noise)（White noise）。
+需要注意的是，一些文章经常会把Perlin噪声、Value噪声与 [分形噪声（Fractal noise）](https://en.wikipedia.org/wiki/Pink_noise) 弄混，这实际在概念上是有些不一样的。分形噪声会把多个不同振幅、不同频率的octave【一个Octave代表了一层特定频率和振幅的噪声】相叠加，得到一个更加自然的噪声。而这些octave则对应了不同的来源，它可以是Gradient噪声（例如Perlin噪声）或Value噪声，也可以是一个简单的 [白噪声](https://en.wikipedia.org/wiki/White_noise)（White noise）。
 
 一些非常出色的文章也错误把这种分形噪声声称为Perlin噪声，例如：
 
@@ -25,3 +25,46 @@
 ***
 
 ![image](./img/noise-1.png)
+
+
+***
+
+## octave
+
+想象在生成山脉地形：
+ - 第1个Octave：决定巨大的山脉轮廓（低频、高振幅）→ 大起伏
+ - 第2个Octave：在山脉上添加一些丘陵（频率×2，振幅÷2）→ 中等细节
+ - 第3个Octave：在丘陵上添加岩石和巨石（频率×4，振幅÷4）→ 小细节
+ - 第4个Octave：添加石子和沙粒（频率×8，振幅÷8）→ 微小细节
+叠加所有这些Octave，就能得到极具真实感的自然地形。  
+
+在分形噪声（Fractal Brownian Motion, fbm）中，Octave的叠加遵循严格的数学规律：   
+
+```javascript
+fbm(p) = Σ [ octave_i ]
+octave_i = amplitude_i × noise(frequency_i × p)
+```
+
+其中：
+ - frequency_i = lacunarity^i  （通常 lacunarity = 2，即每级频率翻倍）
+ - amplitude_i = persistence^i  （通常 persistence = 0.5，即每级振幅减半）
+
+```javascript
+float noise_sum(vec2 p) {
+  float f = 0.0;
+  p = p * 4.0;          // 基础频率
+  f += 1.0000 * noise(p); p = 2.0 * p;  // Octave 1
+  f += 0.5000 * noise(p); p = 2.0 * p;  // Octave 2 (频率×2, 振幅×0.5)
+  f += 0.2500 * noise(p); p = 2.0 * p;  // Octave 3 (频率×4, 振幅×0.25)
+  f += 0.1250 * noise(p); p = 2.0 * p;  // Octave 4 (频率×8, 振幅×0.125)
+  f += 0.0625 * noise(p); p = 2.0 * p;  // Octave 5 (频率×16, 振幅×0.0625)
+  return f;
+}
+```
+
+每一行 noise(p) 调用就是一个独立的Octave层。    
+关键参数：
+ - Octave数量：越多细节越丰富，但计算量越大（通常是4-8个）
+ - Lacunarity（频率倍增值）：默认2.0，控制细节密集程度
+ - Persistence（振幅 persistence）：默认0.5，控制细节减弱速度
+理解Octave是掌握程序生成内容（地形、云层、纹理等）的核心，用数学方式"雕刻"出不同尺度的自然细节。
