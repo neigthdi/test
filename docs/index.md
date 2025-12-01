@@ -10,6 +10,5 @@
 #### 未完成：{ style="color: #d400f0ff;"}
  - 1、computeShader的海洋【海浪的雅可比行列式】{ style="color: #d400f0ff;"}
  - 2、shaderToy的海洋倒影{ style="color: #d400f0ff;"}
- - 3、山上的云朵{ style="color: #d400f0ff;"}
+ - 3、山的云{ style="color: #d400f0ff;"}
 ***
-最后更新时间：2025-11-27 13:43

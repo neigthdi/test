@@ -1,5 +1,3 @@
-import "./chunk-BUSYA2B4.js";
-
 // node_modules/.pnpm/katex@0.16.22/node_modules/katex/dist/katex.mjs
 var SourceLocation = class _SourceLocation {
   // The + prefix indicates that these fields aren't writeable
