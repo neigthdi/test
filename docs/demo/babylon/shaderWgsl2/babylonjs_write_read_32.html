@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>三阶段写→读→读（带uTime）</title>
+	</head>
+	<body>
+		<script type="module">
+			const adapter = await navigator.gpu.requestAdapter();
+			const device = await adapter.requestDevice();
+			const [W, H] = [4, 4];
+
+			/* 0. 6 张纹理 ----------------------------------------------------*/
+			const usage = GPUTextureUsage.STORAGE_BINDING |
+				GPUTextureUsage.TEXTURE_BINDING |
+				GPUTextureUsage.COPY_SRC;
+			const tex = [];
+			for (let i = 0; i < 6; ++i) {
+				tex.push(device.createTexture({ size: [W, H], format: 'rgba32float', usage }));
+			}
+			const [t1, t2, t3, t4, t5, t6] = tex;
+
+			/* 1. 写 t1/t2/t3 的 compute 管线（改！）-------------------------*/
+			const write123Module = device.createShaderModule({
+				code: `
+          struct Params { uTime:f32, pad:f32, pad2:f32, pad3:f32 };   // 16 字节对齐
+          @group(0) @binding(0) var<uniform> param:Params;
+          @group(0) @binding(1) var t1 : texture_storage_2d<rgba32float, write>;
+          @group(0) @binding(2) var t2 : texture_storage_2d<rgba32float, write>;
+          @group(0) @binding(3) var t3 : texture_storage_2d<rgba32float, write>;
+
+          @compute @workgroup_size(1,1,1)
+          fn main(@builtin(global_invocation_id) gid:vec3<u32>) {
+            let coord = vec2<i32>(gid.xy);
+            let s = sin(param.uTime);
+            textureStore(t1, coord, vec4<f32>(s, s, s, 1.0));   // 红图 RGB = sin(uTime)
+            textureStore(t2, coord, vec4<f32>(0.0, 0.0, 1.0, 1.0)); // 蓝
+            textureStore(t3, coord, vec4<f32>(0.0, 1.0, 0.0, 1.0)); // 绿
+          }`
+			});
+			const write123Pipeline = device.createComputePipeline({
+				layout: 'auto',
+				compute: { module: write123Module, entryPoint: 'main' }
+			});
+
+			/* 2. 写 t4/t5/t6 的 compute 管线（不变）--------------------------*/
+			const write456Module = device.createShaderModule({
+				code: `
+          @group(0) @binding(0) var t1 : texture_2d<f32>;
+          @group(0) @binding(1) var t2 : texture_2d<f32>;
+          @group(0) @binding(2) var t3 : texture_2d<f32>;
+          @group(0) @binding(3) var t4 : texture_storage_2d<rgba32float, write>;
+          @group(0) @binding(4) var t5 : texture_storage_2d<rgba32float, write>;
+          @group(0) @binding(5) var t6 : texture_storage_2d<rgba32float, write>;
+
+          @compute @workgroup_size(1,1,1)
+          fn main(@builtin(global_invocation_id) gid:vec3<u32>) {
+            let coord = vec2<i32>(gid.xy);
+            let v1 = textureLoad(t1, coord, 0);
+            let v2 = textureLoad(t2, coord, 0);
+            let v3 = textureLoad(t3, coord, 0);
+            textureStore(t4, coord, v1 - v2);
+            textureStore(t5, coord, v1 - v3);
+            textureStore(t6, coord, v2 - v3);
+          }`
+			});
+			const write456Pipeline = device.createComputePipeline({
+				layout: 'auto',
+				compute: { module: write456Module, entryPoint: 'main' }
+			});
+
+			/* 3. 创建 uniform 缓冲（16 字节）--------------------------------*/
+			const uniformBuf = device.createBuffer({
+				size: 16,
+				usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+			});
+
+			/* 4. 两个 bindGroup ---------------------------------------------*/
+			const bg123 = device.createBindGroup({
+				layout: write123Pipeline.getBindGroupLayout(0),
+				entries: [
+					{ binding: 0, resource: { buffer: uniformBuf } },
+					{ binding: 1, resource: tex[0].createView() },
+					{ binding: 2, resource: tex[1].createView() },
+					{ binding: 3, resource: tex[2].createView() }
+				]
+			});
+			const bg456 = device.createBindGroup({
+				layout: write456Pipeline.getBindGroupLayout(0),
+				entries: [
+					...[0, 1, 2].map(b => ({ binding: b, resource: tex[b].createView() })),
+					...[3, 4, 5].map(b => ({ binding: b, resource: tex[b].createView() }))
+				]
+			});
+
+			/* 5. 每秒更新 ----------------------------------------------------*/
+			setInterval(() => {
+				const t = performance.now() * 0.001; // 秒
+				device.queue.writeBuffer(uniformBuf, 0, new Float32Array([t, 0, 0, 0]));
+
+				const enc = device.createCommandEncoder();
+				const c1 = enc.beginComputePass();
+				c1.setPipeline(write123Pipeline);
+				c1.setBindGroup(0, bg123);
+				c1.dispatchWorkgroups(W, H);
+				c1.end();
+
+				const c2 = enc.beginComputePass();
+				c2.setPipeline(write456Pipeline);
+				c2.setBindGroup(0, bg456);
+				c2.dispatchWorkgroups(W, H);
+				c2.end();
+
+				device.queue.submit([enc.finish()]);
+				readBack(); // 可选：把 t4/t5/t6 读回来验证
+			}, 1000);
+
+			/* 6. 读回 t4/t5/t6（256 字节对齐）-------------------------------*/
+			async function readBack() {
+				const name = ['texture4 (R-B)', 'texture5 (R-G)', 'texture6 (B-G)'];
+				const bytesPerPixel = 16,
+					unpadded = W * bytesPerPixel,
+					padded = Math.ceil(unpadded / 256) * 256;
+				for (let i = 0; i < 3; ++i) {
+					const buf = device.createBuffer({
+						size: padded * H,
+						usage: GPUBufferUsage.COPY_DST | GPUBufferUsage
+							.MAP_READ
+					});
+					const enc = device.createCommandEncoder();
+					enc.copyTextureToBuffer({ texture: tex[3 + i] }, { buffer: buf, bytesPerRow: padded }, [W, H]);
+					device.queue.submit([enc.finish()]);
+					await buf.mapAsync(GPUMapMode.READ);
+					const mapped = new Float32Array(buf.getMappedRange());
+					console.log(`---- ${name[i]} ----`);
+					for (let y = 0; y < H; ++y) {
+						const rowOff = y * padded / 4,
+							line = [];
+						for (let x = 0; x < W; ++x) {
+							const o = rowOff + x * 4;
+							line.push(
+								`[${mapped[o].toFixed(2)},${mapped[o+1].toFixed(2)},${mapped[o+2].toFixed(2)},${mapped[o+3].toFixed(2)}]`
+							);
+						}
+						console.log(line.join(' '));
+					}
+					buf.unmap();
+				}
+			}
+		</script>
+	</body>
+</html>

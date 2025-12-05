@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<script src="https://preview.babylonjs.com/babylon.js "></script>
+		<script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js "></script>
+		<title></title>
+	</head>
+	<body>
+		<canvas id="shaderSea1" style="width: 1000px;height: 600px;"></canvas>
+
+		<script>
+		</script>
+
+		<script>
+			let IMG_SIZE = 128
+			let IMG_SIZE_SQRT = Math.sqrt(IMG_SIZE)
+			let logN = Math.log2(IMG_SIZE)
+			let half = IMG_SIZE / 2
+			let uTime = 0.02
+			let workGroupSizeRowX = IMG_SIZE
+			let workGroupSizeRowY = 1
+			let workGroupSizeColX = 1
+			let workGroupSizeColY = IMG_SIZE
+			let customAmplitude = 0.08
+			let phillipsGroupSize = 16
+
+			let wInverseData = new Float32Array(IMG_SIZE * 4)
+		</script>
+
+		<script>
+			function codeTexturePhillips() {
+				return `
+					const TWO_PI: f32 = 6.283185307179586;
+					const PI: f32 = 3.14159265359;
+								
+					// 复数乘法
+					fn complexMultiply(a: vec2<f32>, b: vec2<f32>) -> vec2<f32> {
+						var result: vec2<f32>;
+						result.x = a.x * b.x - a.y * b.y;  // 实部
+						result.y = a.x * b.y + a.y * b.x;  // 虚部
+						return result;
+					}
+						
+					// 色散关系函数
+					fn dispersion(k: vec2<f32>) -> f32 {
+						return sqrt(9.8 * length(k));
+					}
+					
+					// 快速随机函数
+					fn randValueFast(uv: vec2<f32>, seed: f32) -> f32 {
+						return fract(sin(dot(uv, vec2<f32>(12.9898, 78.12345)) + seed) * 43759.54321);
+					}
+					
+					// 高斯图
+					fn gauss(uv: vec2<f32>) -> vec2<f32> {
+						var u1 = randValueFast(uv, 1753.21);
+						var u2 = randValueFast(uv, 3547.15);
+						
+						u1 = max(u1, 1e-6);
+						
+						let mag = sqrt(-2.0 * log(u1));
+						let ang = TWO_PI * u2;
+						
+						return vec2<f32>(mag * cos(ang), mag * sin(ang));
+					}
+					
+					fn donelanBannerDirectionalSpreading(k: vec2<f32>) -> f32 {
+						let kLen = length(k);
+						if(kLen < 1e-6) { return 0.0; } // 排除 k=0
+						
+						let G = 9.8;
+						var wind = vec2<f32>(1.0, -1.0);
+						var betaS = 0.0;
+						var omega = 0.855 * G / length(wind);
+						var ratio = dispersion(k) / omega;
+						
+						// 计算 betaS（方向分布参数）
+						if (ratio < 0.95) {
+							betaS = 2.61 * pow(ratio, 1.3);
+						} else if (ratio < 1.6) {
+							betaS = 2.28 * pow(ratio, -1.3);
+						} else {
+							var  epsilon = -0.4 + 0.8393 * exp(-0.567 * log(ratio * ratio));
+							betaS = pow(10.0, epsilon);
+						}
+						
+						var theta = atan2(k.y, k.x) - atan2(wind.y, wind.x);
+						
+						return  betaS / max(1e-7, 2.0 * tanh(betaS * PI) * pow(cosh(betaS * theta), 2.0));
+					}
+					
+					// phillips图谱
+					fn phillips(k: vec2<f32>) -> f32 {
+						let kLen = length(k);
+						if(kLen < 1e-6) { return 0.0; } // 排除 k=0
+						let kLen2 = kLen * kLen;
+						let kLen4 = kLen2 * kLen2;
+						
+						let windDir = normalize(vec2<f32>(1.0, -1.0)); // 风向向量
+						let windSpeed = 30.5; // 风速
+						let A = ${customAmplitude}; // 振幅参数
+						let G = 9.8;
+						
+						let L = windSpeed * windSpeed / G; // 最大波长
+						let L2 = L * L;
+						
+						// 基础 Phillips
+						var P = A * exp(-1.0 / (kLen2 * L2)) / kLen4;
+						
+						// 方向锁定 cos²θ
+						let cosTheta = (dot(normalize(k), windDir));
+						
+						P *= cosTheta * cosTheta;
+						
+						return P;
+					}
+					
+					struct Params { uTime:f32, pad:f32, pad2:f32, pad3:f32 };   // 16 字节对齐
+					@group(0) @binding(1) var phillipsTextureY: texture_storage_2d<rgba32float, write>;
+					@group(0) @binding(2) var phillipsTextureX: texture_storage_2d<rgba32float, write>;
+					@group(0) @binding(3) var phillipsTextureZ: texture_storage_2d<rgba32float, write>;
+					@group(0) @binding(4) var<uniform> param: Params;
+					
+					@compute @workgroup_size(${phillipsGroupSize}, ${phillipsGroupSize}, 1)
+					fn main(
+						@builtin(global_invocation_id) global_id: vec3<u32>
+					) {
+						var color = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+						
+						let x = f32(global_id.x);
+						let y = f32(global_id.y);
+						
+						let gaussValue1 = gauss(vec2<f32>(x + 3.1415, y + 2.7182));
+						let gaussValue2 = gauss(vec2<f32>(x + 1.4142, y + 1.7321));
+						
+						let size = f32(${IMG_SIZE});
+						
+						// 都是为了平移到中间
+						let nx = x - size * 0.5;
+						let ny = y - size * 0.5;
+						let k = vec2<f32>(TWO_PI * nx / size, TWO_PI * ny / size);
+						
+						// let k = vec2<f32>(TWO_PI * x / size - PI, TWO_PI * y / size - PI);
+						
+						// var h0k = vec2<f32>(gaussValue1 * sqrt(phillips(k) * donelanBannerDirectionalSpreading(k) * 0.5));
+						// var h0kConj = vec2<f32>(gaussValue2 * sqrt(phillips(-k) * donelanBannerDirectionalSpreading(-k) * 0.5));
+						var h0k = vec2<f32>(gaussValue1 * sqrt(phillips(k) * 0.5));
+						var h0kConj = vec2<f32>(gaussValue2 * sqrt(phillips(-k) * 0.5));
+						h0kConj.y *= -1.0;
+						
+						let omega = dispersion(k) * param.uTime;
+						let c = cos(omega);
+						let s = sin(omega);
+						
+						let h1 = complexMultiply(h0k, vec2<f32>(c, s));
+						let h2 = complexMultiply(h0kConj, vec2<f32>(c, -s));
+						
+						let hTildeY = vec2<f32>(h1 + h2); // 这个是y的
+						
+						// 下面是计算x和z的
+						var hTildeX = vec2<f32>(0.0);
+						var hTildeZ = vec2<f32>(0.0);
+						let kLen = length(k);
+						if (kLen > 1e-4) {
+							let kNorm = k/kLen;
+							hTildeX = complexMultiply(vec2<f32>(0.0, -kNorm.x), hTildeY);
+							hTildeZ = complexMultiply(vec2<f32>(0.0, -kNorm.y), hTildeY);
+						}
+						
+						textureStore(phillipsTextureY, vec2<i32>(global_id.xy), vec4<f32>(hTildeY.r, hTildeY.g, 0.0, 1.0));
+						textureStore(phillipsTextureX, vec2<i32>(global_id.xy), vec4<f32>(hTildeX.r, hTildeX.g, 0.0, 1.0));
+						textureStore(phillipsTextureZ, vec2<i32>(global_id.xy), vec4<f32>(hTildeZ.r, hTildeZ.g, 0.0, 1.0));
+					}
+				`
+			}
+		</script>
+
+		<script>
+			function codeRow(isInverse) {
+				return `
+					fn complexMultiply(a: vec4<f32>, b: vec4<f32>) -> vec4<f32> {
+						var result: vec4<f32>;
+						result.x = a.x * b.x - a.y * b.y;  // 实部
+						result.y = a.x * b.y + a.y * b.x;  // 虚部
+						return result;
+					}
+					
+					@group(0) @binding(1) var phillipsTextureY : texture_2d<f32>;
+					@group(0) @binding(2) var phillipsTextureX : texture_2d<f32>;
+					@group(0) @binding(3) var phillipsTextureZ : texture_2d<f32>;
+					@group(0) @binding(4) var wData : texture_2d<f32>;
+					@group(0) @binding(5) var rowTextureY : texture_storage_2d<rgba32float, write>;
+					@group(0) @binding(6) var rowTextureX : texture_storage_2d<rgba32float, write>;
+					@group(0) @binding(7) var rowTextureZ : texture_storage_2d<rgba32float, write>;
+					
+						
+					var<workgroup> sharedDataY: array<vec4<f32>, ${IMG_SIZE}u>;
+					var<workgroup> tempDataY: array<vec4<f32>, ${IMG_SIZE}u>;
+					var<workgroup> sharedDataX: array<vec4<f32>, ${IMG_SIZE}u>;
+					var<workgroup> tempDataX: array<vec4<f32>, ${IMG_SIZE}u>;
+					var<workgroup> sharedDataZ: array<vec4<f32>, ${IMG_SIZE}u>;
+					var<workgroup> tempDataZ: array<vec4<f32>, ${IMG_SIZE}u>;
+					
+					@compute @workgroup_size(${workGroupSizeRowX}, ${workGroupSizeRowY}, 1)
+					fn main(
+						@builtin(global_invocation_id) global_id: vec3<u32>,
+						@builtin(local_invocation_id) local_id: vec3<u32>
+					) {
+						
+						// 该行存入到 sharedDataY 中
+						// 使用 global_id.x 作为索引，因为要存储行数据
+						sharedDataY[local_id.x] = textureLoad(phillipsTextureY, vec2<i32>(i32(local_id.x), i32(global_id.y)), 0);
+						sharedDataX[local_id.x] = textureLoad(phillipsTextureX, vec2<i32>(i32(local_id.x), i32(global_id.y)), 0);
+						sharedDataZ[local_id.x] = textureLoad(phillipsTextureZ, vec2<i32>(i32(local_id.x), i32(global_id.y)), 0);
+						
+						workgroupBarrier(); // 确保写入
+						
+						// 开始计算
+						for (var m = 0u; m < ${logN}u; m++) {
+							workgroupBarrier(); // 确保所有线程完成上一轮数据写入
+					
+							tempDataY[local_id.x] = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+							tempDataX[local_id.x] = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+							tempDataZ[local_id.x] = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+							
+							workgroupBarrier(); // 确保初始化完成
+					
+							var inputIndex = 0u;
+							var step = 1u << m; // 等于pow
+							var blockSize = 1u << (m + 1u);
+							var blockNum = ${IMG_SIZE}u / blockSize;
+							var kFor = blockSize / 2u;
+					
+							for (var n = 0u; n < blockNum; n++) {
+								workgroupBarrier(); // 确保所有运算完成
+								for(var k = 0u; k < kFor; k++) {
+									var inputDataY1 = sharedDataY[inputIndex];
+									var inputDataY2 = sharedDataY[inputIndex + ${half}u];
+									
+									var inputDataX1 = sharedDataX[inputIndex];
+									var inputDataX2 = sharedDataX[inputIndex + ${half}u];
+									
+									var inputDataZ1 = sharedDataZ[inputIndex];
+									var inputDataZ2 = sharedDataZ[inputIndex + ${half}u];
+					
+									var outputIndex1 = 2u * (inputIndex - (inputIndex % (1u << m))) + (inputIndex % (1u << m));
+									var outputIndex2 = outputIndex1 + step;
+					
+									var indexW = k * (1u << (${logN}u - m - 1u));
+									var w = textureLoad(wData, vec2<i32>(i32(indexW), 0), 0);
+									
+									var pY1 = inputDataY1;
+									var pY2 = complexMultiply(inputDataY2, w);
+									
+									var pX1 = inputDataX1;
+									var pX2 = complexMultiply(inputDataX2, w);
+									
+									var pZ1 = inputDataZ1;
+									var pZ2 = complexMultiply(inputDataZ2, w);
+					
+									tempDataY[outputIndex1] = pY1 + pY2;
+									tempDataY[outputIndex2] = pY1 - pY2;
+									
+									tempDataX[outputIndex1] = pX1 + pX2;
+									tempDataX[outputIndex2] = pX1 - pX2;
+									
+									tempDataZ[outputIndex1] = pZ1 + pZ2;
+									tempDataZ[outputIndex2] = pZ1 - pZ2;
+					
+									workgroupBarrier(); // 确保所有蝶形运算完成
+					
+									inputIndex = inputIndex + 1u;
+								}
+							}
+					
+							workgroupBarrier(); // 确保所有运算完成
+					
+							sharedDataY[local_id.x] = tempDataY[local_id.x];
+							sharedDataX[local_id.x] = tempDataX[local_id.x];
+							sharedDataZ[local_id.x] = tempDataZ[local_id.x];
+					
+							workgroupBarrier(); // 确保交换完成
+					
+						}
+					
+						// 如果是逆fft，最后一步需要 / N；如果是正fff，则不需要
+						let scale = select(1.0, 1.0 / f32(${IMG_SIZE_SQRT}), ${isInverse});
+						let outY = sharedDataY[local_id.x] * scale;
+						let outX = sharedDataX[local_id.x] * scale;
+						let outZ = sharedDataZ[local_id.x] * scale;
+					
+						textureStore(rowTextureY, vec2<i32>(i32(local_id.x), i32(global_id.y)), vec4<f32>(outY.x, outY.y, 0.0, 1.0));
+						textureStore(rowTextureX, vec2<i32>(i32(local_id.x), i32(global_id.y)), vec4<f32>(outX.x, outX.y, 0.0, 1.0));
+						textureStore(rowTextureZ, vec2<i32>(i32(local_id.x), i32(global_id.y)), vec4<f32>(outZ.x, outZ.y, 0.0, 1.0));
+					}
+				`
+			}
+		</script>
+
+		<script>
+			function codeCol(isInverse) {
+				return `
+					fn complexMultiply(a: vec4<f32>, b: vec4<f32>) -> vec4<f32> {
+						var result: vec4<f32>;
+						result.x = a.x * b.x - a.y * b.y;  // 实部
+						result.y = a.x * b.y + a.y * b.x;  // 虚部
+						return result;
+					}
+					
+					@group(0) @binding(1) var rowTextureY : texture_2d<f32>;
+					@group(0) @binding(2) var rowTextureX : texture_2d<f32>;
+					@group(0) @binding(3) var rowTextureZ : texture_2d<f32>;
+					@group(0) @binding(4) var wData : texture_2d<f32>;
+					@group(0) @binding(5) var colTextureY : texture_storage_2d<rgba32float, write>;
+					@group(0) @binding(6) var colTextureX : texture_storage_2d<rgba32float, write>;
+					@group(0) @binding(7) var colTextureZ : texture_storage_2d<rgba32float, write>;
+					
+					var<workgroup> sharedDataY: array<vec4<f32>, ${IMG_SIZE}u>;
+					var<workgroup> tempDataY: array<vec4<f32>, ${IMG_SIZE}u>;
+					var<workgroup> sharedDataX: array<vec4<f32>, ${IMG_SIZE}u>;
+					var<workgroup> tempDataX: array<vec4<f32>, ${IMG_SIZE}u>;
+					var<workgroup> sharedDataZ: array<vec4<f32>, ${IMG_SIZE}u>;
+					var<workgroup> tempDataZ: array<vec4<f32>, ${IMG_SIZE}u>;
+					
+					@compute @workgroup_size(${workGroupSizeColX}, ${workGroupSizeColY}, 1)
+					fn main(
+						@builtin(global_invocation_id) global_id: vec3<u32>,
+						@builtin(local_invocation_id) local_id: vec3<u32>
+					) {
+					
+						// 该列存入到 sharedData 中
+						// 使用 global_id.y 作为索引，因为要存储列数据
+						sharedDataY[local_id.y] = textureLoad(rowTextureY, vec2<i32>(i32(global_id.x), i32(local_id.y)), 0);
+						sharedDataX[local_id.y] = textureLoad(rowTextureX, vec2<i32>(i32(global_id.x), i32(local_id.y)), 0);
+						sharedDataZ[local_id.y] = textureLoad(rowTextureZ, vec2<i32>(i32(global_id.x), i32(local_id.y)), 0);
+						
+						workgroupBarrier(); // 确保写入
+					
+						// 开始计算
+						for (var m = 0u; m < ${logN}u; m++) {
+							workgroupBarrier(); // 确保所有线程完成上一轮数据写入
+							
+							tempDataY[local_id.y] = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+							tempDataX[local_id.y] = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+							tempDataZ[local_id.y] = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+							
+							workgroupBarrier(); // 确保初始化完成
+					
+							var inputIndex = 0u;
+							var step = 1u << m; // 等于pow
+							var blockSize = 1u << (m + 1u);
+							var blockNum = ${IMG_SIZE}u / blockSize;
+							var kFor = blockSize / 2u;
+					
+							for (var n = 0u; n < blockNum; n++) {
+								workgroupBarrier(); // 确保所有运算完成
+								for(var k = 0u; k < kFor; k++) {
+									var inputDataY1 = sharedDataY[inputIndex];
+									var inputDataY2 = sharedDataY[inputIndex + ${half}u];
+									
+									var inputDataX1 = sharedDataX[inputIndex];
+									var inputDataX2 = sharedDataX[inputIndex + ${half}u];
+									
+									var inputDataZ1 = sharedDataZ[inputIndex];
+									var inputDataZ2 = sharedDataZ[inputIndex + ${half}u];
+					
+									var outputIndex1 = 2u * (inputIndex - (inputIndex % (1u << m))) + (inputIndex % (1u << m));
+									var outputIndex2 = outputIndex1 + step;
+					
+									var indexW = k * (1u << (${logN}u - m - 1u));
+									var w = textureLoad(wData, vec2<i32>(i32(indexW), 0), 0);
+					
+									var pY1 = inputDataY1;
+									var pY2 = complexMultiply(inputDataY2, w);
+									
+									var pX1 = inputDataX1;
+									var pX2 = complexMultiply(inputDataX2, w);
+									
+									var pZ1 = inputDataZ1;
+									var pZ2 = complexMultiply(inputDataZ2, w);
+					
+									tempDataY[outputIndex1] = pY1 + pY2;
+									tempDataY[outputIndex2] = pY1 - pY2;
+									
+									tempDataX[outputIndex1] = pX1 + pX2;
+									tempDataX[outputIndex2] = pX1 - pX2;
+									
+									tempDataZ[outputIndex1] = pZ1 + pZ2;
+									tempDataZ[outputIndex2] = pZ1 - pZ2;
+					
+									workgroupBarrier(); // 确保所有蝶形运算完成
+					
+									inputIndex = inputIndex + 1u;
+								}
+							}
+					
+							workgroupBarrier(); // 确保所有运算完成
+					
+							sharedDataY[local_id.y] = tempDataY[local_id.y];
+							sharedDataX[local_id.y] = tempDataX[local_id.y];
+							sharedDataZ[local_id.y] = tempDataZ[local_id.y];
+					
+							workgroupBarrier(); // 确保交换完成
+						}
+						
+						// 如果是逆fft，最后一步需要 / N；如果是正fff，则不需要
+						let scale = select(1.0, 1.0 / f32(${IMG_SIZE_SQRT}), ${isInverse});
+						let outY = sharedDataY[local_id.y] * scale;
+						let outX = sharedDataX[local_id.y] * scale;
+						let outZ = sharedDataZ[local_id.y] * scale;
+						
+						textureStore(colTextureY, vec2<i32>(i32(global_id.x), i32(global_id.y)), vec4<f32>(outY.x, outY.y, 0.0, 1.0));
+						textureStore(colTextureX, vec2<i32>(i32(global_id.x), i32(global_id.y)), vec4<f32>(outX.x, outX.y, 0.0, 1.0));
+						textureStore(colTextureZ, vec2<i32>(i32(global_id.x), i32(global_id.y)), vec4<f32>(outZ.x, outZ.y, 0.0, 1.0));
+					}
+				`
+			}
+		</script>
+
+
+		<script>
+			let init = async () => {
+				let ele = document.getElementById('shaderSea1')
+				let engine = new BABYLON.WebGPUEngine(ele, {
+					enableAllFeatures: false,
+					forceTexturePot: true,
+					deviceDescriptor: {
+						requiredLimits: {
+							maxComputeWorkgroupStorageSize: 32768,
+						},
+					},
+					enableOfflineSupport: false,
+				})
+				await engine.initAsync()
+				let scene = new BABYLON.Scene(engine)
+				scene.useRightHandedSystem = false
+				let camera = new BABYLON.ArcRotateCamera('camera', -Math.PI / 1.5, Math.PI / 0.2, 15, new BABYLON
+					.Vector3(0, 0,
+						0), scene)
+				camera.upperBetaLimit = Math.PI / 2.2
+				camera.wheelPrecision = 2
+				camera.panningSensibility = 20
+				camera.attachControl(ele, true)
+				camera.setPosition(new BABYLON.Vector3(0, IMG_SIZE * 2, -IMG_SIZE * 2))
+				let light = new BABYLON.HemisphericLight('light', new BABYLON.Vector3(40, 40, 40), scene)
+				light.direction = new BABYLON.Vector3(1.0, 0.0, 1.0)
+				light.diffuse = new BABYLON.Color3(1.0, 0.95, 0.8)
+
+
+
+				let device = engine._device
+				let usage = GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC |
+					GPUTextureUsage.COPY_DST
+
+				let uniformBuf = device.createBuffer({
+					size: 16,
+					usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+				})
+
+
+
+
+
+
+
+
+
+
+				/** w 的开始 */
+				for (let i = 0; i < IMG_SIZE; i++) {
+					let angle = (2 * Math.PI * i) / IMG_SIZE
+					let re = Math.cos(angle)
+					let im = Math.sin(angle)
+					wInverseData[i * 4] = re // re
+					wInverseData[i * 4 + 1] = im // im
+					wInverseData[i * 4 + 2] = 0
+					wInverseData[i * 4 + 3] = 1
+				}
+				// 创建 staging buffer 并把数据写进去
+				let wBufferSize = wInverseData.byteLength
+				let wStagingBuffer = device.createBuffer({
+					size: wBufferSize,
+					usage: GPUBufferUsage.COPY_SRC,
+					mappedAtCreation: true,
+				})
+				new Float32Array(wStagingBuffer.getMappedRange()).set(wInverseData)
+				wStagingBuffer.unmap()
+				// 创建目标纹理（128×1，rgba32float，每 texel 4×float）
+				let textureW = device.createTexture({ size: [IMG_SIZE, 1], format: 'rgba32float', usage })
+				// 把 buffer 拷进纹理
+				let commandEncoderWriteW = device.createCommandEncoder()
+				commandEncoderWriteW.copyBufferToTexture({
+						buffer: wStagingBuffer,
+						bytesPerRow: IMG_SIZE * 4 * 4 // 每行字节数 = 128×4×4
+					}, { texture: textureW, origin: { x: 0, y: 0 } },
+					[IMG_SIZE, 1, 1] // 拷贝尺寸
+				)
+				// 提交命令
+				device.queue.submit([commandEncoderWriteW.finish()])
+				// 读取数据到 rawTextureW
+				let readBackBufferW = device.createBuffer({
+					size: IMG_SIZE * 1 * 4 * 4, // 128×1×4×float
+					usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+				})
+				let commandEncoderReadW = device.createCommandEncoder()
+				commandEncoderReadW.copyTextureToBuffer({ texture: textureW, origin: { x: 0, y: 0 } }, {
+						buffer: readBackBufferW,
+						bytesPerRow: IMG_SIZE * 4 * 4
+					},
+					[IMG_SIZE, 1, 1]
+				)
+				device.queue.submit([commandEncoderReadW.finish()])
+				await readBackBufferW.mapAsync(GPUMapMode.READ)
+				let wData = new Float32Array(readBackBufferW.getMappedRange())
+				let rawTextureW = new BABYLON.RawTexture(
+					wData,
+					IMG_SIZE,
+					1,
+					BABYLON.Engine.TEXTUREFORMAT_RGBA,
+					scene,
+					false, // no mipmaps
+					false, // not invertY
+					BABYLON.Texture.LINEAR_LINEAR,
+					BABYLON.Engine.TEXTURETYPE_FLOAT
+				)
+				let planeW = BABYLON.MeshBuilder.CreatePlane('planeW', {
+					width: IMG_SIZE,
+					height: 1
+				}, scene)
+				let matW = new BABYLON.StandardMaterial('matW', scene)
+				matW.diffuseTexture = rawTextureW
+				planeW.material = matW
+				planeW.rotation = new BABYLON.Vector3(Math.PI / 2, 0, 0)
+				planeW.position = new BABYLON.Vector3(0, 0, IMG_SIZE + 20)
+				/** w 的结束 */
+
+
+
+
+
+
+
+
+
+
+				/** phillips 的开始 */
+				let phillipsY = device.createTexture({ size: [IMG_SIZE, IMG_SIZE], format: 'rgba32float', usage })
+				let phillipsX = device.createTexture({ size: [IMG_SIZE, IMG_SIZE], format: 'rgba32float', usage })
+				let phillipsZ = device.createTexture({ size: [IMG_SIZE, IMG_SIZE], format: 'rgba32float', usage })
+				let writePhillipsModule = device.createShaderModule({
+					code: codeTexturePhillips()
+				})
+				let writePhillipsPipeline = device.createComputePipeline({
+					layout: 'auto',
+					compute: { module: writePhillipsModule, entryPoint: 'main' }
+				})
+				let bindGroupPhillips = device.createBindGroup({
+					layout: writePhillipsPipeline.getBindGroupLayout(0),
+					entries: [
+						{ binding: 1, resource: phillipsY.createView() },
+						{ binding: 2, resource: phillipsX.createView() },
+						{ binding: 3, resource: phillipsZ.createView() },
+						{ binding: 4, resource: { buffer: uniformBuf } },
+					]
+				})
+
+				let planeY = BABYLON.MeshBuilder.CreatePlane('planeY', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+				let rawPlaneY = new BABYLON.RawTexture(new Float32Array(IMG_SIZE * IMG_SIZE * 4), IMG_SIZE, IMG_SIZE, BABYLON
+					.Engine.TEXTUREFORMAT_RGBA, scene, false, false, BABYLON.Texture.LINEAR_LINEAR, BABYLON.Engine
+					.TEXTURETYPE_FLOAT)
+				let matY = new BABYLON.StandardMaterial('matY', scene)
+				matY.diffuseTexture = rawPlaneY
+				planeY.material = matY
+				planeY.rotation = new BABYLON.Vector3(Math.PI / 2, 0, 0)
+				planeY.position = new BABYLON.Vector3(-IMG_SIZE - 20, 0, 0)
+
+				let planeX = BABYLON.MeshBuilder.CreatePlane('planeX', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+				let rawPlaneX = new BABYLON.RawTexture(new Float32Array(IMG_SIZE * IMG_SIZE * 4), IMG_SIZE, IMG_SIZE, BABYLON
+					.Engine.TEXTUREFORMAT_RGBA, scene, false, false, BABYLON.Texture.LINEAR_LINEAR, BABYLON.Engine
+					.TEXTURETYPE_FLOAT)
+				let matX = new BABYLON.StandardMaterial('matX', scene)
+				matX.diffuseTexture = rawPlaneX
+				planeX.material = matX
+				planeX.rotation = new BABYLON.Vector3(Math.PI / 2, 0, 0)
+				planeX.position = new BABYLON.Vector3(0, 0, 0)
+
+				let planeZ = BABYLON.MeshBuilder.CreatePlane('planeZ', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+				let rawPlaneZ = new BABYLON.RawTexture(new Float32Array(IMG_SIZE * IMG_SIZE * 4), IMG_SIZE, IMG_SIZE, BABYLON
+					.Engine.TEXTUREFORMAT_RGBA, scene, false, false, BABYLON.Texture.LINEAR_LINEAR, BABYLON.Engine
+					.TEXTURETYPE_FLOAT)
+				let matZ = new BABYLON.StandardMaterial('matZ', scene)
+				matZ.diffuseTexture = rawPlaneZ
+				planeZ.material = matZ
+				planeZ.rotation = new BABYLON.Vector3(Math.PI / 2, 0, 0)
+				planeZ.position = new BABYLON.Vector3(IMG_SIZE + 20, 0, 0)
+				/** phillips 的结束 */
+
+
+
+
+
+
+
+
+
+
+				/** row 的开始 */
+				let rowY = device.createTexture({ size: [IMG_SIZE, IMG_SIZE], format: 'rgba32float', usage })
+				let rowX = device.createTexture({ size: [IMG_SIZE, IMG_SIZE], format: 'rgba32float', usage })
+				let rowZ = device.createTexture({ size: [IMG_SIZE, IMG_SIZE], format: 'rgba32float', usage })
+				let writeRowModule = device.createShaderModule({
+					code: codeRow(true)
+				})
+				let writeRowPipeline = device.createComputePipeline({
+					layout: 'auto',
+					compute: { module: writeRowModule, entryPoint: 'main' }
+				})
+				let bindGroupRow = device.createBindGroup({
+					layout: writeRowPipeline.getBindGroupLayout(0),
+					entries: [
+						{ binding: 1, resource: phillipsY.createView() },
+						{ binding: 2, resource: phillipsX.createView() },
+						{ binding: 3, resource: phillipsZ.createView() },
+						{ binding: 4, resource: textureW.createView() },
+						{ binding: 5, resource: rowY.createView() },
+						{ binding: 6, resource: rowX.createView() },
+						{ binding: 7, resource: rowZ.createView() },
+					]
+				})
+
+				let planeRowY = BABYLON.MeshBuilder.CreatePlane('planeRowY', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+				let rawRowY = new BABYLON.RawTexture(new Float32Array(IMG_SIZE * IMG_SIZE * 4), IMG_SIZE, IMG_SIZE, BABYLON
+					.Engine.TEXTUREFORMAT_RGBA, scene, false, false, BABYLON.Texture.LINEAR_LINEAR, BABYLON.Engine
+					.TEXTURETYPE_FLOAT)
+				let matRowY = new BABYLON.StandardMaterial('matRowY', scene)
+				matRowY.diffuseTexture = rawRowY
+				planeRowY.material = matRowY
+				planeRowY.rotation = new BABYLON.Vector3(Math.PI / 2, 0, 0)
+				planeRowY.position = new BABYLON.Vector3(-IMG_SIZE - 20, 0, -IMG_SIZE - 20)
+
+				let planeRowX = BABYLON.MeshBuilder.CreatePlane('planeRowX', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+				let rawRowX = new BABYLON.RawTexture(new Float32Array(IMG_SIZE * IMG_SIZE * 4), IMG_SIZE, IMG_SIZE, BABYLON
+					.Engine.TEXTUREFORMAT_RGBA, scene, false, false, BABYLON.Texture.LINEAR_LINEAR, BABYLON.Engine
+					.TEXTURETYPE_FLOAT)
+				let matRowX = new BABYLON.StandardMaterial('matRowX', scene)
+				matRowX.diffuseTexture = rawRowX
+				planeRowX.material = matRowX
+				planeRowX.rotation = new BABYLON.Vector3(Math.PI / 2, 0, 0)
+				planeRowX.position = new BABYLON.Vector3(0, 0, -IMG_SIZE - 20)
+
+				let planeRowZ = BABYLON.MeshBuilder.CreatePlane('planeRowZ', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+				let rawRowZ = new BABYLON.RawTexture(new Float32Array(IMG_SIZE * IMG_SIZE * 4), IMG_SIZE, IMG_SIZE, BABYLON
+					.Engine.TEXTUREFORMAT_RGBA, scene, false, false, BABYLON.Texture.LINEAR_LINEAR, BABYLON.Engine
+					.TEXTURETYPE_FLOAT)
+				let matRowZ = new BABYLON.StandardMaterial('matRowZ', scene)
+				matRowZ.diffuseTexture = rawRowZ
+				planeRowZ.material = matRowZ
+				planeRowZ.rotation = new BABYLON.Vector3(Math.PI / 2, 0, 0)
+				planeRowZ.position = new BABYLON.Vector3(IMG_SIZE + 20, 0, -IMG_SIZE - 20)
+				/** row 的结束 */
+
+
+
+
+
+
+
+
+
+
+				/** col 的开始 */
+				let colY = device.createTexture({ size: [IMG_SIZE, IMG_SIZE], format: 'rgba32float', usage })
+				let colX = device.createTexture({ size: [IMG_SIZE, IMG_SIZE], format: 'rgba32float', usage })
+				let colZ = device.createTexture({ size: [IMG_SIZE, IMG_SIZE], format: 'rgba32float', usage })
+				let writeColModule = device.createShaderModule({
+					code: codeCol(true)
+				})
+				let writeColPipeline = device.createComputePipeline({
+					layout: 'auto',
+					compute: { module: writeColModule, entryPoint: 'main' }
+				})
+				let bindGroupCol = device.createBindGroup({
+					layout: writeColPipeline.getBindGroupLayout(0),
+					entries: [
+						{ binding: 1, resource: rowY.createView() },
+						{ binding: 2, resource: rowX.createView() },
+						{ binding: 3, resource: rowZ.createView() },
+						{ binding: 4, resource: textureW.createView() },
+						{ binding: 5, resource: colY.createView() },
+						{ binding: 6, resource: colX.createView() },
+						{ binding: 7, resource: colZ.createView() },
+					]
+				})
+
+				let planeColY = BABYLON.MeshBuilder.CreatePlane('planeColY', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+				let rawColY = new BABYLON.RawTexture(new Float32Array(IMG_SIZE * IMG_SIZE * 4), IMG_SIZE, IMG_SIZE, BABYLON
+					.Engine.TEXTUREFORMAT_RGBA, scene, false, false, BABYLON.Texture.LINEAR_LINEAR, BABYLON.Engine
+					.TEXTURETYPE_FLOAT)
+				let matColY = new BABYLON.StandardMaterial('matColY', scene)
+				matColY.diffuseTexture = rawColY
+				planeColY.material = matColY
+				planeColY.rotation = new BABYLON.Vector3(Math.PI / 2, 0, 0)
+				planeColY.position = new BABYLON.Vector3(-IMG_SIZE - 20, 0, (-IMG_SIZE - 20) * 2)
+
+				let planeColX = BABYLON.MeshBuilder.CreatePlane('planeColX', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+				let rawColX = new BABYLON.RawTexture(new Float32Array(IMG_SIZE * IMG_SIZE * 4), IMG_SIZE, IMG_SIZE, BABYLON
+					.Engine.TEXTUREFORMAT_RGBA, scene, false, false, BABYLON.Texture.LINEAR_LINEAR, BABYLON.Engine
+					.TEXTURETYPE_FLOAT)
+				let matColX = new BABYLON.StandardMaterial('matColX', scene)
+				matColX.diffuseTexture = rawColX
+				planeColX.material = matColX
+				planeColX.rotation = new BABYLON.Vector3(Math.PI / 2, 0, 0)
+				planeColX.position = new BABYLON.Vector3(0, 0, (-IMG_SIZE - 20) * 2)
+
+				let planeColZ = BABYLON.MeshBuilder.CreatePlane('planeColZ', { width: IMG_SIZE, height: IMG_SIZE }, scene)
+				let rawColZ = new BABYLON.RawTexture(new Float32Array(IMG_SIZE * IMG_SIZE * 4), IMG_SIZE, IMG_SIZE, BABYLON
+					.Engine.TEXTUREFORMAT_RGBA, scene, false, false, BABYLON.Texture.LINEAR_LINEAR, BABYLON.Engine
+					.TEXTURETYPE_FLOAT)
+				let matColZ = new BABYLON.StandardMaterial('matColZ', scene)
+				matColZ.diffuseTexture = rawColZ
+				planeColZ.material = matColZ
+				planeColZ.rotation = new BABYLON.Vector3(Math.PI / 2, 0, 0)
+				planeColZ.position = new BABYLON.Vector3(IMG_SIZE + 20, 0, (-IMG_SIZE - 20) * 2)
+				/** col 的结束 */
+
+
+
+
+
+
+
+				const oceanMat = new BABYLON.ShaderMaterial('oceanMat', scene, {
+					vertexSource: `
+						precision highp float;
+		
+						attribute vec3 position;
+						attribute vec2 uv;
+		
+						uniform mat4 worldViewProjection;
+						uniform sampler2D heightMap;
+						uniform sampler2D displacementX;
+						uniform sampler2D displacementZ;
+						uniform float uGridCount;
+						uniform float uEnergyScale;
+		
+						varying float vX;
+						varying float vY;
+						varying float vZ;
+		
+						void main() {
+							// texelCenter 把 uv 从任意小数对齐到“texel 中心”，再让 GPU 做双线性插值，就不会出现“一格一格”的跳变
+							vec2 texelCenter = (floor(uv * uGridCount) + 0.5) / uGridCount;
+							vec4 texelSample = texture2D(heightMap,  texelCenter);
+							
+							vX = abs(texelSample.x);
+							vY = abs(texelSample.y);
+							vZ = abs(texelSample.z);
+		
+							vec3 pos = position;
+		
+							gl_Position = worldViewProjection * vec4(pos, 1.0);
+						}
+					`,
+					fragmentSource: `
+						precision highp float;
+		
+						uniform sampler2D heightMap;
+						uniform float uEnergyScale;
+						uniform float uGridCount;
+		
+						varying float vX;
+						varying float vY;
+						varying float vZ;
+		
+						void main(){
+							vec3 color = vec3(abs(vX), abs(vY), abs(vZ));
+							gl_FragColor = vec4(color, 1.0);
+						}
+					`
+				}, {
+					attributes: ['position', 'uv'],
+					uniforms: ['worldViewProjection', 'heightMap', 'displacementX', 'displacementZ', 'uGridCount', 'uEnergyScale'],
+					samplers: ['heightMap', 'displacementZ', 'displacementX'],
+				})
+				oceanMat.setTexture('heightMap', rawColY)
+				oceanMat.setTexture('displacementX', rawColX)
+				oceanMat.setTexture('displacementZ', rawColZ)
+				oceanMat.setFloat('uGridCount', IMG_SIZE * 4)
+				oceanMat.setFloat('uEnergyScale', IMG_SIZE)
+				const oceanSize = 1024
+				const ocean = BABYLON.MeshBuilder.CreateGround('ocean', {
+					width: oceanSize,
+					height: oceanSize,
+					subdivisions: IMG_SIZE - 1
+				}, scene)
+				ocean.material = oceanMat
+				ocean.position = new BABYLON.Vector3(0, 0, oceanSize * 0.75)
+
+
+
+
+
+
+
+				let readAndUpdate = async (srcTexture, rawTexture) => {
+					let encoder = device.createCommandEncoder()
+					let buffer = device.createBuffer({
+						size: IMG_SIZE * IMG_SIZE * 4 * 4,
+						usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+					})
+					encoder.copyTextureToBuffer({ texture: srcTexture }, {
+						buffer,
+						bytesPerRow: IMG_SIZE * 4 * 4,
+						rowsPerImage: IMG_SIZE
+					}, [IMG_SIZE, IMG_SIZE])
+					device.queue.submit([encoder.finish()])
+					await buffer.mapAsync(GPUMapMode.READ)
+					let data = new Float32Array(buffer.getMappedRange()).slice() // 拷贝一份
+					buffer.unmap()
+					rawTexture.update(data)
+				}
+
+
+
+
+
+
+
+
+
+
+				scene.registerBeforeRender(() => {
+					uTime += 0.01
+					device.queue.writeBuffer(uniformBuf, 0, new Float32Array([uTime, 0, 0, 0]))
+					let phillipsEncoder = device.createCommandEncoder()
+					let phillipsPass = phillipsEncoder.beginComputePass()
+					phillipsPass.setPipeline(writePhillipsPipeline)
+					phillipsPass.setBindGroup(0, bindGroupPhillips)
+					phillipsPass.dispatchWorkgroups(IMG_SIZE / phillipsGroupSize, IMG_SIZE / phillipsGroupSize)
+					phillipsPass.end()
+					device.queue.submit([phillipsEncoder.finish()])
+
+					let rowEncoder = device.createCommandEncoder()
+					let rowPass = rowEncoder.beginComputePass()
+					rowPass.setPipeline(writeRowPipeline)
+					rowPass.setBindGroup(0, bindGroupRow)
+					rowPass.dispatchWorkgroups(IMG_SIZE / workGroupSizeRowX, IMG_SIZE / workGroupSizeRowY)
+					rowPass.end()
+					device.queue.submit([rowEncoder.finish()])
+
+					let colEncoder = device.createCommandEncoder()
+					let colPass = colEncoder.beginComputePass()
+					colPass.setPipeline(writeColPipeline)
+					colPass.setBindGroup(0, bindGroupCol)
+					colPass.dispatchWorkgroups(IMG_SIZE / workGroupSizeColX, IMG_SIZE / workGroupSizeColY)
+					colPass.end()
+					device.queue.submit([colEncoder.finish()])
+
+					readAndUpdate(phillipsY, rawPlaneY)
+					readAndUpdate(phillipsX, rawPlaneX)
+					readAndUpdate(phillipsZ, rawPlaneZ)
+					readAndUpdate(rowY, rawRowY)
+					readAndUpdate(rowX, rawRowX)
+					readAndUpdate(rowZ, rawRowZ)
+					readAndUpdate(colY, rawColY)
+					readAndUpdate(colX, rawColX)
+					readAndUpdate(colZ, rawColZ)
+				})
+
+				engine.runRenderLoop(async () => {
+					if (scene && scene.activeCamera) {
+						scene.render()
+					}
+				})
+			}
+
+
+			init()
+		</script>
+	</body>
+</html>

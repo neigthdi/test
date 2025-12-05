@@ -153,10 +153,10 @@ function sidebarBase() {
         { text: '几何体相关', link: '/components/babylonGeometry.md' },
         { text: 'RPG相关', link: '/components/babylonRpg.md' },
         { text: '后处理', link: '/components/babylonPostProcess.md' },
-        { text: 'shader1', link: '/components/babylonShader1.md' },
-        { text: 'shader2', link: '/components/babylonShader2.md' },
-        { text: 'computeShader1', link: '/components/babylonComputeShader1.md' },
-        { text: 'computeShader2', link: '/components/babylonComputeShader2.md' },
+        { text: 'glsl1', link: '/components/babylonShaderGlsl1.md' },
+        { text: 'glsl2', link: '/components/babylonShaderGlsl2.md' },
+        { text: 'wgsl1', link: '/components/babylonShaderWgsl1.md' },
+        { text: 'wgsl2', link: '/components/babylonShaderWgsl2.md' },
       ]
     },
     {
