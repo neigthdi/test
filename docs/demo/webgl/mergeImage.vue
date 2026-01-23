@@ -10,7 +10,7 @@
 import { ref, nextTick, onUnmounted } from 'vue'
 
 let animationFrame
-let sceneResources
+let sceneResources: any
 
 const vertexSource = `
   precision mediump float;

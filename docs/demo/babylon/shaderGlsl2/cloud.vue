@@ -1,7 +1,11 @@
 <template>
   <div>
-    <a href="https://zhuanlan.zhihu.com/p/501039307">体积云效果的实现，游戏世界的云合雾集</a>
-    <a href="https://zhuanlan.zhihu.com/p/622654876">体积云渲染（Volumetric Clouds），技术美术教程</a>
+    <div>
+      <a href="https://zhuanlan.zhihu.com/p/501039307">体积云效果的实现，游戏世界的云合雾集</a>
+    </div>
+    <div>
+      <a href="https://zhuanlan.zhihu.com/p/622654876">体积云渲染（Volumetric Clouds），技术美术教程</a>
+    </div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
       <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>

@@ -4,14 +4,14 @@
 ## 水面倒影
 <preview path="../demo/babylon/shaderGlsl2/shaderWaterReflection.vue"></preview>
 
-## 模拟云
+## 模拟体积云
 <preview path="../demo/babylon/shaderGlsl2/cloud.vue"></preview>
+
+## 球体的坑
+<preview path="../demo/babylon/shaderGlsl2/spherePit.vue"></preview>
 
 ## 菲利普频谱
 <preview path="../demo/babylon/shaderGlsl2/phillips.vue"></preview>
 
-## proceduralTexture1（继承renderTargetTexture）（注意二者区别）
-<preview path="../demo/babylon/shaderGlsl2/proceduralTexture1.vue"></preview>
-
-## proceduralTexture2（继承renderTargetTexture）（注意二者区别）
-<preview path="../demo/babylon/shaderGlsl2/proceduralTexture2.vue"></preview>
+## proceduralTexture（继承renderTargetTexture）（注意二者区别）
+<preview path="../demo/babylon/shaderGlsl2/proceduralTexture.vue"></preview>

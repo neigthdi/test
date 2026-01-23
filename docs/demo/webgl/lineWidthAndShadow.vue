@@ -375,7 +375,7 @@ class Webgl {
 
 
 let animationFrame 
-let sceneResources
+let sceneResources: any
 
 const isRunning = ref(false)
 

@@ -27,7 +27,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 const requestID = ref<any>()
 const isRunning = ref(false)
-let sceneResources
+let sceneResources: any
 
 let allBox: any = []
 let collectionSelect: any = []

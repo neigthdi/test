@@ -37,7 +37,7 @@ const ratio = ref<any>({ value: 0 })
 const requestID = ref<any>()
 let next = 0
 const isRunning = ref(false)
-let sceneResources
+let sceneResources: any
 
 const onTrigger = async () => {
   if (!isRunning.value) {

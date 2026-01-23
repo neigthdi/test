@@ -27,7 +27,7 @@ const addTime = ref<any>({ value: 0 })
 const requestID = ref<any>()
 const isRunning = ref(false)
 let clock: any = new Clock()
-let sceneResources
+let sceneResources: any
 
 const onTrigger = async () => {
   if (!isRunning.value) {

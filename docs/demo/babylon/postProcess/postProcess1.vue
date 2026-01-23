@@ -24,7 +24,7 @@ import {
   PostProcessRenderEffect,
 } from 'babylonjs'
 
-let sceneResources
+let sceneResources: any
 
 const fps = ref(0)
 const isRunning = ref(false)

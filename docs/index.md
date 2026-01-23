@@ -8,9 +8,8 @@
 ***
 
 #### 未完成：{ style="color: #d400f0ff;"}
- - 1、computeShader的海洋【海浪的雅可比行列式】{ style="color: #d400f0ff;"}
+ - 1、computeShader的海洋【雅可比行列式实现浪花效果】{ style="color: #d400f0ff;"}
  - 2、shaderToy的海洋倒影{ style="color: #d400f0ff;"}
- - 3、山的云{ style="color: #d400f0ff;"}
+ - 3、babylon版本体积云{ style="color: #d400f0ff;"}
  - 【二或三月份再更新，暂时学习web.3】
 ***
-最后更新时间：2026-01-14 13:50

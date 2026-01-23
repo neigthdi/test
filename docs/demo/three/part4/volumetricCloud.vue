@@ -32,7 +32,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 const requestID = ref<any>()
 const isRunning = ref(false)
-let sceneResources
+let sceneResources: any
 
 // 一个哈希表，用于生成梯度向量的索引
 // 这个数组包含 256 个随机排列的整数，范围在 [0, 255] 之间

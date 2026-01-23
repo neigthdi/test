@@ -29,7 +29,7 @@ const requestID = ref<any>()
 const isRunning = ref(false)
 const windowHalfX = ref(0)
 const windowHalfY = ref(0)
-let sceneResources
+let sceneResources: any
 let loader: any = new TextureLoader()
 let position = 1
 let mouseX = 0
