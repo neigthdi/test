@@ -91,7 +91,7 @@ let customAmplitude = 0.8
 let customWindSpeed = 45.223
 let phillipsGroupSize = 16
 
-let wData = new Float32Array(IMG_SIZE * 4)
+// let wData = new Float32Array(IMG_SIZE * 4)
 let wInverseData = new Float32Array(IMG_SIZE * 4)
 
 const codeTexturePhillips = () => {
@@ -240,7 +240,7 @@ const codeTexturePhillips = () => {
   `
   }
 
-const codeRow = (isInverse) => {
+const codeRow = (isInverse: any) => {
   return `
     fn complexMultiply(a: vec4<f32>, b: vec4<f32>) -> vec4<f32> {
       var result: vec4<f32>;
@@ -360,7 +360,7 @@ const codeRow = (isInverse) => {
   `
   }
 
-const codeCol = (isInverse) => {
+const codeCol = (isInverse: any) => {
   return `
     fn complexMultiply(a: vec4<f32>, b: vec4<f32>) -> vec4<f32> {
       var result: vec4<f32>;
@@ -844,7 +844,7 @@ const initScene = async () => {
 
 
     
-    let readAndUpdate = async (srcTexture, rawTexture) => {
+    let readAndUpdate = async (srcTexture: any, rawTexture: any) => {
       let encoder = device.createCommandEncoder()
       let buffer = device.createBuffer({
         size: IMG_SIZE * IMG_SIZE * 4 * 4,

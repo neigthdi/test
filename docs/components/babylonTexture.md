@@ -12,3 +12,6 @@
 
 ## 反射 -3【主要是原理】【ShaderMaterial】
 <preview path="../demo/babylon/texture/mirrorTexture3.vue"></preview>
+
+## rawTexture3d-1
+<preview path="../demo/babylon/texture/rawTexture3d1.vue"></preview>

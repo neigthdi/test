@@ -84,7 +84,7 @@ const initScene = async () => {
     ground.material = groundMat
   }
 
-  const createBox = (width) => {
+  const createBox = (width: any) => {
     const boxMat = new StandardMaterial('box')
     if (width === semiHouseWidth) {
       boxMat.diffuseTexture = new Texture('/images/semiHouse.png')
@@ -123,7 +123,7 @@ const initScene = async () => {
     return box
   }
 
-  const createRoof = (width) => {
+  const createRoof = (width: any) => {
     const roofMat = new StandardMaterial('roof')
     roofMat.diffuseTexture = new Texture('/images/roof.jpg')
     const roof = MeshBuilder.CreateCylinder('roof', {
@@ -139,7 +139,7 @@ const initScene = async () => {
     return roof
   }
 
-  const mergeHouse = (width) => {
+  const mergeHouse = (width: any) => {
     const box = createBox(width)
     const roof = createRoof(width)
     return Mesh.MergeMeshes([box, roof], true, false, undefined, false, true)

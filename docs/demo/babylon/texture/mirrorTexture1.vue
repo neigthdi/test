@@ -10,7 +10,6 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue'
-import 'babylonjs-loaders'
 import {
   Engine,
   Scene,
