@@ -13,13 +13,13 @@ import { onMounted, ref, nextTick, onUnmounted } from 'vue'
 import {
   Engine,
   Scene,
+  Effect,
   ArcRotateCamera,
   Vector3,
   RawTexture3D,
   HemisphericLight,
   MeshBuilder,
   ShaderMaterial,
-  Effect,
   Texture,
 } from 'babylonjs'
 
@@ -58,6 +58,13 @@ const generateWorleyNoise3D = (width: any, height: any, depth: any) => {
   }
 
   // 生成特征点网格
+  // 3D 空间被划分成 4×4×4 的网格：
+  // 每个维度被分成4段，共64个小立方体
+  //   X轴: [0,1] [1,2] [2,3] [3,4]
+  //   Y轴: [0,1] [1,2] [2,3] [3,4]
+  //   Z轴: [0,1] [1,2] [2,3] [3,4]
+  // 每个小格子内有1个随机偏移的特征点
+  // 噪声值 = 到最近特征点的距离
   const gridSize = 4 // 每个维度的网格数量
   const featurePoints = []
 
@@ -120,75 +127,6 @@ const generateWorleyNoise3D = (width: any, height: any, depth: any) => {
   return data
 }
 
-// ============================================
-// 3D Worley Noise Shader
-// ============================================
-Effect.ShadersStore['worley3DVertexShader'] = `
-  precision highp float;
-  
-  attribute vec3 position;
-  attribute vec3 normal;
-  attribute vec2 uv;
-  
-  uniform mat4 worldViewProjection;
-  uniform mat4 world;
-  
-  varying vec3 vPosition;
-  varying vec3 vNormal;
-  varying vec3 vUV3D;  // 3D纹理坐标
-  
-  void main(void) {
-    vec4 worldPos = world * vec4(position, 1.0);
-    vPosition = worldPos.xyz;
-    vNormal = normalize(mat3(world) * normal);
-    
-    // 使用世界坐标作为3D纹理坐标，可以缩放调整密度
-    vUV3D = worldPos.xyz * 0.15;
-    
-    gl_Position = worldViewProjection * vec4(position, 1.0);
-  }
-`
-
-Effect.ShadersStore['worley3DFragmentShader'] = `
-  precision highp float;
-  precision highp sampler3D;
-  
-  varying vec3 vPosition;
-  varying vec3 vNormal;
-  varying vec3 vUV3D;
-  
-  // 3D纹理采样器 - 必须使用 sampler3D
-  uniform sampler3D worleyTexture;
-  uniform vec3 cameraPosition;
-  uniform float time;
-  
-  void main(void) {
-    // 采样3D Worley噪声纹理
-    // 使用 fract 实现周期性重复
-    vec3 uvw = fract(vUV3D + vec3(time * 0.05));
-    
-    // 使用 texture 函数采样3D纹理 (WebGL 2.0)
-    float noise = texture(worleyTexture, uvw).r;
-    
-    // 添加一些颜色变化
-    vec3 baseColor = vec3(0.2, 0.4, 0.8); // 蓝色基调
-    vec3 highlightColor = vec3(0.9, 0.95, 1.0); // 白色高光
-    
-    // 基于噪声混合颜色
-    vec3 color = mix(baseColor, highlightColor, noise);
-    
-    // 简单的光照计算
-    vec3 lightDir = normalize(vec3(0.5, 1.0, 0.5));
-    float diff = max(dot(vNormal, lightDir), 0.0);
-    vec3 ambient = vec3(0.3);
-    
-    // 边缘发光效果（基于噪声）
-    float rim = 1.0 - max(dot(vNormal, normalize(cameraPosition - vPosition)), 0.0);
-    rim = pow(rim, 3.0) * noise * 2.0;
-    
-    gl_FragColor = vec4(color * (diff + ambient) + vec3(rim), 1.0);
-  }
-`
 
 const initScene = async () => {
   const ele = document.getElementById("rawTexture3d_1") as any
@@ -219,6 +157,76 @@ const initScene = async () => {
     return light
   }
 
+  // ============================================
+  // 3D Worley Noise Shader
+  // ============================================
+  Effect.ShadersStore['worley3DVertexShader'] = `
+    precision highp float;
+    
+    attribute vec3 position;
+    attribute vec3 normal;
+    attribute vec2 uv;
+    
+    uniform mat4 worldViewProjection;
+    uniform mat4 world;
+    
+    varying vec3 vPosition;
+    varying vec3 vNormal;
+    varying vec3 vUV3D;  // 3D纹理坐标
+    
+    void main(void) {
+      vec4 worldPos = world * vec4(position, 1.0);
+      vPosition = worldPos.xyz;
+      vNormal = normalize(mat3(world) * normal);
+      
+      // 使用世界坐标作为3D纹理坐标，可以缩放调整密度
+      vUV3D = worldPos.xyz * 0.15;
+      
+      gl_Position = worldViewProjection * vec4(position, 1.0);
+    }
+  `
+
+  Effect.ShadersStore['worley3DFragmentShader'] = `
+    precision highp float;
+    precision highp sampler3D;
+    
+    varying vec3 vPosition;
+    varying vec3 vNormal;
+    varying vec3 vUV3D;
+    
+    // 3D纹理采样器 - 必须使用 sampler3D
+    uniform sampler3D worleyTexture;
+    uniform vec3 cameraPosition;
+    uniform float time;
+    
+    void main(void) {
+      // 采样3D Worley噪声纹理
+      // 使用 fract 实现周期性重复
+      vec3 uvw = fract(vUV3D + vec3(time * 0.05));
+      
+      // 使用 texture 函数采样3D纹理 (WebGL 2.0)
+      float noise = texture(worleyTexture, uvw).r;
+      
+      // 添加一些颜色变化
+      vec3 baseColor = vec3(0.2, 0.4, 0.8); // 蓝色基调
+      vec3 highlightColor = vec3(0.9, 0.95, 1.0); // 白色高光
+      
+      // 基于噪声混合颜色
+      vec3 color = mix(baseColor, highlightColor, noise);
+      
+      // 简单的光照计算
+      vec3 lightDir = normalize(vec3(0.5, 1.0, 0.5));
+      float diff = max(dot(vNormal, lightDir), 0.0);
+      vec3 ambient = vec3(0.3);
+      
+      // 边缘发光效果（基于噪声）
+      float rim = 1.0 - max(dot(vNormal, normalize(cameraPosition - vPosition)), 0.0);
+      rim = pow(rim, 3.0) * noise * 2.0;
+      
+      gl_FragColor = vec4(color * (diff + ambient) + vec3(rim), 1.0);
+    }
+  `
+
   const createWorleyTexture3D = () => {
     const textureSize = 32 // 3D纹理尺寸 (32x32x32)
     const noiseData = generateWorleyNoise3D(textureSize, textureSize, textureSize)
@@ -238,9 +246,26 @@ const initScene = async () => {
       Engine.TEXTURETYPE_UNSIGNED_BYTE // 8位无符号整数（0-255），Uint8Array 数据；TEXTURETYPE_UNSIGNED_INTEGER，32位无符号整数
     )
 
-    worleyTexture3D.wrapU = Texture.WRAP_ADDRESSMODE
-    worleyTexture3D.wrapV = Texture.WRAP_ADDRESSMODE
-    worleyTexture3D.wrapR = Texture.WRAP_ADDRESSMODE // 3D纹理的R轴包装模式
+    // 这三个属性控制 3D 纹理在三个轴向上的寻址/包装模式，决定当纹理坐标超出 [0, 1] 范围时如何采样。
+    // wrapU	X 轴	水平方向（左右）	2D 纹理的 U
+    // wrapV	Y 轴	垂直方向（上下）	2D 纹理的 V
+    // wrapR	Z 轴	深度方向（前后）	3D 纹理特有
+    // 配合 shader：
+    //   vec3 uvw = fract(vUV3D + vec3(time * 0.05));  // fract 将坐标限制在 [0,1]
+    // 实际上 fract() 已经处理了越界，但 wrap 模式确保万一有浮点误差或直接使用 uvw > 1.0 时，纹理会无缝重复而不是截断或报错。
+    // -------------------------------------------------------------------------------
+    // // 1. WRAP - 重复/平铺（你的设置）
+    // // 坐标 1.2 → 采样 0.2 的位置，形成无缝循环
+    // Texture.WRAP_ADDRESSMODE
+    // // 2. CLAMP - 边缘拉伸
+    // // 坐标 1.2 → 采样 1.0 的边缘像素，边缘拉伸效果
+    // Texture.CLAMP_ADDRESSMODE  
+    // // 3. MIRROR - 镜像重复
+    // // 坐标 1.2 → 采样 0.8 的位置（反向），1.8 → 0.2，形成镜像
+    // Texture.MIRROR_ADDRESSMODE
+    worleyTexture3D.wrapU = Texture.WRAP_ADDRESSMODE // X: 左右重复
+    worleyTexture3D.wrapV = Texture.WRAP_ADDRESSMODE // Y: 上下重复  
+    worleyTexture3D.wrapR = Texture.WRAP_ADDRESSMODE // Z: 前后重复
 
     const worley3DMaterial = new ShaderMaterial('worley3D', scene, {
       vertex: 'worley3D',
