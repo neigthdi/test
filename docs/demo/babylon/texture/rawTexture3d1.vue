@@ -217,9 +217,20 @@ const generateWorleyNoise3D = (width: any, height: any, depth: any) => {
         //   最大3D距离 = √(2² + 2² + 2²) = √8 ≈ 2.828
         // 使用 3.2 作为分母让大部分噪声值落在有效范围内，增强对比度
         const intensity = Math.min(minDist / (gridSize * 0.8), 1.0)
-
         // 转换为 8-bit 灰度值 [0, 255]
         const gray = Math.floor(intensity * 255)
+
+
+
+        // // 归一化距离并反转（距离越近越亮/密度越高）
+        // // 使用 gridSize * sqrt(3)/2 作为最大可能距离（体对角线的一半）
+        // const maxPossibleDist = gridSize * 0.866 // sqrt(3)/2 ≈ 0.866
+        // const normalizedDist = Math.min(minDist / maxPossibleDist, 1.0)
+        // // 反转：特征点附近密度高（云），远离密度低（透明）
+        // const density = 1.0 - normalizedDist
+        // // 可选：应用曲线调整对比度
+        // const contrastedDensity = Math.pow(density, 2.0)
+        // const gray = Math.floor(contrastedDensity * 255)
 
         data[index++] = gray // R
         data[index++] = gray // G
