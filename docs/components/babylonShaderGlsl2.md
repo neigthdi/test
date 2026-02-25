@@ -7,6 +7,9 @@
 ## 模拟体积云
 <preview path="../demo/babylon/shaderGlsl2/cloud.vue"></preview>
 
+## 模拟体积云【使用UBO方式，而不是传统uniform方式】
+<preview path="../demo/babylon/shaderGlsl2/cloudUbo.vue"></preview>
+
 ## 球体的坑
 <preview path="../demo/babylon/shaderGlsl2/spherePit.vue"></preview>
 

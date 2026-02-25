@@ -73,10 +73,16 @@ const initScene = async () => {
     return light
   }
 
+  // 项目	                 是否使用UBO	  说明
+  // Scene/Mesh 矩阵参数   ✅ 是	        Babylon内置，自动管理
+  // time       动画参数   ✅ 是	        自定义MyUBO
+  // colors     颜色数据   ❌ 否	        使用Storage Buffer（更适合数组）
+  // vColor     颜色数组   ❌ 否	        传统uniform（WGSL兼容模式）
+  // diffuse    纹理数据   ❌ 否        	单独sampler2D绑定
 
   ShaderStore.ShadersStoreWGSL['customVertexShader'] = `
-    #include<sceneUboDeclaration>
-    #include<meshUboDeclaration>
+    #include<sceneUboDeclaration> // 内置UBO，包含 viewProjection 等场景级uniform
+    #include<meshUboDeclaration> // 内置UBO，包含 world 等模型级uniform
     
     attribute position: vec3<f32>;
     attribute uv: vec2<f32>;
@@ -93,8 +99,9 @@ const initScene = async () => {
   ShaderStore.ShadersStoreWGSL['customFragmentShader'] = `
     var<storage, read_write> colors: array<f32>;
     
+    // 自定义 UBO
     struct MyUBO {
-      time: f32,
+      time: f32, // 4字节，但会自动对齐到16字节边界
     };
     
     var<uniform> myUBO: MyUBO;
@@ -119,7 +126,7 @@ const initScene = async () => {
     fragment: 'custom',
   }, {
     attributes: ['position', 'normal', 'uv', 'rgb'],
-    uniformBuffers: ['Scene', 'Mesh'],
+    uniformBuffers: ['Scene', 'Mesh'], // 启用内置UBO
     shaderLanguage: ShaderLanguage.WGSL,
   })
 

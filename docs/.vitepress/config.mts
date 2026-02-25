@@ -106,12 +106,13 @@ function sidebarBase() {
       text: '其他',
       collapsible: true,
       items: [
+        { text: 'three的优化(babylon)', link: '/other/threeOptimize' },
         { text: '着色器', link: '/other/shader' },
         { text: '钩子', link: '/other/hook' },
         { text: '存储', link: '/other/storage' },
         { text: 'layerMask', link: '/other/layerMask' },
         { text: 'clone和createInstance', link: '/other/cloneAndCreateInstance' },
-        { text: 'three的优化(babylon)', link: '/other/threeOptimize' },
+        { text: 'layout(std140)', link: '/other/std' },
       ]
     },
     {
