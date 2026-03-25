@@ -16,7 +16,7 @@
       <div>逆row计算（<span class="color-blue">完成</span>）</div>
       <div>逆col计算（<span class="color-blue">完成</span>）</div>
       <div>光照法线（<span class="color-blue">完成</span>）</div>
-      <div>泡沫--雅可比行列式算（<span class="color-red">未完成</span>）</div>
+      <div>泡沫--雅可比行列式算（<span class="color-red">完成</span>）</div>
     </div>
     <div class="flex space-between">
       <div>fps: {{ fps }}</div>
@@ -90,6 +90,7 @@ let workGroupSizeColY = IMG_SIZE
 let customAmplitude = 0.8
 let customWindSpeed = 45.223
 let phillipsGroupSize = 16
+let uTileCount = 2  // FFT patch 平铺次数，1024/4=256 世界单位一个波形周期
 
 // let wData = new Float32Array(IMG_SIZE * 4)
 let wInverseData = new Float32Array(IMG_SIZE * 4)
@@ -467,9 +468,58 @@ const codeCol = (isInverse: any) => {
       
       // 如果是逆fft，最后一步需要 / N；如果是正fff，则不需要
       let scale = select(1.0, 1.0 / f32(${IMG_SIZE_SQRT}), ${isInverse});
-      let outY = sharedDataY[local_id.y] * scale;
-      let outX = sharedDataX[local_id.y] * scale;
-      let outZ = sharedDataZ[local_id.y] * scale;
+
+
+      // ─────────────────────────────────────────────────────────────────────
+      // 从头推导
+      // Phillips 频谱生成时，k 向量做了中心化：
+      // let nx = x - size * 0.5;   // 让 k=0 在图片中心
+      // let k  = TWO_PI * nx / size;
+      // 这等价于把原始频谱 H(k) 做了一次 fftshift【fft移动】，即：
+      // ─────────────────────────────────────────────────────────────────────
+      // H_shifted(k) = H(k - N/2)
+      // DFT 频移定理
+      // 对于一维 DFT，若把频域移位 N/2，时域会发生什么？
+      // ─────────────────────────────────────────────────────────────────────
+      // H_shifted(k) = H(k - N/2)
+      // ─────────────────────────────────────────────────────────────────────
+      // IFFT{ H(k - N/2) }(n)
+      //   = Σ H(k-N/2) · e^(+2πi·k·n/N)
+      //   令 m = k - N/2
+      //   = Σ H(m) · e^(+2πi·(m+N/2)·n/N)
+      //   = Σ H(m) · e^(+2πi·m·n/N) · e^(+2πi·N/2·n/N)
+      //   = h(n) · e^(+πi·n)
+      //   = h(n) · (-1)^n          ← 因为 e^(iπ) = -1
+      // ─────────────────────────────────────────────────────────────────────
+      // 所以：
+      // IFFT{ H_shifted }(n)  =  h(n) · (-1)^n
+      // 二维推广：
+      // IFFT2{ H_shifted }(x, y)  =  h(x, y) · (-1)^(x+y)
+      // ─────────────────────────────────────────────────────────────────────
+      // 代码的含义
+      // 计算出来的值实际上是 h(x,y) · (-1)^(x+y)，需要乘以 (-1)^(x+y) 还原真正的 h(x,y)：
+      // let sign = select(-1.0, 1.0, (global_id.x + global_id.y) % 2u == 0u);
+      //             ↑ x+y 是奇数 → -1       ↑ x+y 是偶数 → +1
+      //            即 sign = (-1)^(x+y)
+      // ─────────────────────────────────────────────────────────────────────
+      // 结论：
+      //   IFFT 算出来的值实际上是 h(x,y)·(-1)^(x+y)，
+      //   再乘一次 (-1)^(x+y) 才能还原真正的位移值 h(x,y)。
+      //   这就是输出图中出现 [0.25, -0.28, 0.30, -0.32...] 棋盘格交替正负的根因。
+      // ─────────────────────────────────────────────────────────────────────
+      // x+y	  (-1)^(x+y)	  计算出的值	  乘以 sign 后
+      // 偶数	      +1	          +h	          +h ✓
+      // 奇数	      -1	          -h	          +h ✓
+      // ─────────────────────────────────────────────────────────────────────
+      // 乘完之后，原来的 [0.25, -0.28, 0.30, -0.32...] 就变成了连续的 [0.25, 0.28, 0.30, 0.32...]，这才是真正的海面位移值
+      // ─────────────────────────────────────────────────────────────────────
+      let sign = select(-1.0, 1.0, (global_id.x + global_id.y) % 2u == 0u);
+      
+
+      // 如果不乘以 sign，那么输出的位移值就是 [0.25, -0.28, 0.30, -0.32...]，这是不正确的
+      let outY = sharedDataY[local_id.y] * scale * sign;
+      let outX = sharedDataX[local_id.y] * scale * sign;
+      let outZ = sharedDataZ[local_id.y] * scale * sign;
       
       textureStore(colTextureY, vec2<i32>(i32(global_id.x), i32(global_id.y)), vec4<f32>(outY.x, outY.y, 0.0, 1.0));
       textureStore(colTextureX, vec2<i32>(i32(global_id.x), i32(global_id.y)), vec4<f32>(outX.x, outX.y, 0.0, 1.0));
@@ -814,6 +864,8 @@ const initScene = async () => {
 
     let planeColY = MeshBuilder.CreatePlane('planeColY', { width: IMG_SIZE, height: IMG_SIZE }, scene)
     let rawColY = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_FLOAT)
+    rawColY.wrapU = Texture.WRAP_ADDRESSMODE
+    rawColY.wrapV = Texture.WRAP_ADDRESSMODE
     let matColY = new StandardMaterial('matColY', scene)
     matColY.diffuseTexture = rawColY
     planeColY.material = matColY
@@ -822,6 +874,8 @@ const initScene = async () => {
 
     let planeColX = MeshBuilder.CreatePlane('planeColX', { width: IMG_SIZE, height: IMG_SIZE }, scene)
     let rawColX = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_FLOAT)
+    rawColX.wrapU = Texture.WRAP_ADDRESSMODE
+    rawColX.wrapV = Texture.WRAP_ADDRESSMODE
     let matColX = new StandardMaterial('matColX', scene)
     matColX.diffuseTexture = rawColX
     planeColX.material = matColX
@@ -830,6 +884,8 @@ const initScene = async () => {
 
     let planeColZ = MeshBuilder.CreatePlane('planeColZ', { width: IMG_SIZE, height: IMG_SIZE }, scene)
     let rawColZ = RawTexture.CreateRGBAStorageTexture(null, IMG_SIZE, IMG_SIZE, scene, false, false, Texture.LINEAR_LINEAR, Constants.TEXTURETYPE_FLOAT)
+    rawColZ.wrapU = Texture.WRAP_ADDRESSMODE
+    rawColZ.wrapV = Texture.WRAP_ADDRESSMODE
     let matColZ = new StandardMaterial('matColZ', scene)
     matColZ.diffuseTexture = rawColZ
     planeColZ.material = matColZ
@@ -872,7 +928,7 @@ const initScene = async () => {
     const oceanMat = new ShaderMaterial('oceanMat', scene, {
       vertexSource: `
         precision highp float;
-			
+
         attribute vec3 position;
         attribute vec2 uv;
 
@@ -880,26 +936,37 @@ const initScene = async () => {
         uniform sampler2D heightMap;
         uniform sampler2D displacementX;
         uniform sampler2D displacementZ;
-        uniform float uGridCount;
-        uniform float uEnergyScale;
 
-        varying float vX;
-        varying float vY;
-        varying float vZ;
+        varying vec2 vUv;
+
+        // SPIR-V 不允许 sampler 作函数参数，每个纹理单独写双线性插值函数
+        float blH(vec2 uv) {
+          float s=1.0/${IMG_SIZE}.0; vec2 p=fract(uv*${IMG_SIZE}.0), c=(floor(uv*${IMG_SIZE}.0)+0.5)*s;
+          return mix(mix(texture2D(heightMap,c).x,    texture2D(heightMap,c+vec2(s,0.0)).x,p.x),
+                     mix(texture2D(heightMap,c+vec2(0.0,s)).x, texture2D(heightMap,c+vec2(s,s)).x,p.x),p.y);
+        }
+        float blX(vec2 uv) {
+          float s=1.0/${IMG_SIZE}.0; vec2 p=fract(uv*${IMG_SIZE}.0), c=(floor(uv*${IMG_SIZE}.0)+0.5)*s;
+          return mix(mix(texture2D(displacementX,c).x,    texture2D(displacementX,c+vec2(s,0.0)).x,p.x),
+                     mix(texture2D(displacementX,c+vec2(0.0,s)).x, texture2D(displacementX,c+vec2(s,s)).x,p.x),p.y);
+        }
+        float blZ(vec2 uv) {
+          float s=1.0/${IMG_SIZE}.0; vec2 p=fract(uv*${IMG_SIZE}.0), c=(floor(uv*${IMG_SIZE}.0)+0.5)*s;
+          return mix(mix(texture2D(displacementZ,c).x,    texture2D(displacementZ,c+vec2(s,0.0)).x,p.x),
+                     mix(texture2D(displacementZ,c+vec2(0.0,s)).x, texture2D(displacementZ,c+vec2(s,s)).x,p.x),p.y);
+        }
 
         void main() {
-          // texelCenter 把 uv 从任意小数对齐到“texel 中心”，再让 GPU 做双线性插值，就不会出现“一格一格”的跳变
-          vec2 texelCenter = (floor(uv * uGridCount) + 0.5) / uGridCount;
-          vec4 texelSample = texture2D(heightMap,  texelCenter);
-          
-          vX = abs(texelSample.x);
-          vY = abs(texelSample.y);
-          vZ = abs(texelSample.z);
+          vUv = uv * ${uTileCount}.0;
+
+          float dY = blH(vUv);
+          float dX = blX(vUv);
+          float dZ = blZ(vUv);
 
           vec3 pos = position;
-          pos.x += vX;
-          pos.z += vZ;
-          pos.y = vY * 5.0;
+          pos.x += dX;
+          pos.z += dZ;
+          pos.y += dY * 3.0;
 
           gl_Position = worldViewProjection * vec4(pos, 1.0);
         }
@@ -910,73 +977,116 @@ const initScene = async () => {
         uniform sampler2D heightMap;
         uniform sampler2D displacementX;
         uniform sampler2D displacementZ;
-        uniform float uEnergyScale;
         uniform float uGridCount;
         uniform vec3 uLightDir;
-        
-        varying float vX;
-        varying float vY;
-        varying float vZ;
+
+        varying vec2 vUv;
+
+        // SPIR-V 不允许 sampler 作函数参数，每个纹理单独写双线性插值函数
+        float blH(vec2 uv) {
+          float s = 1.0/uGridCount; vec2 p = fract(uv*uGridCount), c = (floor(uv*uGridCount)+0.5)*s;
+          return mix(mix(texture2D(heightMap,c).x,    texture2D(heightMap,c+vec2(s,0.0)).x,p.x),
+                     mix(texture2D(heightMap,c+vec2(0.0,s)).x, texture2D(heightMap,c+vec2(s,s)).x,p.x),p.y);
+        }
+        float blX(vec2 uv) {
+          float s = 1.0/uGridCount; vec2 p = fract(uv*uGridCount), c = (floor(uv*uGridCount)+0.5)*s;
+          return mix(mix(texture2D(displacementX,c).x,    texture2D(displacementX,c+vec2(s,0.0)).x,p.x),
+                     mix(texture2D(displacementX,c+vec2(0.0,s)).x, texture2D(displacementX,c+vec2(s,s)).x,p.x),p.y);
+        }
+        float blZ(vec2 uv) {
+          float s = 1.0/uGridCount; vec2 p = fract(uv*uGridCount), c = (floor(uv*uGridCount)+0.5)*s;
+          return mix(mix(texture2D(displacementZ,c).x,    texture2D(displacementZ,c+vec2(s,0.0)).x,p.x),
+                     mix(texture2D(displacementZ,c+vec2(0.0,s)).x, texture2D(displacementZ,c+vec2(s,s)).x,p.x),p.y);
+        }
 
         void main() {
-          // 简单的颜色渲染
-          // vec3 deepWaterColor = vec3(0.0, 0.549, 0.996); // 海水的深蓝色
-          // vec3 shallowWaterColor = vec3(0.3, 0.7, 1.0); // 天空的浅天蓝色
-          // vec3 waterColor = mix(deepWaterColor, shallowWaterColor, abs(vY));
-          // // waterColor = vec3(abs(vY), abs(vY), abs(vY));
-          // gl_FragColor = vec4(waterColor, 1.0);
-          
-          // texelCenter 把 uv 从任意小数对齐到“texel 中心”，再让 GPU 做双线性插值，就不会出现“一格一格”的跳变
-          vec2 texelCenter = (floor(gl_FragCoord.xy) + 0.5) / uGridCount;
-          
-          // 一个 texel 的边长（世界空间 1 个单位）
-          float texel = 1.0 / uGridCount;
-          
-          // 对 height 做中心差分
-          float hx = abs(texture2D(heightMap, texelCenter + vec2(texel, 0.0)).x) - abs(texture2D(heightMap, texelCenter - vec2(texel, 0.0)).x);
-          float hz = abs(texture2D(heightMap, texelCenter + vec2(0.0, texel)).x) - abs(texture2D(heightMap, texelCenter - vec2(0.0, texel)).x);
-          // 中心差分系数 1/(2*texel)
-          hx *= 0.5;
-          hz *= 0.5;
-          
-          // 对 displacementX 做中心差分
-          float dxx = abs(texture2D(displacementX, texelCenter + vec2(texel, 0.0)).x) - abs(texture2D(displacementX, texelCenter - vec2(texel, 0.0)).x);
-          float dxz = abs(texture2D(displacementX, texelCenter + vec2(0.0, texel)).x) - abs(texture2D(displacementX, texelCenter - vec2(0.0, texel)).x);
-          // 中心差分系数 1/(2*texel)
-          dxx *= 0.5;
-          dxz *= 0.5;
-          
-          // 对 displacementZ 做中心差分
-          float dzx = abs(texture2D(displacementZ, texelCenter + vec2(texel, 0.0)).x) - abs(texture2D(displacementZ, texelCenter - vec2(texel, 0.0)).x);
-          float dzz = abs(texture2D(displacementZ, texelCenter + vec2(0.0, texel)).x) - abs(texture2D(displacementZ, texelCenter - vec2(0.0, texel)).x);
-          // 中心差分系数 1/(2*texel)
-          dzx *= 0.5;
-          dzz *= 0.5;
-          
-          // 构造切线向量（世界空间）
-          vec3 Tx = vec3(1.0 + dxx, hx, dzx); // 注意：dx 影响 x、z 两个方向
-          vec3 Tz = vec3(dxz, hz, 1.0 + dzz);
-          
-          // 叉乘得法线并归一化
+          vec2 texelCenter = vUv;
+          float d = 1.0 / uGridCount;
+
+          // ∂Y/∂x  ∂Y/∂z
+          float hx  = (blH(texelCenter+vec2(d,0.0)) - blH(texelCenter-vec2(d,0.0))) * 0.5;
+          float hz  = (blH(texelCenter+vec2(0.0,d)) - blH(texelCenter-vec2(0.0,d))) * 0.5;
+
+          // ∂Dx/∂x  ∂Dx/∂z
+          float dxx = (blX(texelCenter+vec2(d,0.0)) - blX(texelCenter-vec2(d,0.0))) * 0.5;
+          float dxz = (blX(texelCenter+vec2(0.0,d)) - blX(texelCenter-vec2(0.0,d))) * 0.5;
+
+          // ∂Dz/∂x  ∂Dz/∂z
+          float dzx = (blZ(texelCenter+vec2(d,0.0)) - blZ(texelCenter-vec2(d,0.0))) * 0.5;
+          float dzz = (blZ(texelCenter+vec2(0.0,d)) - blZ(texelCenter-vec2(0.0,d))) * 0.5;
+
+          // ─────────────────────────────────────────────────────────────────────
+          // 【法线】构造切线向量后叉乘
+          //
+          //   海面上一个点的世界坐标（Gerstner 位移后）：
+          //     P(u,v) = ( u + Dx(u,v),  Y(u,v),  v + Dz(u,v) )
+          //
+          //   对 u（x方向）求偏导 → 切线 Tx：
+          //     Tx = ∂P/∂u = ( 1 + ∂Dx/∂x,  ∂Y/∂x,  ∂Dz/∂x )
+          //                =   (1+dxx,         hx,     dzx   )
+          //
+          //   对 v（z方向）求偏导 → 切线 Tz：
+          //     Tz = ∂P/∂v = ( ∂Dx/∂z,  ∂Y/∂z,  1 + ∂Dz/∂z )
+          //                =   (dxz,      hz,     1+dzz      )
+          //
+          //   法线 = Tz × Tx（右手系，结果朝上）
+          // ─────────────────────────────────────────────────────────────────────
+          vec3 Tx = vec3(1.0 + dxx, hx,  dzx      );
+          vec3 Tz = vec3(dxz,       hz,  1.0 + dzz);
           vec3 norm = normalize(cross(Tz, Tx));
-          
-          // 用水体颜色做简单光照【最基础的漫反射光照模型】
-          vec3 deep = vec3(0.0, 0.549, 0.996); // 海水的深蓝色
-          vec3 shallow = vec3(0.3, 0.7, 1.0); // 天空的浅天蓝色
-          vec3 base = mix(deep, shallow, clamp(abs(vY) / 5.0, 0.0, 1.0)); // 调整高度差
-          
+
+          // ─────────────────────────────────────────────────────────────────────
+          // 【雅可比行列式】判断海面是否发生折叠（产生泡沫）
+          //
+          //   Gerstner 位移把每个粒子从 (u,v) 移到 P(u,v)，
+          //   雅可比行列式 J 描述这个映射在局部的"面积拉伸比"：
+          //
+          //     J = |∂P/∂u  ×  ∂P/∂v| 在 xz 平面上的投影
+          //
+          //   只取水平分量（忽略 Y），xz 平面上的雅可比为：
+          //
+          //     J = det | ∂Px/∂u   ∂Px/∂v |  =  (1+∂Dx/∂x)(1+∂Dz/∂z) - (∂Dx/∂z)(∂Dz/∂x)
+          //             | ∂Pz/∂u   ∂Pz/∂v |
+          //           = (1+dxx)(1+dzz) - dxz·dzx
+          //
+          //   物理意义：
+          //     J > 1  → 局部面积拉伸，海面平坦舒展
+          //     J = 1  → 无形变
+          //     J < 1  → 局部面积压缩，粒子向某点汇聚
+          //     J ≤ 0  → 面积为零或反向，海面发生折叠 → 白浪/泡沫区域
+          //
+          //   foam = clamp(1-J, 0, 1)：
+          //     J=1 时 foam=0（无泡沫）
+          //     J=0 时 foam=1（最强泡沫）
+          //     J<0 时也 clamp 到 1
+          // ─────────────────────────────────────────────────────────────────────
+          float J    = (1.0 + dxx) * (1.0 + dzz) - dxz * dzx;
+          // smoothstep：J=1.5 时无泡沫，J=0.0 时全泡沫，中间平滑过渡
+          float foam = smoothstep(1.5, 0.0, J);
+
+          // ─────────────────────────────────────────────────────────────────────
+          // 【颜色 + 光照】
+          // ─────────────────────────────────────────────────────────────────────
+          // 直接在 fragment 里采样高度，双线性过滤保证跨纹素的颜色顺滑过渡
+          float fragY  = blH(texelCenter);
+          vec3 deep    = vec3(0.0, 0.549, 0.996); // 深海蓝
+          vec3 shallow = vec3(0.3,  0.7,  1.0  ); // 浅天蓝
+          vec3 base    = mix(deep, shallow, clamp(abs(fragY) / 5.0, 0.0, 1.0));
+          // 叠加泡沫白色（雅可比折叠区域）
+          base = mix(base, vec3(1.0), foam);
+
           // 简单 Lambertian Diffuse
-          vec3 L = normalize(uLightDir);
-          float NormDotL = max(0.0, dot(norm, L));
+          vec3 L        = normalize(uLightDir);
+          float NdotL   = max(0.0, dot(norm, L));
           
           // 光照参数（能量守恒范围内）
           const vec3 kAmbient = vec3(0.15, 0.18, 0.20);	// 天空漫反射
           const vec3 kDirect = vec3(0.85, 0.82, 0.80);	// 太阳直射
-          
-          vec3 lighting = kAmbient + kDirect * NormDotL;
-          
+
+          vec3 lighting = kAmbient + kDirect * NdotL;
+
           vec3 color = base * lighting;
-          color = pow(color, vec3(1.0 / 2.2));
+          color = pow(color, vec3(1.0 / 2.2)); // gamma 校正
 
           gl_FragColor = vec4(color, 1.0);
         }
@@ -991,7 +1101,7 @@ const initScene = async () => {
     const ocean = MeshBuilder.CreateGround('ocean', {
       width: oceanSize,
       height: oceanSize,
-      subdivisions: IMG_SIZE - 1
+      subdivisions: 1023
     }, scene)
     ocean.material = oceanMat
     ocean.position = new Vector3(0, 0, oceanSize * 0.75)
@@ -999,7 +1109,7 @@ const initScene = async () => {
     oceanMat.setTexture('heightMap', rawColY)
     oceanMat.setTexture('displacementX', rawColX)
     oceanMat.setTexture('displacementZ', rawColZ)
-    oceanMat.setFloat('uGridCount', oceanSize)
+    oceanMat.setFloat('uGridCount', IMG_SIZE)
     oceanMat.setFloat('uEnergyScale', IMG_SIZE)
     oceanMat.setVector3('uLightDir', new Vector3(0.0, 1.0, 0.0))
 
