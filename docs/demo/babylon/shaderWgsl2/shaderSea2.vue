@@ -620,27 +620,6 @@ const initScene = async () => {
     )
     device.queue.submit([commandEncoderReadW.finish()])
     await readBackBufferW.mapAsync(windows.GPUMapMode.READ)
-    let wData = new Float32Array(readBackBufferW.getMappedRange())
-    let rawTextureW = new RawTexture(
-      wData,
-      IMG_SIZE,
-      1,
-      Constants.TEXTUREFORMAT_RGBA,
-      scene,
-      false, // no mipmaps
-      false, // not invertY
-      Texture.LINEAR_LINEAR,
-      Constants.TEXTURETYPE_FLOAT
-    )
-    let planeW = MeshBuilder.CreatePlane('planeW', {
-      width: IMG_SIZE,
-      height: 1
-    }, scene)
-    let matW = new StandardMaterial('matW', scene)
-    matW.diffuseTexture = rawTextureW
-    planeW.material = matW
-    planeW.rotation = new Vector3(Math.PI / 2, 0, 0)
-    planeW.position = new Vector3(0, 0, IMG_SIZE + 20)
     /** w 的结束 */
 
 
@@ -933,7 +912,6 @@ const initScene = async () => {
       subdivisions: 1023
     }, scene)
     ocean.material = oceanMat
-    ocean.position = new Vector3(0, 0, oceanSize * 0.75)
 
     oceanMat.setTexture('heightMap', rawColY)
     oceanMat.setTexture('displacementX', rawColX)
