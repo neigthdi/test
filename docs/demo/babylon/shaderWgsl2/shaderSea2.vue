@@ -22,8 +22,8 @@
         </tr>
         <tr>
           <td style="border:1px solid #ccc; padding:4px 8px; font-weight:bold;">优化3：蝶形并行度</td>
-          <td style="border:1px solid #ccc; padding:4px 8px; color:#c00;">workgroup_size = N = 128<br>128 线程跑相同串行循环，利用率 1/128<br>蝶形计算量：128 × 64 × 7 = 57344 次/pass</td>
-          <td style="border:1px solid #ccc; padding:4px 8px; color:#080;">workgroup_size = N/2 = 64（Stockham 并行）<br>每线程负责 1 个蝶形对，利用率 100%<br>蝶形计算量：64 × 7 = 448 次/pass</td>
+          <td style="border:1px solid #ccc; padding:4px 8px; color:#c00;">workgroup_size = N = 128<br>128 线程跑相同串行循环，利用率 1/128<br>蝶形计算量：128[workgroup_size] × 64[blockNum*kFor] × 7[logN] = 57344 次/pass</td>
+          <td style="border:1px solid #ccc; padding:4px 8px; color:#080;">workgroup_size = N/2 = 64（Stockham 并行）<br>每线程负责 1 个蝶形对，利用率 100%<br>蝶形计算量：64[workgroup_size] × 7[logN] = 448 次/pass</td>
         </tr>
         <tr>
           <td style="border:1px solid #ccc; padding:4px 8px; font-weight:bold;">共享内存</td>
@@ -78,7 +78,7 @@ let uTime = 0.0
 
 let IMG_SIZE = 128
 let IMG_SIZE_SQRT = Math.sqrt(IMG_SIZE)
-let logN = Math.log2(IMG_SIZE)
+let logN = Math.log2(IMG_SIZE) // Math.log2(128) = 7 -> 2⁷ = 128
 let half = IMG_SIZE / 2
 // 优化3: workgroup_size = N/2，每线程负责 1 个蝶形对（原为 N=128，全线程串行）
 let workGroupSizeRowX = IMG_SIZE / 2   // 64

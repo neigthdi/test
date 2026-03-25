@@ -567,8 +567,9 @@ for (let i = 0; i < size; i++) {
 console.log(OutputData)
 ```
 
-```javascript
 
+#### 优化后的
+```javascript
 
 for (var m = 0u; m < ${logN}u; m++) {
   let step = 1u << m;
