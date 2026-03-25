@@ -984,19 +984,22 @@ const initScene = async () => {
 
         // SPIR-V 不允许 sampler 作函数参数，每个纹理单独写双线性插值函数
         float blH(vec2 uv) {
-          float s = 1.0/uGridCount; vec2 p = fract(uv*uGridCount), c = (floor(uv*uGridCount)+0.5)*s;
-          return mix(mix(texture2D(heightMap,c).x,    texture2D(heightMap,c+vec2(s,0.0)).x,p.x),
-                     mix(texture2D(heightMap,c+vec2(0.0,s)).x, texture2D(heightMap,c+vec2(s,s)).x,p.x),p.y);
+          float s = 1.0/uGridCount; 
+          vec2 p = fract(uv * uGridCount), c = (floor(uv * uGridCount) + 0.5)*s;
+          return mix(mix(texture2D(heightMap, c).x, texture2D(heightMap, c + vec2(s, 0.0)).x, p.x),
+                     mix(texture2D(heightMap, c + vec2(0.0, s)).x, texture2D(heightMap, c + vec2(s, s)).x, p.x), p.y);
         }
         float blX(vec2 uv) {
-          float s = 1.0/uGridCount; vec2 p = fract(uv*uGridCount), c = (floor(uv*uGridCount)+0.5)*s;
-          return mix(mix(texture2D(displacementX,c).x,    texture2D(displacementX,c+vec2(s,0.0)).x,p.x),
-                     mix(texture2D(displacementX,c+vec2(0.0,s)).x, texture2D(displacementX,c+vec2(s,s)).x,p.x),p.y);
+          float s = 1.0/uGridCount; 
+          vec2 p = fract(uv * uGridCount), c = (floor(uv * uGridCount) + 0.5)*s;
+          return mix(mix(texture2D(displacementX, c).x, texture2D(displacementX, c + vec2(s, 0.0)).x, p.x),
+                     mix(texture2D(displacementX, c + vec2(0.0, s)).x, texture2D(displacementX, c + vec2(s, s)).x, p.x), p.y);
         }
         float blZ(vec2 uv) {
-          float s = 1.0/uGridCount; vec2 p = fract(uv*uGridCount), c = (floor(uv*uGridCount)+0.5)*s;
-          return mix(mix(texture2D(displacementZ,c).x,    texture2D(displacementZ,c+vec2(s,0.0)).x,p.x),
-                     mix(texture2D(displacementZ,c+vec2(0.0,s)).x, texture2D(displacementZ,c+vec2(s,s)).x,p.x),p.y);
+          float s = 1.0/uGridCount; 
+          vec2 p = fract(uv * uGridCount), c = (floor(uv * uGridCount) + 0.5)*s;
+          return mix(mix(texture2D(displacementZ, c).x, texture2D(displacementZ, c + vec2(s, 0.0)).x, p.x),
+                     mix(texture2D(displacementZ, c + vec2(0.0, s)).x, texture2D(displacementZ, c + vec2(s, s)).x, p.x), p.y);
         }
 
         void main() {
@@ -1004,16 +1007,16 @@ const initScene = async () => {
           float d = 1.0 / uGridCount;
 
           // ∂Y/∂x  ∂Y/∂z
-          float hx  = (blH(texelCenter+vec2(d,0.0)) - blH(texelCenter-vec2(d,0.0))) * 0.5;
-          float hz  = (blH(texelCenter+vec2(0.0,d)) - blH(texelCenter-vec2(0.0,d))) * 0.5;
+          float hx  = (blH(texelCenter + vec2(d, 0.0)) - blH(texelCenter - vec2(d, 0.0))) * 0.5;
+          float hz  = (blH(texelCenter + vec2(0.0,d)) - blH(texelCenter - vec2(0.0,d))) * 0.5;
 
           // ∂Dx/∂x  ∂Dx/∂z
-          float dxx = (blX(texelCenter+vec2(d,0.0)) - blX(texelCenter-vec2(d,0.0))) * 0.5;
-          float dxz = (blX(texelCenter+vec2(0.0,d)) - blX(texelCenter-vec2(0.0,d))) * 0.5;
+          float dxx = (blX(texelCenter + vec2(d, 0.0)) - blX(texelCenter - vec2(d, 0.0))) * 0.5;
+          float dxz = (blX(texelCenter + vec2(0.0,d)) - blX(texelCenter - vec2(0.0,d))) * 0.5;
 
           // ∂Dz/∂x  ∂Dz/∂z
-          float dzx = (blZ(texelCenter+vec2(d,0.0)) - blZ(texelCenter-vec2(d,0.0))) * 0.5;
-          float dzz = (blZ(texelCenter+vec2(0.0,d)) - blZ(texelCenter-vec2(0.0,d))) * 0.5;
+          float dzx = (blZ(texelCenter + vec2(d, 0.0)) - blZ(texelCenter - vec2(d, 0.0))) * 0.5;
+          float dzz = (blZ(texelCenter + vec2(0.0,d)) - blZ(texelCenter - vec2(0.0,d))) * 0.5;
 
           // ─────────────────────────────────────────────────────────────────────
           // 【法线】构造切线向量后叉乘
@@ -1031,36 +1034,43 @@ const initScene = async () => {
           //
           //   法线 = Tz × Tx（右手系，结果朝上）
           // ─────────────────────────────────────────────────────────────────────
-          vec3 Tx = vec3(1.0 + dxx, hx,  dzx      );
-          vec3 Tz = vec3(dxz,       hz,  1.0 + dzz);
+          vec3 Tx = vec3(1.0 + dxx, hx, dzx);
+          vec3 Tz = vec3(dxz, hz, 1.0 + dzz);
           vec3 norm = normalize(cross(Tz, Tx));
 
           // ─────────────────────────────────────────────────────────────────────
-          // 【雅可比行列式】判断海面是否发生折叠（产生泡沫）
+          // 【雅可比行列式 J】检测海面折叠 → 生成泡沫/白浪
           //
-          //   Gerstner 位移把每个粒子从 (u,v) 移到 P(u,v)，
-          //   雅可比行列式 J 描述这个映射在局部的"面积拉伸比"：
+          //   ① 什么是雅可比行列式？
+          //      描述向量场变换的"局部面积缩放比例"。
+          //      对 2D 变换 F(x,z)，其雅可比矩阵的行列式为：
+          //        det | ∂F₁/∂x   ∂F₁/∂z |  =  a*d - b*c
+          //            | ∂F₂/∂x   ∂F₂/∂z |
           //
-          //     J = |∂P/∂u  ×  ∂P/∂v| 在 xz 平面上的投影
+          //   ② 为什么这样算？
+          //      Gerstner 波把水面粒子 (x,z) 水平位移到新位置：
+          //        新位置 = (x + Dx,  z + Dz)
+          //      对这个变换求雅可比矩阵（含恒等变换的 1+）：
           //
-          //   只取水平分量（忽略 Y），xz 平面上的雅可比为：
+          //        J_matrix = | ∂(x+Dx)/∂x   ∂(x+Dx)/∂z |  =  | 1+dxx   dxz |
+          //                   | ∂(z+Dz)/∂x   ∂(z+Dz)/∂z |     | dzx    1+dzz |
           //
-          //     J = det | ∂Px/∂u   ∂Px/∂v |  =  (1+∂Dx/∂x)(1+∂Dz/∂z) - (∂Dx/∂z)(∂Dz/∂x)
-          //             | ∂Pz/∂u   ∂Pz/∂v |
-          //           = (1+dxx)(1+dzz) - dxz·dzx
+          //      行列式：J = (1+dxx)(1+dzz) - dxz·dzx
           //
-          //   物理意义：
-          //     J > 1  → 局部面积拉伸，海面平坦舒展
-          //     J = 1  → 无形变
-          //     J < 1  → 局部面积压缩，粒子向某点汇聚
-          //     J ≤ 0  → 面积为零或反向，海面发生折叠 → 白浪/泡沫区域
+          //   ③ 各变量含义：
+          //      dxx = ∂Dx/∂x  — x 位移对 x 的偏导
+          //      dzz = ∂Dz/∂z  — z 位移对 z 的偏导
+          //      dxz = ∂Dx/∂z  — x 位移对 z 的偏导（交叉项）
+          //      dzx = ∂Dz/∂x  — z 位移对 x 的偏导（交叉项）
+          //      "1+" 来自恒等变换：总坐标 = 原坐标 + 位移
           //
-          //   foam = clamp(1-J, 0, 1)：
-          //     J=1 时 foam=0（无泡沫）
-          //     J=0 时 foam=1（最强泡沫）
-          //     J<0 时也 clamp 到 1
+          //   ④ 物理意义：
+          //      J > 1  → 面积拉伸，海面平坦舒展
+          //      J = 1  → 无形变
+          //      J < 1  → 面积压缩，粒子向某点汇聚（波峰堆积）
+          //      J ≤ 0  → 面积为零或反向，海面折叠翻卷 → 白浪/泡沫
           // ─────────────────────────────────────────────────────────────────────
-          float J    = (1.0 + dxx) * (1.0 + dzz) - dxz * dzx;
+          float J = (1.0 + dxx) * (1.0 + dzz) - dxz * dzx;
           // smoothstep：J=1.5 时无泡沫，J=0.0 时全泡沫，中间平滑过渡
           float foam = smoothstep(1.5, 0.0, J);
 
@@ -1068,16 +1078,16 @@ const initScene = async () => {
           // 【颜色 + 光照】
           // ─────────────────────────────────────────────────────────────────────
           // 直接在 fragment 里采样高度，双线性过滤保证跨纹素的颜色顺滑过渡
-          float fragY  = blH(texelCenter);
-          vec3 deep    = vec3(0.0, 0.549, 0.996); // 深海蓝
-          vec3 shallow = vec3(0.3,  0.7,  1.0  ); // 浅天蓝
-          vec3 base    = mix(deep, shallow, clamp(abs(fragY) / 5.0, 0.0, 1.0));
+          float fragY = blH(texelCenter);
+          vec3 deep = vec3(0.0, 0.549, 0.996); // 深海蓝
+          vec3 shallow = vec3(0.3, 0.7, 1.0); // 浅天蓝
+          vec3 base = mix(deep, shallow, clamp(abs(fragY) / 5.0, 0.0, 1.0));
           // 叠加泡沫白色（雅可比折叠区域）
           base = mix(base, vec3(1.0), foam);
 
           // 简单 Lambertian Diffuse
-          vec3 L        = normalize(uLightDir);
-          float NdotL   = max(0.0, dot(norm, L));
+          vec3 L = normalize(uLightDir);
+          float NdotL = max(0.0, dot(norm, L));
           
           // 光照参数（能量守恒范围内）
           const vec3 kAmbient = vec3(0.15, 0.18, 0.20);	// 天空漫反射
