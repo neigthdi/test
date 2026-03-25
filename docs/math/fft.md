@@ -566,3 +566,59 @@ for (let i = 0; i < size; i++) {
 }
 console.log(OutputData)
 ```
+
+```javascript
+
+
+for (var m = 0u; m < ${logN}u; m++) {
+  let step = 1u << m;
+
+  // 线程 t 负责的输出位置（Stockham 蝶形索引公式）
+  // m=0（step=1，第一阶段）
+  // outputIndex1 = 2*(t - t%1) + t%1 = 2t，outputIndex2 = 2t+1
+  // t=0：读 [0][4]，写 [0][1]
+  // t=1：读 [1][5]，写 [2][3]
+  // t=2：读 [2][6]，写 [4][5]
+  // t=3：读 [3][7]，写 [6][7]
+  // 输出是相邻的对，间距 step=1。
+
+  // m=1（step=2，第二阶段）
+  // pos = t%2，outputIndex1 = 2*(t - t%2) + t%2
+  // t=0：pos=0，读 [0][4]，写 [0][2]
+  // t=1：pos=1，读 [1][5]，写 [1][3]
+  // t=2：pos=0，读 [2][6]，写 [4][6]
+  // t=3：pos=1，读 [3][7]，写 [5][7]
+  // 输出间距 step=2。
+
+  // m=2（step=4，第三阶段）
+  // pos = t%4，outputIndex1 = 2*(t - t%4) + t%4
+  // t=0：pos=0，读 [0][4]，写 [0][4]
+  // t=1：pos=1，读 [1][5]，写 [1][5]
+  // t=2：pos=2，读 [2][6]，写 [2][6]
+  // t=3：pos=3，读 [3][7]，写 [3][7]
+  // 输出间距 step=4，输入输出位置相同（最后一阶段原地）。
+
+  // 关键规律
+  // 每阶段的读取位置始终是 [t] 和 [t+N/2]（上下两半），但写出位置的间距 step 随 m 翻倍：
+
+  // m=0：写到相邻位置  (间距 1)  → [0][1], [2][3], [4][5], [6][7]
+  // m=1：写到隔一位置  (间距 2)  → [0][2], [1][3], [4][6], [5][7]
+  // m=2：写到隔三位置  (间距 4)  → [0][4], [1][5], [2][6], [3][7]
+  // 这正是 Stockham 自排序的核心：每阶段逐渐把频率分量"归位"，最终不需要 bit-reversal 就能得到自然序输出。
+  let outputIndex1 = 2u * (t - t % step) + t % step;
+  let outputIndex2 = outputIndex1 + step;
+
+  // 旋转因子：W_N^k，k = (t%step) * (N/(2*blockSize)) = (t%step) * (N/2 >> m)
+  // 每阶段 m，蝶形块大小 blockSize = 2^(m+1)
+  // W 的下标公式（标准 DFT）：W_N^k，k = pos * (N / blockSize)
+  //                               = pos * (N / 2^(m+1))
+  //                               = pos * (N/2 / 2^m)
+  //                               = pos * (half >> m)
+  // 其中 pos = t % step
+  // 验证 m=0：step=1，pos = t%1 = 0，indexW = 0 → 全部用 W^0 = 1（正确，第一阶段旋转因子均为 1）
+
+  // 验证 m=6（最后一阶）：step=64，pos = t%64 = t，indexW = t×1 = t → 64 个线程各用不同的旋转因子 W^0..W^63（正确）
+  let indexW = (t % step) * (${half}u >> m);
+  let w = textureLoad(wData, vec2<i32>(i32(indexW), 0), 0);
+}
+```
