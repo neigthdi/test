@@ -342,29 +342,38 @@ const initScene = async () => {
         // xyz.y = A * sin(value);
         // xyz.z = z + A * dir.y * cos(value);
 
-        const int wavesCount = 4;
+        const int wavesCount = 10;
 
         for(int i = 0; i < wavesCount; i++) {
           float step = float(i) + 0.212;
 
-          // 随机方向分布，都是正方向
-          // 这个的vec2的x和y分别对应了xyz轴的x和z，因为高度的y不用考虑方向
-          // x是切线，z是副切线
-          float angle = random(vec2(float(i), float(i) + 1.1234123)) * 3.1415926 * 2.0; // 0 - 2π
+          // 主浪方向 + 有限角度扩散
+          // 0.0 = 沿X轴正方向传播，浪尖沿Z轴（南北方向）垂直排列
+          // 如果全部是 0~2π 随机，各方向的挤压力互相抵消，看不到清晰的垂直浪尖
+          float dominantAngle = 0.0;
+          float spread = 3.1415926 * 0.5; // ±45度扩散，保留主方向感
+          float angle = dominantAngle + (random(vec2(float(i), float(i) + 1.1234123)) - 0.5) * spread;
           vec2 dir = vec2(cos(angle), sin(angle));
           
           float A = random(vec2(step + 0.134, step + 0.42)) * 0.2 + 0.2;
           float waveLength = random(vec2(step + 0.134, step + 0.442)) * 15.0 + 10.0;
-          float speed = random(vec2(step + 0.134, step + 0.2)) * 2.0 + 1.2;
+          // float speed = random(vec2(step + 0.134, step + 0.2)) * 2.0 + 1.2;
 
           // 固定的计算公式和值
           float k = 2.0 * 3.14 / waveLength;
-          float f = speed / waveLength; // 频率
-          float omega = 2.0 * 3.14 * f; // 等于 k * speed
+          // float f = speed / waveLength; // 频率
+          // float omega = 2.0 * 3.14 * f; // 等于 k * speed
+          float omega = sqrt(9.8 * k); // sqrt(g * k)后，短波（大k）频率快、长波（小k）频率慢，不同波之间存在相位漂移，叠加后自然形成"一组波从无到有、到达峰值、再消退"的波群包络——不需要任何额外的包络函数，纯粹是物理干涉的结果。
           float value = dot(dir * k, vec2(x, z)) - omega * time;
-          xyz.x += A * dir.x * cos(value);
+          // 标准 Gerstner 波公式里的 Q（steepness，陡峭度） 参数，只加在水平分量上，垂直分量 y 不加
+          float steepness = 0.8; // 全局控制整体陡峭程度，0~1
+          // Σ (Q_i × k_i × A_i) = steepness × N / N = steepness ≤ 1
+          // k 大（短波）的波，Q 自动分配得小；A 大（高振幅）的波，Q 也自动更小 —— 天然防止自交，同时通过一个 steepness 参数统一控制整体波形的尖锐程度。
+          float Q = steepness / (float(wavesCount) * k * A);
+
+          xyz.x += Q * A * dir.x * cos(value);
           xyz.y += A * sin(value);
-          xyz.z += A * dir.y * cos(value);
+          xyz.z += Q * A * dir.y * cos(value);
 
 
           // T=dP/dx
@@ -391,17 +400,17 @@ const initScene = async () => {
           // 这里的 1 表示初始的切线方向在 x 轴上的分量。在没有波的影响时，切线方向是沿着 x 轴的
           // normalX = vec3(1.0 + normalX.x, normalX.y, normalX.z);
           // ---------------------------------------------------------
-          normalX.x += dir.x * dir.x * k * A * -sin(value);
+          normalX.x += Q * dir.x * dir.x * k * A * -sin(value);
           normalX.y += dir.x * k * A * cos(value);
-          normalX.z += dir.x * dir.y * k * A * -sin(value);
+          normalX.z += Q * dir.x * dir.y * k * A * -sin(value);
 
           // T=dP/dz
           // Tx=dPx/dz   --->   dx * k * a * (-sin(value))
           // Ty=dPy/dz   --->   k * a * cos(value)
           // Tz=dPz/dz   --->   dy * k * a * (-sin(value))
-          normalZ.x += dir.x * dir.y * k * A * -sin(value);
+          normalZ.x += Q * dir.x * dir.y * k * A * -sin(value);
           normalZ.y += dir.y * k * A * cos(value);
-          normalZ.z += dir.y * dir.y * k * A * -sin(value);
+          normalZ.z += Q * dir.y * dir.y * k * A * -sin(value);
         }
 
 
@@ -536,7 +545,8 @@ const initScene = async () => {
 
         // 根据深度混合基础颜色
         // 由于上面 Gerstner 的计算中，振幅的高度是[0, 1] * 0.2 + 0.2，然后循环4次，所以最大最小值是[-0.4 * 4 , 0.4 * 4]
-        float depthFactor = clamp(xyz.y, -1.6, 1.6);
+        // depthFactor 需要归一化到 [0, 1]，否则 mix() 超过 1.0 时会外插值导致波峰泛白
+        float depthFactor = clamp((xyz.y + 1.6) / 3.2, 0.0, 1.0);
         vec3 waterColor = mix(deepWaterColor, shallowWaterColor, depthFactor);
 
 
@@ -567,10 +577,10 @@ const initScene = async () => {
         //      指数越大，高光越集中（如金属表面）
         //      指数越小，高光越分散（如粗糙表面）
         // 输出：specular是高光强度（范围[0, 1]），值越大表示高光越亮
-        float specular = pow(max(0.0, dot(waveNormal, halfVector)), 2.0); // 2 是高光指数
+        float specular = pow(max(0.0, dot(waveNormal, halfVector)), 64.0); // 指数越大高光越集中，避免大面积泛白
 
         // 4、生成最终的高光颜色
-        vec3 specularColor = uLightColor * specular * 0.5;
+        vec3 specularColor = uLightColor * specular * 0.4;
         // ------------------------计算高光反射（Blinn-Phong）：步骤 1 ~ 4------------------------
 
 
@@ -584,7 +594,8 @@ const initScene = async () => {
         
         // 最终颜色合成
         vec3 baseColor = mix(waterColor, reflectionColor, fresnel); // 基础水色与反射的混合
-        baseColor += diffuseColor + specularColor; // 添加光照效果
+        baseColor += diffuseColor * 0.3 + specularColor; // 适当降低漫反射强度，防止叠加后整体泛白
+        baseColor = clamp(baseColor, 0.0, 1.0); // 防止超出范围导致纯白
         
 
 
@@ -639,11 +650,12 @@ const initScene = async () => {
       { 
         width: 150, 
         height: 150, 
-        subdivisions: 600 
+        subdivisions: 150 
       },
       scene
     )
     const material = createSphereShader()
+    plane.position = new Vector3(0, 1.6, 0)
    
     plane.material = material
     return material
@@ -666,8 +678,8 @@ const initScene = async () => {
   createGround()
   createSphere()
   const material = createPlane()
-  material.setVector3('lightDirection', light.direction)
-  material.setColor3('lightColor', light.diffuse)
+  material.setVector3('uLightDirection', light.direction)
+  material.setColor3('uLightColor', light.diffuse)
   runAnimate()
 
   scene.registerBeforeRender(function() {
