@@ -34,17 +34,17 @@ const onRunning = async () => {
   }
 
   class Star {
-    ctx
-    x
-    y
-    radius
-    cycle
-    sColor
-    eColor
-    color
-    time
+    ctx: any
+    x: any
+    y: any
+    radius: any
+    cycle: any
+    sColor: any
+    eColor: any
+    color: any
+    time: any
 
-    constructor(ctx, x, y, radius, cycle, sColor, eColor) {
+    constructor(ctx: any, x: any, y: any, radius: any, cycle: any, sColor: any, eColor: any) {
       this.ctx = ctx
       this.x = x
       this.y = y

@@ -43,7 +43,7 @@ import {
 const fps = ref(0)
 const isRunning = ref(false)
 
-const inputMap = {}
+let inputMap: any = {}
 const isRightHandedSystem = false
  let sceneResources: any, adt: any
 
@@ -52,10 +52,10 @@ const peopleSpeed = 0.2
 const peopleSpeedBackwards = 0.06
 const peopleRotationSpeed = 0.01
 let animating = true
-let walkAnim 
-let walkBackAnim
-let idleAnim
-let sambaAnim
+let walkAnim: any 
+let walkBackAnim: any
+let idleAnim: any
+let sambaAnim: any
 
 const onTrigger = async () => {
   if (!isRunning.value) {
@@ -239,7 +239,7 @@ const initScene = async () => {
     return people
   }
 
-  const peopleAction = (people) => {
+  const peopleAction = (people: any) => {
     let keyDown = false
     // 管理角色的动作，例如位置、方向
     if (inputMap['w']) {
@@ -338,6 +338,7 @@ const destroy = () => {
     adt.dispose()
     adt = null
   }
+  inputMap = {}
 }
 
 onMounted(async() => {

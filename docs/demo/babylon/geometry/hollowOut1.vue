@@ -100,7 +100,7 @@ const initScene = async () => {
     return hole
   }
 
-  const createHollowOut = async(box, hole) => {
+  const createHollowOut = async(box: any, hole: any) => {
     await InitializeCSG2Async()
     const csgBox = CSG2.FromMesh(box)
     const csgHole = CSG2.FromMesh(hole)

@@ -12,28 +12,28 @@ const requestID = ref<any>()
 const isRunning = ref(false)
 
 class Chart {
-  width
-  height
-  El
-  ctx
-  shapes
-  doc
-  scale
-  maxScale
-  minScale
-  step
-  offsetX
-  offsetY
-  wrapDom
-  mousedownOriginX
-  mousedownOriginY
-  targetX
-  targetY
-  bindScroll
-  bindDrag
-  activeShape
+  width: any
+  height: any
+  El: any
+  ctx: any
+  shapes: any
+  doc: any
+  scale: any
+  maxScale: any
+  minScale: any
+  step: any
+  offsetX: any
+  offsetY: any
+  wrapDom: any
+  mousedownOriginX: any
+  mousedownOriginY: any
+  targetX: any
+  targetY: any
+  bindScroll: any
+  bindDrag: any
+  activeShape: any
 
-  constructor(params) {
+  constructor(params: any) {
     const wrapDomStyle = getComputedStyle(params.el)
     this.width = parseInt(wrapDomStyle.width, 10)
     this.height = parseInt(wrapDomStyle.height, 10)
@@ -84,7 +84,7 @@ class Chart {
     this.doc.addEventListener('mouseup', this.removeMouseDrag.bind(this))
   }
 
-  addMouseDrag(e) {
+  addMouseDrag(e: any) {
     this.bindDragFunc()
     this.targetX = e.offsetX
     this.targetY = e.offsetY
@@ -103,7 +103,7 @@ class Chart {
     this.El.removeEventListener('mousemove', this.bindDrag, false)
   }
 
-  moveCanvasFunc(e) {
+  moveCanvasFunc(e: any) {
     const maxDragX = this.El.width / 2
     const maxDragY = this.El.height / 2
 
@@ -129,7 +129,7 @@ class Chart {
     })
   }
 
-  scrollFunc(e) {
+  scrollFunc(e: any) {
     e.preventDefault()
 
     if (e.wheelDelta) {
@@ -157,14 +157,14 @@ class Chart {
     }
   }
 
-  drawCircle(data) {
+  drawCircle(data: any) {
     this.ctx.beginPath()
     this.ctx.fillStyle = data.fillStyle
     this.ctx.arc(data.x, data.y, data.r, 0, 2 * Math.PI)
     this.ctx.fill()
   }
 
-  drawLine(data) {
+  drawLine(data: any) {
     const arr = data.data.concat()
 
     this.ctx.beginPath()
@@ -178,13 +178,13 @@ class Chart {
     this.ctx.stroke()
   }
 
-  drawRect(data) {
+  drawRect(data: any) {
     this.ctx.beginPath()
     this.ctx.fillStyle = data.fillStyle
     this.ctx.fillRect(...data.data)
   }
 
-  draw(info) {
+  draw(info: any) {
     switch (info.type) {
       case 'line':
         this.drawLine(info)
@@ -200,7 +200,7 @@ class Chart {
     }
   }
 
-  push(data) {
+  push(data: any) {
     this.shapes.push(data)
   }
 
@@ -212,7 +212,7 @@ class Chart {
     // 最后再设置矩阵
     this.ctx.setTransform(this.scale, 0, 0, this.scale, this.offsetX, this.offsetY)
 
-    this.shapes.forEach(item => {
+    this.shapes.forEach((item: any) => {
       this.draw(item)
     })
   }

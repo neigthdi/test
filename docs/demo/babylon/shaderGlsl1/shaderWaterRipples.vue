@@ -75,7 +75,7 @@ const initScene = async () => {
     return light
   }
 
-  const materialShader = (mat) => {
+  const materialShader = (mat: any) => {
     mat.Fragment_Definitions(`
       // 用于在图形渲染中创建一种称为“焦散”（caustic）效果的视觉效果
       // 焦散效果通常用于模拟光线通过透明介质（如水或玻璃）时的折射和反射

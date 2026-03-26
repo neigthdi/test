@@ -230,7 +230,7 @@ const initScene = async () => {
       }
     )
 
-    const createPipe = (name, path, radius, scene) => {
+    const createPipe = (name: any, path: any, radius: any, scene: any) => {
       const tubeOptions = {
         path: path,
         radius: radius,

@@ -87,7 +87,7 @@ const situation3Text = () => {
   `
 }
 
-const situationObj = {
+const situationObj: any = {
  '1': situation1Text(),
  '2': situation2Text(),
  '3': situation3Text()
@@ -96,7 +96,7 @@ const situationObj = {
 
 const curSituation = ref(1)
 
-const changeSituation = async (cur) => {
+const changeSituation = async (cur: any) => {
   if (isRunning.value) {
     destroy()
     curSituation.value = cur

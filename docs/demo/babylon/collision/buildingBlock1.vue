@@ -177,7 +177,7 @@ const initScene = async () => {
 
   const assetsBody: any = []
 
-  const createBlock = (x, y, z, i, color) => {
+  const createBlock = (x: number, y: number, z: number, i: string | number, color: Color3) => {
     const block: any = MeshBuilder.CreateBox('block_' + i, { width: 0.2, height: 1.8, depth: 0.2 }, scene)
     block.position.set(x, y, z)
     block.checkCollisions = true

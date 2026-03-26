@@ -24,14 +24,14 @@ const onRunning = async() => {
   const start = { x: 50, y: 50 }
   const middle = { x: 20, y: 360 }
   const end = { x: 600, y: 50 }
-  let prevPos
-  let nextPos
+  let prevPos: any
+  let nextPos: any
   let add = 0
 
   
   // 获取二次贝塞尔曲线上的x和y
   // 贝塞尔曲线方程B(t)=(1−t)^2 * P0 + 2 * t * (1−t) * P1 + t^2 * P2 
-  const getBezierPoints = (p0, p1, p2, pointNum) => {
+  const getBezierPoints = (p0: any, p1: any, p2: any, pointNum: number) => {
     const points: any = []
     for (let i = 0; i < pointNum; i++) {
       const t = i / pointNum
@@ -43,14 +43,14 @@ const onRunning = async() => {
   }
 
   // 计算两点之间的角度
-  const calculateAngle = (x1, y1, x2, y2) => {
+  const calculateAngle = (x1: number, y1: number, x2: number, y2: number) => {
     const dx = x2 - x1
     const dy = y2 - y1
     const angle = Math.atan2(dy, dx)
     return angle
   }
 
-  const drawWay = (p0, p1, p2) => {
+  const drawWay = (p0: any, p1: any, p2: any) => {
     ctx.beginPath()
     ctx.moveTo(p0.x, p0.y)
     ctx.quadraticCurveTo(p1.x, p1.y, p2.x, p2.y)
@@ -59,7 +59,7 @@ const onRunning = async() => {
     ctx.stroke()
   }
 
-  const drawLine = (arr) => {
+  const drawLine = (arr: any) => {
     const start = arr.shift()
     const end = arr.pop()
     ctx.beginPath()
@@ -73,7 +73,7 @@ const onRunning = async() => {
     ctx.stroke()
   }
 
-  const drawCar = (prevPos, nextPos) => {
+  const drawCar = (prevPos: any, nextPos: any) => {
     // 保存当前的绘图状态
     ctx.save()
 
@@ -99,7 +99,7 @@ const onRunning = async() => {
   }
 
   
-  const dealPoints = (pointList) => {
+  const dealPoints = (pointList: any) => {
     const newPointList: any = []
     for (let i = 0; i < pointList.length; i += 10) {
       newPointList.push(pointList[i])

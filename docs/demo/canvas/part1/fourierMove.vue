@@ -11,10 +11,10 @@ import { onMounted, onUnmounted, ref, nextTick } from 'vue'
 const controls = ref(4)
 const requestID = ref<any>()
 const isRunning = ref(false)
-let canvas
-let ctx
-let running
-let draw
+let canvas: any
+let ctx: any
+let running: any
+let draw: any
 
 const onRunning = async () => {
   await nextTick()
@@ -33,14 +33,14 @@ const onRunning = async () => {
 
   let time = 0
 
-  const createDisc = (r, color, x?, y?) => {
+  const createDisc = (r: any, color: any, x?: any, y?: any) => {
     ctx.beginPath()
     ctx.arc(x || 0, y || 0, r, 0, Math.PI * 2, true)
     ctx.strokeStyle = color || '#00bcd4'
     ctx.stroke()
   }
 
-  const createLine = (d, rotate) => {
+  const createLine = (d: any, rotate: any) => {
     ctx.beginPath()
     ctx.moveTo(0, 0)
     ctx.lineTo(d, 0)
@@ -103,7 +103,7 @@ const onRunning = async () => {
     ctx.beginPath()
     ctx.moveTo(300, arrY)
     let arrX = 0;
-    arr.forEach(v => {
+    arr.forEach((v: any) => {
       ctx.lineTo(300 + arrX++, v)
     })
     ctx.stroke()

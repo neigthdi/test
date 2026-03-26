@@ -168,7 +168,7 @@ const initScene = async () => {
     )
   }
 
-  const setFirstCameraInfo = (firstCamera) => {
+  const setFirstCameraInfo = (firstCamera: any) => {
     firstCamera.attachControl(ele, true)
 
     firstCamera.applyGravity = true
@@ -263,12 +263,12 @@ const initScene = async () => {
     return ground
   }
 
-  const createShadow = (light, mesh) => {
+  const createShadow = (light: any, mesh: any) => {
     const shadowGenerator: any = new ShadowGenerator(1024, light)
     shadowGenerator.addShadowCaster(mesh)
   }
 
-  const createBox = (firstCamera) => {
+  const createBox = (firstCamera: any) => {
     const box = MeshBuilder.CreateBox('box', {
       width: 2,
       height: 2,

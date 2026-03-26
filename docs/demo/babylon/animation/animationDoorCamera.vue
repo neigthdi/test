@@ -87,8 +87,8 @@ const initScene = async () => {
       { width: 7, height: 6, depth: 0.1, position: { x: 4, y: -3, z: 3.5 }, rotation: { y: Math.PI / 2 } },
     ]
     for (let i = 0; i < wallList.length; i++) {
-      const cur = wallList[i]
-      const wall = MeshBuilder.CreateBox('wall' + i, {
+      const cur: any = wallList[i]
+      const wall: any = MeshBuilder.CreateBox('wall' + i, {
         width: cur.width, height: cur.height, depth: cur.depth,
       }, scene)
       for (const key in cur.position) {
@@ -127,8 +127,8 @@ const initScene = async () => {
   }
 
   /** 创建枢纽 */
-  const createHinge  = (door) => {
-    const hinge = MeshBuilder.CreateBox('hinge', {}, scene)
+  const createHinge  = (door: any) => {
+    const hinge: any = MeshBuilder.CreateBox('hinge', {}, scene)
     hinge.isVisible = false
     door.parent = hinge
     hinge.position.y = 2
@@ -150,7 +150,7 @@ const initScene = async () => {
   }
 
   /** 设置多个球体的数组 */
-  const setSphereList = (sphere) => {
+  const setSphereList = (sphere: { clone: () => any }) => {
     sphereList.push(sphere)
 
     sphereList.push(sphere.clone())
@@ -162,7 +162,7 @@ const initScene = async () => {
   }
 
   /** 球体上的的灯 */
-  const createSpotLight = (sphereList) => {
+  const createSpotLight = (sphereList: string | any[]) => {
     for (let i = 0; i < sphereList.length; i++) {
       spotLights[i] = new SpotLight(
         'spotLight' + i, 
@@ -279,7 +279,7 @@ const initScene = async () => {
   }
 
   /** 运行剪辑 */
-  const createRunClip = (rotate, move, hinge, sweep, lightDimmer) => {
+  const createRunClip = (rotate: Animation, move: Animation, hinge: any, sweep: Animation, lightDimmer: Animation) => {
     scene.beginDirectAnimation(camera, [rotate, move], 0, 25 * frameRate, false)
     scene.beginDirectAnimation(hinge, [sweep], 0, 25 * frameRate, false)
     scene.beginDirectAnimation(spotLights[0], [lightDimmer], 0, 25 * frameRate, false)

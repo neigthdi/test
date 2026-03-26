@@ -44,7 +44,7 @@ const onTrigger = async () => {
   }
 }
 
-function parseColor (color, toNumber) {
+function parseColor (color: any, toNumber: any) {
   if (toNumber === true) {
     if (typeof color === 'number') {
       return (color | 0) // chop off decimal
@@ -61,46 +61,49 @@ function parseColor (color, toNumber) {
   }
 }
 
-function Ball(radius, color){
-  if (radius === undefined) { radius = 40 }
-  if (color === undefined) { color = '#00ff00' }
-  this.x = 0
-  this.y = 0
-  this.vx = 0
-  this.vy = 0
-  this.radius = radius
-  this.rotation = 0
-  this.mass = 1
-  this.scaleX = 1
-  this.scaleY = 1
-  this.name = ""
-  this.color = parseColor(color, false)
-  this.lineWidth = 1
-}
+class Ball {
+  x = 0
+  y = 0
+  vx = 0
+  vy = 0
+  radius: number
+  rotation = 0
+  mass = 1
+  scaleX = 1
+  scaleY = 1
+  name = ""
+  color: any
+  lineWidth = 1
 
-Ball.prototype.draw = function (context) {
-  context.save()
-  context.translate(this.x, this.y)
-  context.rotate(this.rotation)
-  context.scale(this.scaleX, this.scaleY)
-  context.lineWidth = this.lineWidth
-  context.fillStyle = this.color
-  context.strokeStyle = this.color
-  context.beginPath()
-  context.arc(0, 0, this.radius, 0, Math.PI * 2, false)
-  context.closePath()
-  context.fill()
-  context.stroke()
-  context.restore()
-}
+  constructor(radius = 40, color: any = '#00ff00') {
+    this.radius = radius
+    this.color = parseColor(color, false)
+  }
 
-// 得到球体的左上角坐标
-Ball.prototype.getBounds = function () {
-  return {
-    x: this.x - this.radius,
-    y: this.y - this.radius,
-    width: this.radius * 2,
-    height: this.radius * 2
+  draw(context: any) {
+    context.save()
+    context.translate(this.x, this.y)
+    context.rotate(this.rotation)
+    context.scale(this.scaleX, this.scaleY)
+    context.lineWidth = this.lineWidth
+    context.fillStyle = this.color
+    context.strokeStyle = this.color
+    context.beginPath()
+    context.arc(0, 0, this.radius, 0, Math.PI * 2, false)
+    context.closePath()
+    context.fill()
+    context.stroke()
+    context.restore()
+  }
+
+  // 得到球体的左上角坐标
+  getBounds() {
+    return {
+      x: this.x - this.radius,
+      y: this.y - this.radius,
+      width: this.radius * 2,
+      height: this.radius * 2
+    }
   }
 }
 
@@ -119,27 +122,27 @@ const onRunning = async() => {
   const ballNum = 4
            
   for(let i = 0; i < ballNum; i++) {
-    const radius = Math.random() * 50 + 5;
-    const color = Math.random()*(0xffffff);
-    const ball = new Ball(radius, color);
-    ball.mass = Math.random() * 5 + 2;
-    ball.x = Math.random() * canvas.width;
-    ball.y = Math.random() * canvas.height;
-    ball.vx = Math.random() * 6 - 3;
-    ball.vy = Math.random() * 6 - 3;
-    balls.push(ball);
+    const radius = Math.random() * 50 + 5
+    const color = Math.random()*(0xffffff)
+    const ball = new Ball(radius, color)
+    ball.mass = Math.random() * 5 + 2
+    ball.x = Math.random() * canvas.width
+    ball.y = Math.random() * canvas.height
+    ball.vx = Math.random() * 6 - 3
+    ball.vy = Math.random() * 6 - 3
+    balls.push(ball)
   }
 
   // 实现二维坐标旋转的功能，根据给定的正弦值（sin）和余弦值（cos）将一个点 (x,y) 旋转到新的位置
   // reverse 参数，用于控制旋转的方向（顺时针或逆时针），true是顺时针，false是逆时针
-  function rotate (x, y, sin, cos, reverse) {
+  function rotate (x: any, y: any, sin: any, cos: any, reverse: any) {
     return {
       x: (reverse) ? (x * cos + y * sin) : (x * cos - y * sin),
       y: (reverse) ? (y * cos - x * sin) : (y * cos + x * sin)
     }
   }
 
-  function checkWalls (ball) {
+  function checkWalls (ball: any) {
     if (ball.x + ball.radius > canvas.width) {
       ball.x = canvas.width - ball.radius
       ball.vx *= bounce
@@ -176,7 +179,7 @@ const onRunning = async() => {
   //   在碰撞响应中，相对速度的计算也会受到影响。例如：
   //   const vxTotal = velA.x - velB.x;
   //   如果 dx 和 dy 的方向相反，那么 velA.x 和 velB.x 的方向也会相反，这可能需要调整碰撞响应的公式
-  function checkCollision (ballA, ballB) {
+  function checkCollision (ballA: any, ballB: any) {
     const dx = ballB.x - ballA.x
     const dy = ballB.y - ballA.y
     const dist = Math.sqrt(dx * dx + dy * dy)
@@ -236,7 +239,7 @@ const onRunning = async() => {
   }
 
 
-  const drawLine = (ball0, ball1, context) => {
+  const drawLine = (ball0: any, ball1: any, context: any) => {
     const dx = ball1.x - ball0.x
     const dy = ball1.y - ball0.y
     const dist = Math.sqrt(dx * dx + dy * dy)
@@ -253,7 +256,7 @@ const onRunning = async() => {
     }
   }
 
-  const move = (ball) => {
+  const move = (ball: any) => {
     ball.x += ball.vx
     ball.y += ball.vy
     checkWalls(ball)
@@ -265,7 +268,7 @@ const onRunning = async() => {
 
     requestID.value = requestAnimationFrame(runAnimate)
 
-    balls.forEach(ball => {
+    balls.forEach((ball: any) => {
       move(ball)
     })
 
@@ -278,7 +281,7 @@ const onRunning = async() => {
       }
     }
 
-    balls.forEach(ball => {
+    balls.forEach((ball: any) => {
       ball.draw(ctx)
     })
   }

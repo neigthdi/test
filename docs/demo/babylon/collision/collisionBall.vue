@@ -180,7 +180,7 @@ const initScene = async () => {
     )
   }
 
-  const randomNumber = (min, max) => {
+  const randomNumber = (min: number, max: number) => {
     if (min === max) {
       return min
     }
@@ -188,7 +188,7 @@ const initScene = async () => {
     return random * (max - min) + min
   }
 
-  const getPosition = (y) => {
+  const getPosition = (y: number | undefined) => {
     return new Vector3(randomNumber(-50, 50), y, randomNumber(-50, 50))
   }
 
@@ -260,7 +260,7 @@ const initScene = async () => {
   runAnimate()
 
   scene.registerBeforeRender(function() {
-    allSphere.forEach(function(obj) {
+    allSphere.forEach(function(obj: any) {
       if (obj.position.y < -10) {
         const ran = Math.random()
         const startY = Math.random() * 10

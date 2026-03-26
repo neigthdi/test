@@ -152,7 +152,7 @@ const initScene = async () => {
 
   const createPipeEffect = () => {
     // 创建管道函数
-    const createPipe = (name, path, radius, scene) => {
+    const createPipe = (name: any, path: any, radius: any, scene: any) => {
       const tubeOptions = {
         path: path,
         radius: radius,

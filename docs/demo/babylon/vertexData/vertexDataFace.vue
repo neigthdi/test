@@ -476,7 +476,7 @@ const initScene = async () => {
   ]
 
   /** 空数组添加法线，法线方向，与光照有影响 */
-  const normals = []  
+  const normals: any = []  
 
   /** Color3数组 */
   const colors = []

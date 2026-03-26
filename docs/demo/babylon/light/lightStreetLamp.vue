@@ -91,7 +91,7 @@ const initScene = async () => {
     skyBox.material = skyBoxMaterial
   }
 
-  const createGui = async (light, bulbInfo) => {
+  const createGui = async (light: HemisphericLight, bulbInfo: any[]) => {
     adt = AdvancedDynamicTexture.CreateFullscreenUI('UI')
     const panel = new StackPanel()
     panel.width = '220px'

@@ -183,7 +183,7 @@ const initScene = async () => {
     return box
   }
 
-  const createWater = (list) =>{
+  const createWater = (list: any) =>{
     const plane = MeshBuilder.CreateGround('ground', { width: 512, height: 512 }, scene)
     const water = new WaterMaterial('water', scene)
     water.backFaceCulling = true

@@ -209,7 +209,7 @@ const initScene = async () => {
   /**
    * 世界坐标转成屏幕坐标
    */
-  const convertWorldCoordinates2ScreenCoordinates = mesh => {
+  const convertWorldCoordinates2ScreenCoordinates = (mesh: any) => {
     // defines the Vector3 to project
     const meshPos = mesh.position
     // defines the world matrix to use
@@ -239,18 +239,18 @@ const initScene = async () => {
   /** 
    * 判断是否在框选中
    */
-  const isInRectangle = (rectangle, point) => {
+  const isInRectangle = (rectangle: any, point: any) => {
     const { sx, sy, ex, ey } = rectangle
     const { x, y } = point
     if (sx < x && x < ex && sy < y && y < ey) return true
     return false
   }
 
-  const fixedNumb = n => {
+  const fixedNumb = (n: number) => {
     return Number(n.toFixed(4))
   }
 
-  const pointerDownFun = e => {
+  const pointerDownFun = (e: any) => {
     if (e.type === PointerEventTypes.POINTERDOWN && isLockScreen.value) {
       pointerDown.value = true
 
@@ -270,7 +270,7 @@ const initScene = async () => {
     }
   }
 
-  const pointerMoveFun = e => {
+  const pointerMoveFun = (e: any) => {
     if (e.type === PointerEventTypes.POINTERMOVE && pointerDown.value && isLockScreen.value) {
       endPoint.value = {
         x: fixedNumb(e.event.offsetX),
@@ -299,7 +299,7 @@ const initScene = async () => {
     }
   }
 
-  const pointerUpFun = e => {
+  const pointerUpFun = (e: any) => {
     if (e.type === PointerEventTypes.POINTERUP && isLockScreen.value) {
       pointerDown.value = false
 
@@ -308,7 +308,7 @@ const initScene = async () => {
         y: fixedNumb(e.event.offsetY)
       }
 
-      boxList.value.forEach(mesh => {
+      boxList.value.forEach((mesh: any) => {
         const sx = Math.min(startPoint.value.x, endPoint.value.x)
         const sy = Math.min(startPoint.value.y, endPoint.value.y)
         const ex = Math.max(startPoint.value.x, endPoint.value.x)
@@ -351,7 +351,7 @@ const initScene = async () => {
     })
   }
 
-  scene.onPointerObservable.add(e => {
+  scene.onPointerObservable.add((e: any) => {
     pointerDownFun(e)
     pointerMoveFun(e)
     pointerUpFun(e)
@@ -373,7 +373,7 @@ const initScene = async () => {
   }
 }
 
-const lockScreen = (e) => {
+const lockScreen = (e: any) => {
   if (isRunning.value) {
     if (e.key.toLocaleLowerCase() === 'z' && !isLockScreen.value) {
       isLockScreen.value = true

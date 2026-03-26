@@ -101,7 +101,7 @@ const initScene = async () => {
     await ImportMeshAsync('/scenes/valleyvillage.glb', scene)
   }
 
-  const createParticleSystem = (lathe) => {
+  const createParticleSystem = (lathe: Mesh) => {
     const particleSystem = new ParticleSystem('system', 5000, scene)
 
     // 每个粒子的纹理
@@ -180,7 +180,7 @@ const initScene = async () => {
     return lathe
   }
 
-  const pointerDown = (mesh) => {
+  const pointerDown = (mesh: { id: string }) => {
     if (mesh.id === 'latheProfile') {
       switched = !switched
       if (switched) {

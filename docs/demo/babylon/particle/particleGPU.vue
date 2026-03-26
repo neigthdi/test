@@ -136,7 +136,7 @@ const initScene = async () => {
     return fountain
   }
 
-  const createParticle = (fountain) => {
+  const createParticle = (fountain: any) => {
     if (particleSystem.value) {
       particleSystem.value.dispose()
     }

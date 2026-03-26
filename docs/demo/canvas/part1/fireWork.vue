@@ -13,11 +13,11 @@ const requestID = ref<any>()
 const isRunning = ref(false)
 
 const PI2 = Math.PI * 2
-const random = (min, max) => Math.random() * (max - min + 1) + min | 0
+const random = (min: any, max: any) => Math.random() * (max - min + 1) + min | 0
 const timestamp = () => new Date().getTime()
 
-let box
-let scene
+let box: any
+let scene: any
 
 class Scene {
   fireworks: any[] = []
@@ -31,7 +31,7 @@ class Scene {
   spawnD = 0
   ctx: any = null
 
-  constructor(el) {
+  constructor(el: any) {
     const canvas = document.getElementById(el) as any
     this.ctx = canvas.getContext('2d')
     const width = Number(window.getComputedStyle(canvas).width.split('px')[0])
@@ -48,7 +48,7 @@ class Scene {
     this.spawnD = this.height * 0.5
   }
 
-  onClick(e) {
+  onClick(e: any) {
     const x = e.offsetX
     const y = e.offsetY
     
@@ -61,7 +61,7 @@ class Scene {
     }
   }
 
-  update(delta) {
+  update(delta: any) {
     this.ctx.globalCompositeOperation = 'hard-light'
     this.ctx.fillStyle = `rgba(20,20,20,${ 7 * delta })`
     this.ctx.fillRect(0, 0, this.width, this.height)
@@ -104,7 +104,7 @@ class FireWork {
   fireworks: any[] = []
   ctx:any = null
 
-  constructor(fireworks, ctx, x, y, targetX, targetY, shade, offsprings) {
+  constructor(fireworks: any[] = [], ctx: any, x: any, y: any, targetX: any, targetY: any, shade: any, offsprings: any) {
     this.fireworks = fireworks
     this.ctx = ctx
 
@@ -120,7 +120,7 @@ class FireWork {
     this.history = []
   }
 
-  update(delta) {
+  update(delta: any) {
     if (this.dead) return
 
     const xDiff = this.targetX - this.x
@@ -171,7 +171,7 @@ class FireWork {
   }
 }
 
-const onAddEvent = (evt) => {
+const onAddEvent = (evt: any) => {
   scene.onClick(evt)
 }
 

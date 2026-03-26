@@ -11,9 +11,9 @@ import { onMounted, ref, onUnmounted, nextTick } from 'vue'
 
 const requestID = ref<any>()
 const isRunning = ref(false)
-let canvas
+let canvas: any
 let ctx
-const idPool = {}
+const idPool: any = {}
 const text = ref('')
 
 const ActionType = {
@@ -45,11 +45,11 @@ const createOnceId = () => {
   return Array(3).fill(0).map(() => parseInt(String(Math.random() * 255))).concat(255).join('-')
 }
 
-const rgbaToId = (rgba) => {
+const rgbaToId = (rgba: any) => {
   return rgba.join('-')
 }
 
-const idToRgba = (id) => {
+const idToRgba = (id: any) => {
   return id.split('-')
 }
 
@@ -62,16 +62,16 @@ const createId = () => {
 }
 
 class EventSimulator {
-  listenersMap
-  lastMoveId
-  lastDownId
+  listenersMap: any
+  lastMoveId: any
+  lastDownId: any
   constructor() {
     this.listenersMap = {}
     this.lastMoveId = null
     this.lastDownId = null
   }
 
-  addAction(action, evt) {
+  addAction(action: any, evt: any) {
     const {
       type,
       id
@@ -111,27 +111,27 @@ class EventSimulator {
     }
   }
 
-  addListeners(id, listeners) {
+  addListeners(id: any, listeners: any) {
     this.listenersMap[id] = listeners
   }
 
-  fire(id, eventName, evt) {
+  fire(id: any, eventName: any, evt: any) {
     if (this.listenersMap[id] && this.listenersMap[id][eventName]) {
       console.log(this.listenersMap)
-      this.listenersMap[id][eventName].forEach(listener => listener(evt))
+      this.listenersMap[id][eventName].forEach((listener: any) => listener(evt))
     }
   }
 }
 
 class Stage {
-  canvas
-  ctx
-  osCanvas
-  osCtx
-  shapeIds
-  shapeList
-  eventSimulator
-  constructor(customCanvas) {
+  canvas: any
+  ctx: any
+  osCanvas: any
+  osCtx: any
+  shapeIds: any
+  shapeList: any
+  eventSimulator: any
+  constructor(customCanvas: any) {
     this.canvas = customCanvas
     this.canvas.width = parseInt(customCanvas.width)
     this.canvas.height = parseInt(customCanvas.height)
@@ -150,7 +150,7 @@ class Stage {
     this.eventSimulator = new EventSimulator()
   }
 
-  add(shape) {
+  add(shape: any) {
     const id = shape.getId()
     this.eventSimulator.addListeners(id, shape.getListeners())
     this.shapeIds.add(id)
@@ -160,7 +160,7 @@ class Stage {
   start() {
     this.clearCanvas()
     this.collision()
-    this.shapeList.forEach(item => {
+    this.shapeList.forEach((item: any) => {
       item.draw(this.ctx, this.osCtx)
     })
     window.requestAnimationFrame(this.start.bind(this))
@@ -178,8 +178,8 @@ class Stage {
     this.osCtx.clearRect(0, 0, this.canvas.width, this.canvas.height)
   }
 
-  handleCreator(type) {
-    return evt => {
+  handleCreator(type: any) {
+    return (evt: any) => {
       const x = evt.offsetX
       const y = evt.offsetY
       const id = this.hitJudge(x, y)
@@ -192,7 +192,7 @@ class Stage {
     }
   }
 
-  hitJudge(x, y) {
+  hitJudge(x: any, y: any) {
     const rgba = Array.from(this.osCtx.getImageData(x, y, 1, 1).data)
     const id = rgbaToId(rgba)
     return this.shapeIds.has(id) ? id : undefined
@@ -200,8 +200,8 @@ class Stage {
 }
 
 class Base {
-  listeners
-  id
+  listeners: any
+  id: any
   constructor() {
     this.listeners = { }
     this.id = createId()
@@ -211,11 +211,11 @@ class Base {
     return this.id
   }
 
-  draw(ctx, osCtx) {
+  draw(ctx: any, osCtx: any) {
     throw new Error('Method not implemented.')
   }
 
-  on(eventName, listener) {
+  on(eventName: any, listener: any) {
     if (this.listeners[eventName]) {
       this.listeners[eventName].push(listener)
     } else {
@@ -229,16 +229,16 @@ class Base {
 }
 
 class Arc extends Base {
-  props
-  ctx
-  osCtx
-  isCollision
-  x
-  y
-  radius
-  fillColor
+  props: any
+  ctx: any
+  osCtx: any
+  isCollision: any
+  x: any
+  y: any
+  radius: any
+  fillColor: any
 
-  constructor(p) {
+  constructor(p: any) {
     super()
     this.props = p
     this.ctx = null
@@ -247,7 +247,7 @@ class Arc extends Base {
 
   }
 
-  move({ x,  y }) {
+  move({ x, y }: any) {
     // 暂停不给移动
     if (!this.isCollision) {
       this.props.x = x
@@ -261,7 +261,7 @@ class Arc extends Base {
     this.isCollision = true
   }
 
-  draw(ctx, osCtx) {
+  draw(ctx: any, osCtx: any) {
     this.ctx = ctx
     this.osCtx = osCtx
     const {
@@ -324,7 +324,7 @@ const onRunning = async () => {
 
   arc1.on(EventNames.click, () => { text.value = '点击了红色' })
   // arc2.on(EventNames.click, () => console.log('arc2 click'))
-  arc2.on(EventNames.mousedown, (e) => { text.value = `点击了橙色，x：${e.offsetX}，y：${e.offsetY}` })
+  arc2.on(EventNames.mousedown, (e: any) => { text.value = `点击了橙色，x：${e.offsetX}，y：${e.offsetY}` })
   // arc2.on(EventNames.mouseup, () => console.log('arc2 click'))
 
   let x = 220

@@ -85,7 +85,7 @@ const onTrigger = async () => {
 //     }
 //   `
 
-const sinCosPosition = (i, dense) => {
+const sinCosPosition = (i: any, dense: any) => {
   let r = 20
   let deg = (i / 180) * Math.PI * dense
   let x = Math.cos(deg) * r

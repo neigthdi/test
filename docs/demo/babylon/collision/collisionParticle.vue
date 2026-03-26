@@ -122,7 +122,7 @@ const initScene = async () => {
     return box
   }
 
-  const createSps = (ground, sphere) => {
+  const createSps = (ground: any, sphere: any) => {
     /** SolidParticleSystem允许创建由一个或多个基础网格模型组成的粒子云 */
     const sps: any = new SolidParticleSystem('sps', scene, {
       /** 启用了 particleIntersection，就可以使用任何固体粒子的 intersectsMesh() 方法来检查该粒子是否与目标网格相交 */
@@ -287,7 +287,7 @@ const initScene = async () => {
   runAnimate()
 
   scene.registerBeforeRender(function() {
-    sps.particles.forEach(particle => {
+    sps.particles.forEach((particle: any) => {
       if (sphere.intersectsMesh(particle, true)) {
         console.log('collided')
       }

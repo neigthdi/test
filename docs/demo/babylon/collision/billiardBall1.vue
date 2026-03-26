@@ -309,7 +309,7 @@ const initScene = async () => {
   }
 
   // 创建动画，90 / 60 = 1.5s，90帧，60帧每秒，1.5秒完成动画
-  const createCueAnimation = (cueTemp, direction) => {
+  const createCueAnimation = (cueTemp: any, direction: any) => {
     const keys: any = []
     keys.push({
       frame: 0,
