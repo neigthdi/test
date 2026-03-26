@@ -157,20 +157,22 @@
 
       Effect.ShadersStore['waveGroundVertexShader'] = `
         precision highp float;
-        
+
         attribute vec3 position;
         attribute vec2 uv;
 
         uniform mat4 worldViewProjection;
-        uniform sampler2D uSampler;
+
+        uniform TimeData {
+          float uTime;
+        };
 
         varying vec2 vUV;
 
         void main() {
           vUV = uv;
-          vec4 baseColor = texture(uSampler, vUV);
           vec3 newPosition = position;
-          newPosition.y = cos(baseColor.r * 10.0 + newPosition.x * 5.0);
+          newPosition.y = cos(position.x + uTime * 5.0);
           gl_Position = worldViewProjection * vec4(newPosition, 1.0);
         }
       `
@@ -197,7 +199,8 @@
 
         @group(0) @binding(4) var<uniform> uTime: f32;
 
-        @compute @workgroup_size(1, 1, 1)
+        // 对于这个 512×512 纹理的简单像素操作，(8, 8, 1) 是合理的起点，性能会有明显提升。
+        @compute @workgroup_size(8, 8, 1)
 
         fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
@@ -205,7 +208,8 @@
 
           var pix: vec4<f32> = textureSampleLevel(src, sampler_src, vec2<f32>(global_id.xy) / dims, 0.0);
 
-          pix.r = uTime - 1.0 * floor(uTime / 1.0);
+          let t = (sin(uTime) + 1.0) / 2.0;
+          pix.r = 1.0 - t;
 
           textureStore(dest, vec2<i32>(global_id.xy), pix);
         }
@@ -240,11 +244,17 @@
         }, {
           attributes: ['position', 'uv'],
           uniforms: ['worldViewProjection', 'uSampler'],
+          uniformBuffers: ['TimeData'],
           samplers: ['uSampler'],
           needAlphaBlending: true,
         },
       )
       waveGroundShader.setTexture('uSampler', dest)
+      waveGroundShader.setUniformBuffer('TimeData', timeBuffer)
+
+      shader.setUniformBuffer('uTime', timeBuffer)
+      shader.setTexture('src', src)
+      shader.setStorageTexture('dest', dest)
 
       // 使用shader
       ground.material = waveGroundShader
@@ -253,14 +263,11 @@
       // ground.material = mat
 
       scene.registerBeforeRender(() => {
-
         uTime += 0.01
+
         timeBuffer.updateFloat('uTime', uTime)
         timeBuffer.update()
 
-        shader.setUniformBuffer('uTime', timeBuffer)
-        shader.setTexture('src', src)
-        shader.setStorageTexture('dest', dest)
         shader.dispatch(dest.getSize().width, dest.getSize().height, 1)
       })
     }
