@@ -289,11 +289,11 @@ const codeRow = (isInverse: any) => {
       let t = local_id.x;  // 0..63，每线程处理一个蝶形对
 
       // 每线程加载 2 个元素（上半段 t 和下半段 t+N/2）
-      sharedDataY[t]             = textureLoad(phillipsTextureY, vec2<i32>(i32(t),             i32(global_id.y)), 0);
+      sharedDataY[t] = textureLoad(phillipsTextureY, vec2<i32>(i32(t), i32(global_id.y)), 0);
       sharedDataY[t + ${half}u]  = textureLoad(phillipsTextureY, vec2<i32>(i32(t + ${half}u),  i32(global_id.y)), 0);
-      sharedDataX[t]             = textureLoad(phillipsTextureX, vec2<i32>(i32(t),             i32(global_id.y)), 0);
+      sharedDataX[t] = textureLoad(phillipsTextureX, vec2<i32>(i32(t), i32(global_id.y)), 0);
       sharedDataX[t + ${half}u]  = textureLoad(phillipsTextureX, vec2<i32>(i32(t + ${half}u),  i32(global_id.y)), 0);
-      sharedDataZ[t]             = textureLoad(phillipsTextureZ, vec2<i32>(i32(t),             i32(global_id.y)), 0);
+      sharedDataZ[t] = textureLoad(phillipsTextureZ, vec2<i32>(i32(t), i32(global_id.y)), 0);
       sharedDataZ[t + ${half}u]  = textureLoad(phillipsTextureZ, vec2<i32>(i32(t + ${half}u),  i32(global_id.y)), 0);
 
       workgroupBarrier(); // 确保所有线程加载完成
@@ -301,7 +301,49 @@ const codeRow = (isInverse: any) => {
       for (var m = 0u; m < ${logN}u; m++) {
         let step = 1u << m;
 
-        // 线程 t 负责的输出位置（Stockham 蝶形索引公式）
+        // 线程 t 负责的输出位置（Stockham 蝶形索引公式）推导：
+        //   ── 每步的结构 ──────────────────────────────────────────────────
+        //   第 m 步：step = 2^m。这个的由来是FFT 的本质：递归折半。
+        //   整个数组（长度 N）被划分为若干"大块"，每块大小 = 2*step。
+        //   每块内有 step 个蝶形对，每对由两个相距 step 的元素组成。
+        //   共有 N/2 个蝶形对，恰好分配给 N/2 个线程（线程 t = 0..N/2-1）。
+        //
+        //   ── 分解线程 t ──────────────────────────────────────────────────
+        //   线程 t 属于哪个大块？
+        //     块编号   = floor(t / step) = (t - t%step) / step
+        //   在块内处于第几个蝶形对？
+        //     块内偏移 = t % step
+        //
+        //   ── 计算输出位置 ─────────────────────────────────────────────────
+        //   该块在输出数组中的起始位置：
+        //     块起始 = 块编号 × 2*step = 2 × (t - t%step)
+        //   加上块内偏移，得到两个输出位置：
+        //     index1 = 2*(t - t%step) + t%step        ← 蝶形对的上元素
+        //     index2 = index1 + step                  ← 蝶形对的下元素
+        //  ─────────────────────────────────────────────────
+        //
+        //   ── 以 N=8 为例验证（共 3 个阶段，每阶段 4 个线程 t=0..3）──────────
+        //
+        //   阶段 0（step=1）：块大小=2，每块 1 对
+        //     t=0: k=0, r=0 → index1=0,  index2=1   对: [0↔1]
+        //     t=1: k=1, r=0 → index1=2,  index2=3   对: [2↔3]
+        //     t=2: k=2, r=0 → index1=4,  index2=5   对: [4↔5]
+        //     t=3: k=3, r=0 → index1=6,  index2=7   对: [6↔7]
+        //
+        //   阶段 1（step=2）：块大小=4，每块 2 对
+        //     t=0: k=0, r=0 → index1=0,  index2=2   对: [0↔2]
+        //     t=1: k=0, r=1 → index1=1,  index2=3   对: [1↔3]
+        //     t=2: k=1, r=0 → index1=4,  index2=6   对: [4↔6]
+        //     t=3: k=1, r=1 → index1=5,  index2=7   对: [5↔7]
+        //
+        //   阶段 2（step=4）：块大小=8，整体 1 块 4 对
+        //     t=0: k=0, r=0 → index1=0,  index2=4   对: [0↔4]
+        //     t=1: k=0, r=1 → index1=1,  index2=5   对: [1↔5]
+        //     t=2: k=0, r=2 → index1=2,  index2=6   对: [2↔6]
+        //     t=3: k=0, r=3 → index1=3,  index2=7   对: [3↔7]
+        //
+        //   规律：step 每翻倍，蝶形对的两元素距离也翻倍——递归折半的物理体现。
+        //  ─────────────────────────────────────────────────
         let outputIndex1 = 2u * (t - t % step) + t % step;
         let outputIndex2 = outputIndex1 + step;
 
@@ -332,19 +374,19 @@ const codeRow = (isInverse: any) => {
       // 如果是逆fft，最后一步需要 / √N；如果是正fft，则不需要
       let scale = select(1.0, 1.0 / f32(${IMG_SIZE_SQRT}), ${isInverse});
 
-      let outY0 = sharedDataY[t]            * scale;
+      let outY0 = sharedDataY[t] * scale;
       let outY1 = sharedDataY[t + ${half}u] * scale;
-      let outX0 = sharedDataX[t]            * scale;
+      let outX0 = sharedDataX[t] * scale;
       let outX1 = sharedDataX[t + ${half}u] * scale;
-      let outZ0 = sharedDataZ[t]            * scale;
+      let outZ0 = sharedDataZ[t] * scale;
       let outZ1 = sharedDataZ[t + ${half}u] * scale;
 
       // 每线程写出 2 个元素
-      textureStore(rowTextureY, vec2<i32>(i32(t),            i32(global_id.y)), vec4<f32>(outY0.x, outY0.y, 0.0, 1.0));
+      textureStore(rowTextureY, vec2<i32>(i32(t), i32(global_id.y)), vec4<f32>(outY0.x, outY0.y, 0.0, 1.0));
       textureStore(rowTextureY, vec2<i32>(i32(t + ${half}u), i32(global_id.y)), vec4<f32>(outY1.x, outY1.y, 0.0, 1.0));
-      textureStore(rowTextureX, vec2<i32>(i32(t),            i32(global_id.y)), vec4<f32>(outX0.x, outX0.y, 0.0, 1.0));
+      textureStore(rowTextureX, vec2<i32>(i32(t), i32(global_id.y)), vec4<f32>(outX0.x, outX0.y, 0.0, 1.0));
       textureStore(rowTextureX, vec2<i32>(i32(t + ${half}u), i32(global_id.y)), vec4<f32>(outX1.x, outX1.y, 0.0, 1.0));
-      textureStore(rowTextureZ, vec2<i32>(i32(t),            i32(global_id.y)), vec4<f32>(outZ0.x, outZ0.y, 0.0, 1.0));
+      textureStore(rowTextureZ, vec2<i32>(i32(t), i32(global_id.y)), vec4<f32>(outZ0.x, outZ0.y, 0.0, 1.0));
       textureStore(rowTextureZ, vec2<i32>(i32(t + ${half}u), i32(global_id.y)), vec4<f32>(outZ1.x, outZ1.y, 0.0, 1.0));
     }
   `
@@ -383,11 +425,11 @@ const codeCol = (isInverse: any) => {
       let t = local_id.y;  // 0..63，每线程处理一个蝶形对
 
       // 每线程加载 2 个列元素（上半段 t 和下半段 t+N/2）
-      sharedDataY[t]            = textureLoad(rowTextureY, vec2<i32>(i32(global_id.x), i32(t)),            0);
+      sharedDataY[t] = textureLoad(rowTextureY, vec2<i32>(i32(global_id.x), i32(t)), 0);
       sharedDataY[t + ${half}u] = textureLoad(rowTextureY, vec2<i32>(i32(global_id.x), i32(t + ${half}u)), 0);
-      sharedDataX[t]            = textureLoad(rowTextureX, vec2<i32>(i32(global_id.x), i32(t)),            0);
+      sharedDataX[t] = textureLoad(rowTextureX, vec2<i32>(i32(global_id.x), i32(t)), 0);
       sharedDataX[t + ${half}u] = textureLoad(rowTextureX, vec2<i32>(i32(global_id.x), i32(t + ${half}u)), 0);
-      sharedDataZ[t]            = textureLoad(rowTextureZ, vec2<i32>(i32(global_id.x), i32(t)),            0);
+      sharedDataZ[t] = textureLoad(rowTextureZ, vec2<i32>(i32(global_id.x), i32(t)), 0);
       sharedDataZ[t + ${half}u] = textureLoad(rowTextureZ, vec2<i32>(i32(global_id.x), i32(t + ${half}u)), 0);
 
       workgroupBarrier(); // 确保所有线程加载完成
@@ -428,19 +470,19 @@ const codeCol = (isInverse: any) => {
       // ─────────────────────────────────────────────────────────────────────
       let sign = select(-1.0, 1.0, (global_id.x + t) % 2u == 0u);
 
-      let outY0 = sharedDataY[t]            * scale * sign;
+      let outY0 = sharedDataY[t] * scale * sign;
       let outY1 = sharedDataY[t + ${half}u] * scale * sign;
-      let outX0 = sharedDataX[t]            * scale * sign;
+      let outX0 = sharedDataX[t] * scale * sign;
       let outX1 = sharedDataX[t + ${half}u] * scale * sign;
-      let outZ0 = sharedDataZ[t]            * scale * sign;
+      let outZ0 = sharedDataZ[t] * scale * sign;
       let outZ1 = sharedDataZ[t + ${half}u] * scale * sign;
 
       // 优化2: 直接写入 BabylonJS 渲染纹理，无需 CPU 回读
-      textureStore(colTextureY, vec2<i32>(i32(global_id.x), i32(t)),            vec4<f32>(outY0.x, outY0.y, 0.0, 1.0));
+      textureStore(colTextureY, vec2<i32>(i32(global_id.x), i32(t)), vec4<f32>(outY0.x, outY0.y, 0.0, 1.0));
       textureStore(colTextureY, vec2<i32>(i32(global_id.x), i32(t + ${half}u)), vec4<f32>(outY1.x, outY1.y, 0.0, 1.0));
-      textureStore(colTextureX, vec2<i32>(i32(global_id.x), i32(t)),            vec4<f32>(outX0.x, outX0.y, 0.0, 1.0));
+      textureStore(colTextureX, vec2<i32>(i32(global_id.x), i32(t)), vec4<f32>(outX0.x, outX0.y, 0.0, 1.0));
       textureStore(colTextureX, vec2<i32>(i32(global_id.x), i32(t + ${half}u)), vec4<f32>(outX1.x, outX1.y, 0.0, 1.0));
-      textureStore(colTextureZ, vec2<i32>(i32(global_id.x), i32(t)),            vec4<f32>(outZ0.x, outZ0.y, 0.0, 1.0));
+      textureStore(colTextureZ, vec2<i32>(i32(global_id.x), i32(t)), vec4<f32>(outZ0.x, outZ0.y, 0.0, 1.0));
       textureStore(colTextureZ, vec2<i32>(i32(global_id.x), i32(t + ${half}u)), vec4<f32>(outZ1.x, outZ1.y, 0.0, 1.0));
     }
   `

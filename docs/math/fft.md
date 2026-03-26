@@ -570,7 +570,7 @@ console.log(OutputData)
 
 #### 优化后的
 ```javascript
-
+let t = local_id.x;
 for (var m = 0u; m < ${logN}u; m++) {
   let step = 1u << m;
 
