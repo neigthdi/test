@@ -198,5 +198,12 @@ function sidebarBase() {
         { text: 'webgl', link: '/components/webgl.md' },
       ]
     },
+    {
+      text: '案例-webgpu',
+      collapsible: true,
+      items: [
+        { text: 'webgpu', link: '/components/webgpu.md' },
+      ]
+    },
   ]
 }

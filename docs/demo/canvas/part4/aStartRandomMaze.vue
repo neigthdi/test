@@ -46,7 +46,7 @@ const onRunning = async() => {
   const size = 9
   
   // 取区域随机数 x>=min && x<max
-  const randInt = (min, max) => {
+  const randInt = (min: number, max: number) => {
     const _max = max || 0
     const _min = min || 0
 
@@ -62,8 +62,8 @@ const onRunning = async() => {
   }
 
   // 普里姆算法生成连通图的二维数组 row 行 column 列
-  const primMaze = (c, r) => {
-    const init = (c, r) => {
+  const primMaze = (c: number, r: number) => {
+    const init = (c: number, r: number) => {
       const tempArr = new Array(2 * r + 1)
       // 全部置1
       for (let i = 0; i < tempArr.length; i++) {
@@ -84,7 +84,7 @@ const onRunning = async() => {
       return tempArr
     }
 
-    const process = (arr) => {
+    const process = (arr: any) => {
       // acc存放已访问队列
       const acc: any = []
       // noAcc存放没有访问队列
@@ -161,7 +161,7 @@ const onRunning = async() => {
   }
 
   // 栅格线条
-  const drawGrid = (context, color, stepX, stepY) =>{
+  const drawGrid = (context: any, color: any, stepX: number, stepY: number) =>{
     context.strokeStyle = color
     context.lineWidth = 0.5
 
@@ -180,7 +180,7 @@ const onRunning = async() => {
   }
 
   // 方块创造方法
-  const createRect = (x, y, r, c) => {
+  const createRect = (x: number, y: number, r: number, c: any) => {
     ctx.beginPath()
     ctx.fillStyle = c
     ctx.rect(x, y, r, r)
@@ -188,7 +188,7 @@ const onRunning = async() => {
   }
 
   // 定义点对象【a*点对象】
-  function Point(x, y) {
+  function Point(x: number, y: number) {
     this.x = x
     this.y = y
     this.parent = null
@@ -202,7 +202,7 @@ const onRunning = async() => {
   }
 
   // 把普通二维数组(全部由1，0表示)的转换成a*所需要的点数组
-  function convertArrToAS (arr) {
+  function convertArrToAS (arr: any) {
     const r = arr.length
     const c = arr[0].length
     const a = new Array(r)
@@ -218,9 +218,9 @@ const onRunning = async() => {
   }
 
   // A*算法，pathArr表示最后返回的路径
-  function findPathA (pathArr, start, end, row, col) {
+  function findPathA (pathArr: any, start: any, end: any, row: number, col: number) {
     // 添加数据到排序数组中
-    function addArrSort (descSortedArr, element, compare) {
+    function addArrSort (descSortedArr: any, element: any, compare: any) {
       let left = 0
       let right = descSortedArr.length - 1
       let mid = (left + right) >> 1
@@ -241,26 +241,26 @@ const onRunning = async() => {
     }
 
     // 判断两个点是否相同
-    function pEqual (p1, p2) {
+    function pEqual (p1: any, p2: any) {
       return p1.x == p2.x && p1.y == p2.y
     }
 
     // 获取两个点距离，采用曼哈顿方法
-    function posDist (pos, pos1) {
+    function posDist (pos: any, pos1: any) {
       return (Math.abs(pos1.x - pos.x) + Math.abs(pos1.y - pos.y))
     }
 
-    function between (val, min, max) {
+    function between (val: number, min: number, max: number) {
       return (val >= min && val <= max)
     }
 
     // 比较两个点f值大小
-    function compPointF (pt1, pt2) {
+    function compPointF (pt1: any, pt2: any) {
       return pt1.f - pt2.f
     }
 
     // 处理当前节点
-    function processCurPoint (arr, openList, row, col, currPoint, destPoint) {
+    function processCurPoint (arr: any, openList: any, row: number, col: number, currPoint: any, destPoint: any) {
       // 获取上下左右
       const ltx = currPoint.x - 1
       const lty = currPoint.y - 1
@@ -299,7 +299,7 @@ const onRunning = async() => {
     }
 
     // 定义openList
-    const openList = []
+    const openList: any = []
     // 定义closeList
     const closeList: any = []
     start = pathArr[start[0]][start[1]]
@@ -331,12 +331,12 @@ const onRunning = async() => {
   }
 
   // 定位屏幕坐标到数组位置
-  function mapSCPos(i, j) {
+  function mapSCPos(i: number, j: number) {
     return [i / size | 0, j / size | 0]
   }
 
   // 检测数组中的位置是否存在方块
-  function mapHasRect(map, i, j) {
+  function mapHasRect(map: any, i: number, j: number) {
     return (map[i][j])
   }
 
@@ -381,7 +381,7 @@ const onRunning = async() => {
   let next: any = null
 
   
-  const mouseClick = (event) => {
+  const mouseClick = (event: any) => {
     // 标准的获取鼠标点击相对于canvas画布的坐标公式
     const x = event.offsetX
     const y = event.offsetY
@@ -447,7 +447,7 @@ const destroy = () => {
   cancelAnimationFrame(requestID.value)
   const parent = document.getElementById('aStartRandomMazeBox') as any
   if(parent) {
-    eventListeners.value.forEach(listener => {
+    eventListeners.value.forEach((listener: any) => {
       parent.removeEventListener('click', listener)
     })
   }

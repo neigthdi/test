@@ -43,7 +43,7 @@ function SpaceShip () {
   this.showFlame = false
 }
 
-SpaceShip.prototype.draw = function (context) {
+SpaceShip.prototype.draw = function (context: any) {
   context.save()
   context.beginPath()
   context.translate(this.x, this.y)
@@ -86,7 +86,7 @@ const onRunning = async() => {
   ship.x = canvas.width / 2
   ship.y = canvas.height / 2
 
-  function keyDown (event) {
+  function keyDown (event: any) {
     event.preventDefault()
 
     switch (event.keyCode) {
@@ -103,7 +103,7 @@ const onRunning = async() => {
       }
   }
 
-  function keyUp(event) {
+  function keyUp(event: any) {
     event.preventDefault()
     vr = 0
     speed = 0
@@ -160,7 +160,7 @@ const onRunning = async() => {
 
 const destroy = () => {
   cancelAnimationFrame(requestID.value)
-  eventListeners.value.forEach(listener => {
+  eventListeners.value.forEach((listener: any) => {
     window.removeEventListener('keydown', listener)
     window.removeEventListener('keyup', listener)
   })

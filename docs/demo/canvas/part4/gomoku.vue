@@ -107,7 +107,7 @@ const onRunning = () => {
     drawChessBoard()
   }
 
-  chess.onclick = function(e) {
+  chess.onclick = function(e: any) {
     if (over) {
       return
     }
@@ -237,7 +237,7 @@ const onRunning = () => {
   }
 
   // 画棋子
-  let oneStep = function(i, j, me) {
+  let oneStep = function(i: number, j: number, me: boolean) {
     context.beginPath();
     context.arc(15 + i * 30, 15 + j * 30, 13, 0, 2 * Math.PI); // 画圆
     context.closePath();
