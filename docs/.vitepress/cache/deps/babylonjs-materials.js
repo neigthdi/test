@@ -1,9 +1,9 @@
 import {
   require_babylon
-} from "./chunk-CZWJT7L5.js";
+} from "./chunk-RE73FYQO.js";
 import {
   __commonJS
-} from "./chunk-BUSYA2B4.js";
+} from "./chunk-5WRI5ZAA.js";
 
 // node_modules/.pnpm/babylonjs-materials@8.32.0/node_modules/babylonjs-materials/babylonjs.materials.min.js
 var require_babylonjs_materials_min = __commonJS({

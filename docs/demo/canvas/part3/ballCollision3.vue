@@ -159,7 +159,7 @@ const onMouseMove = (e) => {
 }
 
 
-const onRunning = async() => {
+const onRunning = async () => {
   await nextTick()
   const canvas: any = document.getElementById('ballCollision3')
   const ctx = canvas.getContext('2d')

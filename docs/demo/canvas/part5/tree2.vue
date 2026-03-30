@@ -102,7 +102,7 @@ Tree.prototype.draw = function (context) {
 }
 
 
-const onRunning = async() => {
+const onRunning = async () => {
   await nextTick()
   const canvas: any = document.getElementById('tree2')
   const ctx = canvas.getContext('2d')

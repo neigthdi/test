@@ -37,7 +37,10 @@ const onRunning = async () => {
       const format = navigator.gpu.getPreferredCanvasFormat();
 
       // 把 context 和 device 绑定，告诉它用什么格式渲染
-      // alphaMode: 'premultiplied' 表示颜色值已经预乘了 alpha，blend 会更准确
+      // alphaMode: 'premultiplied' — 颜色存储时已预先乘以 alpha：
+      //   普通（未预乘）: rgba(255,0,0,0.5) 直接存，混合时计算 前景×alpha + 背景×(1-alpha)
+      //   预乘:           rgba(255,0,0,0.5) 存为 rgba(127,0,0,0.5)，混合时 前景 + 背景×(1-alpha)
+      //   好处：半透明边缘不会出现黑边/白边，纹理插值更准确，GPU 内部也用此格式，推荐默认值
       context.configure({ device, format, alphaMode: 'premultiplied' });
 
       // 用三角形扇的方式拼出圆形，segments 越大越圆，128 基本肉眼看不出棱角
@@ -149,7 +152,7 @@ const onRunning = async () => {
       });
 
       function frame() {
-        const encoder = device.createCommandEncoder();
+        const encoder = device.createCommandEncoder(); // 每帧必须新建：encoder 是一次性对象，finish() 后即失效
         const pass = encoder.beginRenderPass({
           colorAttachments: [{
             view: context.getCurrentTexture().createView(),

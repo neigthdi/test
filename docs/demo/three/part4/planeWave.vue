@@ -81,7 +81,7 @@ const fragmentShader = `
   }
 `
 
-const initScene = async() => {
+const initScene = async () => {
   const ele = document.getElementById('planeWave') as HTMLElement
   const wrapDomStyle = getComputedStyle(ele)
   const width = parseInt(wrapDomStyle.width, 10)
@@ -123,7 +123,7 @@ const initScene = async() => {
     scene.add(directionalLight)
   }
 
-  const createPlane = async() => {
+  const createPlane = async () => {
     const texture = await loader.loadAsync('/images/star.jpg')
     const w = texture.image.width
     const h = texture.image.height

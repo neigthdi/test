@@ -86,7 +86,7 @@ const fragmentShader = `
 }
 `
 
-const initScene = async() => {
+const initScene = async () => {
   const ele = document.getElementById('textureCloud') as HTMLElement
   const wrapDomStyle = getComputedStyle(ele)
   const width = parseInt(wrapDomStyle.width, 10)
@@ -131,7 +131,7 @@ const initScene = async() => {
     scene.add(directionalLight)
   }
 
-  const createCloud = async() => {
+  const createCloud = async () => {
     const fog = new Fog(0x4584b4, -100, 3000) // 雾效果可以增加场景的深度感和真实感
     const texture = await loader.loadAsync('/images/cloud.png')
     const plane: any = new PlaneGeometry(64, 64, 1, 1)

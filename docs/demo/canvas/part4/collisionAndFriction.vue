@@ -72,7 +72,7 @@ SpaceShip.prototype.draw = function (context: any) {
 
 
 
-const onRunning = async() => {
+const onRunning = async () => {
   await nextTick()
   const canvas: any = document.getElementById('collisionAndFriction')
   const ctx = canvas.getContext('2d')

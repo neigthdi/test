@@ -336,7 +336,7 @@ const fragmentShader = `
 `
 
 
-const initScene = async() => {
+const initScene = async () => {
   const ele = document.getElementById('volumetricCloud') as HTMLElement
   const wrapDomStyle = getComputedStyle(ele)
   const width = parseInt(wrapDomStyle.width, 10)

@@ -87,7 +87,7 @@ const rotateMouseMove = (event) => {
   }
 }
 
-const onRunning = async() => {
+const onRunning = async () => {
   await nextTick()
   const canvas: any = document.getElementById('rotate1')
   const ctx = canvas.getContext('2d')

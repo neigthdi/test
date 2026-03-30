@@ -1,9 +1,9 @@
 import {
   require_babylon
-} from "./chunk-CZWJT7L5.js";
+} from "./chunk-RE73FYQO.js";
 import {
   __commonJS
-} from "./chunk-BUSYA2B4.js";
+} from "./chunk-5WRI5ZAA.js";
 
 // node_modules/.pnpm/babylonjs-gui@8.32.0/node_modules/babylonjs-gui/babylon.gui.min.js
 var require_babylon_gui_min = __commonJS({

@@ -31,7 +31,7 @@ const onTrigger = async () => {
 
 
 
-const onRunning = async() => {
+const onRunning = async () => {
   await nextTick()
   const canvas: any = document.getElementById('aStartRandomMaze')
   const ctx = canvas.getContext('2d')

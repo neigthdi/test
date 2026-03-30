@@ -11,7 +11,7 @@ import { onMounted, ref, onUnmounted, nextTick } from 'vue'
 const requestID = ref<any>()
 const isRunning = ref(false)
 
-const onRunning = async() => {
+const onRunning = async () => {
   await nextTick()
   const canvas: any = document.getElementById('autoMove1')
   const ctx = canvas.getContext('2d')

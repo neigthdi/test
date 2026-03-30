@@ -98,6 +98,7 @@ function sidebarBase() {
       collapsible: true,
       items: [
         { text: '点乘-点积-叉乘-叉积-内积-外积', link: '/math/matrixAndVectorComputation' },
+        { text: '法线需要逆转置矩阵', link: '/math/normal' },
         { text: 'Stockham FFT、W', link: '/math/fft' },
         { text: '位运算符', link: '/math/bitwiseOperation' },
       ]

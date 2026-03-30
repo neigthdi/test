@@ -144,7 +144,7 @@ NatureTree.prototype.branchAndLeaves = function (gen) {
   }
 }
 
-const onRunning = async() => {
+const onRunning = async () => {
   await nextTick()
   const canvas: any = document.getElementById('tree1')
   const ctx = canvas.getContext('2d')

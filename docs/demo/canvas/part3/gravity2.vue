@@ -140,7 +140,7 @@ class Ball {
 	}
 }
 
-const onRunning = async() => {
+const onRunning = async () => {
   await nextTick()
   const canvas: any = document.getElementById('gravity2')
   const ctx = canvas.getContext('2d')

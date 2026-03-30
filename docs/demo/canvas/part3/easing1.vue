@@ -107,7 +107,7 @@ const onMouseMove = (e) => {
   }
 }
 
-const onRunning = async() => {
+const onRunning = async () => {
   await nextTick()
   const canvas: any = document.getElementById('easing1')
   const ctx = canvas.getContext('2d')

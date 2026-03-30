@@ -218,7 +218,7 @@ class Chart {
   }
 }
 
-const onRunning = async() => {
+const onRunning = async () => {
   await nextTick()
   const chartObj = new Chart({
     el: document.getElementById('zoomAndDrag'),
