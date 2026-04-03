@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div @click="isShow = !isShow" class="pointer">{{isShow ? '展开' : '隐藏'}}SSGI（屏幕空间全局光照）说明</div>
+    <div @click="isShow = !isShow" class="pointer">{{isShow ? '隐藏' : '展开'}}SSGI（屏幕空间全局光照）说明</div>
     <div v-if="isShow">
       <p>
         <strong>SSGI（Screen Space Global Illumination，屏幕空间全局光照）</strong>
