@@ -45,10 +45,8 @@ result[1]=x[2]*y[0]-y[2]*x[0]
 result[2]=x[0]*y[1]-y[0]*x[1]  
 ***
 
-<font color=orange>右手坐标系：</font>在右手坐标系中，使用右手定则来确定叉积的方向。如果你用右手的食指指向 a 的方向<font color=red>（y轴正方向，向上）</font>，中指指向 b 的方向<font color=red>（z轴正方向，向后）</font>，那么大拇指指向的方向就是 a×b 的方向<font color=red>（x轴正方向，向右）</font>。 
-***
+对于叉积 f×w 【cross(f, w);】，<font color=red>使用右手定则</font>：<font color=orange>手掌方向：右手手掌从 f  向 w  收拢（握拳方向），拇指指向：就是叉积结果 f×w  的方向；</font>或者，<font color=green>食指指向 f，中指指向 w，拇指指向 f×w  的方向</font>
 
-<font color=orange>左手坐标系：</font>在左手坐标系中，使用左手定则来确定叉积的方向。如果你用左手的食指指向 a 的方向<font color=red>（y轴正方向，向上）</font>，中指指向 b 的方向<font color=red>（z轴正方向，向前）</font>，那么大拇指指向的方向就是 a×b 的方向<font color=red>（x轴正方向，向右）</font>。       
 ***
 
 应用场景：   

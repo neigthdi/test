@@ -1,20 +1,45 @@
 <template>
   <div>
-    <div>为什么是-u_time，而不是 u_time，具体解释看 fire2 的 main 函数里面的解析</div>
+    <div>
+      为什么是-u_time，而不是 u_time，具体解释看 fire2 的 main 函数里面的解析
+    </div>
     <div class="flex space-between">
-      <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
-      <div @click="showText = !showText" class="pointer">点击{{ !showText ? '展开': '收起'}}文字</div>
+      <div
+        @click="onTrigger"
+        class="pointer"
+      >
+        点击{{ !isRunning ? '运行' : '关闭' }}
+      </div>
+      <div
+        @click="showText = !showText"
+        class="pointer"
+      >
+        点击{{ !showText ? '展开' : '收起' }}文字
+      </div>
     </div>
     <div v-if="showText">
       <p>1、为什么选择椭球体作为火焰的基础形状？</p>
-      <p>&nbsp;&nbsp;1.1---火焰的形状通常是一个向上延伸的、逐渐变细的形状。椭球体（或扁平的椭球体）是一个很好的基础形状，因为它可以近似火焰的整体轮廓。</p>
-      <p>&nbsp;&nbsp;1.2---通过调整椭球体的参数（如扁平程度），可以更好地控制火焰的形状。</p>
+      <p>
+        &nbsp;&nbsp;1.1---火焰的形状通常是一个向上延伸的、逐渐变细的形状。椭球体（或扁平的椭球体）是一个很好的基础形状，因为它可以近似火焰的整体轮廓。
+      </p>
+      <p>
+        &nbsp;&nbsp;1.2---通过调整椭球体的参数（如扁平程度），可以更好地控制火焰的形状。
+      </p>
       <p>----------------------------------------</p>
       <p>2、为什么使用光线行进算法（Ray Marching）？</p>
-      <p>&nbsp;&nbsp;2.1---光线行进算法是一种用于渲染复杂场景（如体积效果、SDF 等）的算法。它通过沿着光线方向逐步前进，计算光线与场景的交点。</p>
-      <p>&nbsp;&nbsp;2.2---这种方法非常适合渲染火焰，因为它可以处理火焰的不规则形状和动态变化。</p>
+      <p>
+        &nbsp;&nbsp;2.1---光线行进算法是一种用于渲染复杂场景（如体积效果、SDF
+        等）的算法。它通过沿着光线方向逐步前进，计算光线与场景的交点。
+      </p>
+      <p>
+        &nbsp;&nbsp;2.2---这种方法非常适合渲染火焰，因为它可以处理火焰的不规则形状和动态变化。
+      </p>
     </div>
-    <canvas v-if="isRunning" id="fire1" class="shader-toy-stage bg-black"></canvas>
+    <canvas
+      v-if="isRunning"
+      id="fire1"
+      class="shader-toy-stage bg-black"
+    ></canvas>
   </div>
 </template>
 
@@ -121,7 +146,7 @@ onMounted(async () => {
 //     当光线到达场景的表面时，可以正确地终止行进
 
 const onStart = () => {
-  import('glslCanvas').then(module => {
+  import('glslCanvas').then((module) => {
     const canvas = document.getElementById('fire1')
     const glslCanvas: any = new module.default(canvas)
 
@@ -133,20 +158,17 @@ const onStart = () => {
       uniform float u_time;
       uniform vec2 u_mouse;
 
-      // 左手坐标系
       // ro：相机的位置（Ray Origin），即相机在三维空间中的坐标这个点是所有视线（或光线）的起点
       // target：相机的目标点，即相机“看”向的点这个点决定了相机的前进方向（Forward 向量）
       // up：相机的向上方向（Up 向量），通常与相机的前进方向垂直，这个向量用于确定相机的右侧方向（Right 向量）和确保相机的坐标系是正交的
       // 相机源点、目标、向上方向
       // R、U、F 分别是 Right、Up 和 Forward 向量
       mat3 getCameraMat(vec3 ro, vec3 target, vec3 up) {
-        vec3 f = normalize(target - ro); // 计算 Forward 向量（F）
+        vec3 f = normalize(target - ro); // 计算Forward向量（F）
 
-        // 叉积 cross(a, b) 的结果是一个垂直于向量 a 和 b 的向量
-        // 注意：由于使用的是左手坐标系，所以是使用 up 叉乘 f，而不是反过来进行叉乘，进行叉乘运算时一定要注意其方向性！
-        vec3 r = cross(up, f); // Right 向量（R）是 Forward 向量和 Up 向量的叉积，表示相机的右侧方向
+        vec3 r = normalize(cross(f, up)); // Right向量（R）是Forward向量和Up向量的叉积，表示相机的右侧方向
 
-        vec3 u = normalize(cross(f, r)); // 为了确保 Up 向量垂直于 Forward 向量，需要重新计算 Up 向量为 Right 向量和 Forward 向量的叉积
+        vec3 u = normalize(cross(r, f)); // 为了确保Up向量垂直于Forward向量，需要重新计算Up向量为Right向量和Forward向量的叉积
 
         return mat3(r, u, f);
       }

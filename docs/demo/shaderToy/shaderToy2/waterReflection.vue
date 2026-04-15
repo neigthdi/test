@@ -1,7 +1,16 @@
 <template>
   <div>
-    <div @click="onTrigger" class="pointer">点击{{ !isRunning ? '运行' : '关闭' }}</div>
-    <canvas v-if="isRunning" id="waterReflection" class="shader-toy-stage bg-black"></canvas>
+    <div
+      @click="onTrigger"
+      class="pointer"
+    >
+      点击{{ !isRunning ? '运行' : '关闭' }}
+    </div>
+    <canvas
+      v-if="isRunning"
+      id="waterReflection"
+      class="shader-toy-stage bg-black"
+    ></canvas>
   </div>
 </template>
 
@@ -31,7 +40,7 @@ onMounted(async () => {
 })
 
 const onStart = () => {
-  import('glslCanvas').then(module => {
+  import('glslCanvas').then((module) => {
     const canvas = document.getElementById('waterReflection')
     const glslCanvas: any = new module.default(canvas)
 
@@ -221,7 +230,6 @@ const onStart = () => {
     `
 
     const getCameraMat = `
-      // 左手坐标系
       // ro：相机的位置（Ray Origin），即相机在三维空间中的坐标。这个点是所有视线（或光线）的起点
       // target：相机的目标点，即相机“看”向的点。这个点决定了相机的前进方向（Forward 向量）
       // up：相机的向上方向（Up 向量），通常与相机的前进方向垂直，这个向量用于确定相机的右侧方向（Right 向量）和确保相机的坐标系是正交的
@@ -230,11 +238,9 @@ const onStart = () => {
       mat3 getCameraMat(vec3 ro, vec3 target, vec3 up) {
         vec3 f = normalize(target - ro); // 计算 Forward 向量（F）
 
-        // 叉积 cross(a, b) 的结果是一个垂直于向量 a 和 b 的向量
-        // 注意：由于使用的是左手坐标系，所以是使用 up 叉乘 f，而不是反过来进行叉乘，进行叉乘运算时一定要注意其方向性！
-        vec3 r = cross(up, f); // Right 向量（R）是 Forward 向量和 Up 向量的叉积，表示相机的右侧方向
+        vec3 r = normalize(cross(f, up)); // Right 向量（R）是 Forward 向量和 Up 向量的叉积，表示相机的右侧方向
 
-        vec3 u = normalize(cross(f, r)); // 为了确保 Up 向量垂直于 Forward 向量，需要重新计算 Up 向量为 Right 向量和 Forward 向量的叉积
+        vec3 u = normalize(cross(r, f)); // 为了确保 Up 向量垂直于 Forward 向量，需要重新计算 Up 向量为 Right 向量和 Forward 向量的叉积
 
         return mat3(r, u, f);
       }
