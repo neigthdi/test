@@ -1,8 +1,5 @@
-import { fileURLToPath, URL } from "node:url";
-import {
-  containerPreview,
-  componentPreview,
-} from "@vitepress-demo-preview/plugin";
+import { fileURLToPath, URL } from 'node:url'
+import { containerPreview, componentPreview } from '@vitepress-demo-preview/plugin'
 
 export default {
   title: 'Babylonjs',
@@ -11,15 +8,15 @@ export default {
   vite: {
     resolve: {
       alias: {
-        "@": fileURLToPath(new URL("../../src", import.meta.url)),
-      },
-    },
+        '@': fileURLToPath(new URL('../../src', import.meta.url))
+      }
+    }
   },
   markdown: {
     config(md) {
-      md.use(containerPreview);
-      md.use(componentPreview);
-    },
+      md.use(containerPreview)
+      md.use(componentPreview)
+    }
   },
   themeConfig: {
     smoothScroll: true,
@@ -28,7 +25,7 @@ export default {
         text: 'babylon文档',
         link: 'https://doc.babylonjs.com/typedoc/modules/BABYLON'
       },
-      { 
+      {
         text: 'babylon官网案例',
         link: 'https://www.babylonjs-playground.com/'
       },
@@ -51,7 +48,7 @@ export default {
       {
         text: 'shader案例网站-3',
         link: 'https://webgl-shaders.com/'
-      },
+      }
     ],
     sidebar: {
       '/': sidebarBase()
@@ -89,9 +86,7 @@ function sidebarBase() {
     {
       text: 'html模板',
       collapsible: true,
-      items: [
-        { text: '模板', link: '/template/template' },
-      ]
+      items: [{ text: '模板', link: '/template/template' }]
     },
     {
       text: '数学',
@@ -100,20 +95,21 @@ function sidebarBase() {
         { text: '点乘-点积-叉乘-叉积-内积-外积', link: '/math/matrixAndVectorComputation' },
         { text: '法线需要逆转置矩阵', link: '/math/normal' },
         { text: 'Stockham FFT、W', link: '/math/fft' },
-        { text: '位运算符', link: '/math/bitwiseOperation' },
+        { text: '位运算符', link: '/math/bitwiseOperation' }
       ]
     },
     {
       text: '其他',
       collapsible: true,
       items: [
+        { text: '四元数', link: '/other/siyuanshu' },
         { text: 'three的优化(babylon)', link: '/other/threeOptimize' },
         { text: '着色器', link: '/other/shader' },
         { text: '钩子', link: '/other/hook' },
         { text: '存储', link: '/other/storage' },
         { text: 'layerMask', link: '/other/layerMask' },
         { text: 'clone和createInstance', link: '/other/cloneAndCreateInstance' },
-        { text: 'layout(std140)', link: '/other/std' },
+        { text: '使用‘layout(std140)’原因', link: '/other/std' }
       ]
     },
     {
@@ -126,7 +122,7 @@ function sidebarBase() {
         { text: '内置函数', link: '/webgl/funcs' },
         { text: '矩阵变换', link: '/webgl/matrixTransformation' },
         { text: '光相关', link: '/webgl/light' },
-         { text: '噪音', link: '/webgl/noise' },
+        { text: '噪音', link: '/webgl/noise' }
       ]
     },
     {
@@ -137,7 +133,7 @@ function sidebarBase() {
         { text: 'workgroupSize', link: '/wgsl/workgroupSize' },
         { text: 'textureFormats', link: '/other/textureFormats' },
         { text: '存储类别', link: '/wgsl/storageClass' },
-        { text: '内置变量', link: '/wgsl/builtInVar' },
+        { text: '内置变量', link: '/wgsl/builtInVar' }
       ]
     },
     {
@@ -158,7 +154,7 @@ function sidebarBase() {
         { text: 'glsl1', link: '/components/babylonShaderGlsl1.md' },
         { text: 'glsl2', link: '/components/babylonShaderGlsl2.md' },
         { text: 'wgsl1', link: '/components/babylonShaderWgsl1.md' },
-        { text: 'wgsl2', link: '/components/babylonShaderWgsl2.md' },
+        { text: 'wgsl2', link: '/components/babylonShaderWgsl2.md' }
       ]
     },
     {
@@ -168,7 +164,7 @@ function sidebarBase() {
         { text: 'part1', link: '/components/threePart1.md' },
         { text: 'part2', link: '/components/threePart2.md' },
         { text: 'part3', link: '/components/threePart3.md' },
-        { text: 'part4', link: '/components/threePart4.md' },
+        { text: 'part4', link: '/components/threePart4.md' }
       ]
     },
     {
@@ -180,7 +176,7 @@ function sidebarBase() {
         { text: 'part2', link: '/components/canvasPart2.md' },
         { text: 'part3', link: '/components/canvasPart3.md' },
         { text: 'part4', link: '/components/canvasPart4.md' },
-        { text: 'part5', link: '/components/canvasPart5.md' },
+        { text: 'part5', link: '/components/canvasPart5.md' }
       ]
     },
     {
@@ -189,22 +185,18 @@ function sidebarBase() {
       items: [
         { text: '杂录', link: '/components/shaderToyMemo.md' },
         { text: 'shaderToy1', link: '/components/shaderToy1.md' },
-        { text: 'shaderToy2', link: '/components/shaderToy2.md' },
+        { text: 'shaderToy2', link: '/components/shaderToy2.md' }
       ]
     },
     {
       text: '案例-webgl',
       collapsible: true,
-      items: [
-        { text: 'webgl', link: '/components/webgl.md' },
-      ]
+      items: [{ text: 'webgl', link: '/components/webgl.md' }]
     },
     {
       text: '案例-webgpu',
       collapsible: true,
-      items: [
-        { text: 'webgpu', link: '/components/webgpu.md' },
-      ]
-    },
+      items: [{ text: 'webgpu', link: '/components/webgpu.md' }]
+    }
   ]
 }
