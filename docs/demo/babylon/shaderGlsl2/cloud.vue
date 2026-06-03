@@ -215,82 +215,115 @@ const fragment = `
     return vec2(dEnter, dExit);
   }
   
+  // 将世界空间点映射到体积纹理的 [0,1]³ UV（与 boxMin/boxMax 定义的 AABB 对齐）
   vec3 worldToTexCoord(vec3 worldPos, vec3 boxMin, vec3 boxMax) {
     return (worldPos - boxMin) / (boxMax - boxMin);
   }
   
+  // Henyey-Greenstein 相位函数：描述光向前/后散射的强度，g 为不对称参数（0.3 偏前向）
+  // cosTheta = dot(视线方向, 太阳方向)，g 越接近 1 越集中在前向亮边（云边高光）
   float hgPhase(float cosTheta, float g) {
     float g2 = g * g;
     return (1.0 - g2) / (4.0 * 3.14159 * pow(1.0 + g2 - 2.0 * g * cosTheta, 1.5));
   }
   
+  // ---------------------------------------------------------------------
+  // main() 流程（前向体积渲染 ray marching）
+  // ---------------------------------------------------------------------
+  //
+  //  flowchart LR（主链一条横线；「否」向下分叉后结束）
+  //
+  //  ┌────────────┐      ┌────────────┐     ┌──────────┐      ┌────────────┐      ┌─────────────────┐      ┌─────────────┐      ┌──────────────────┐     ┌──────────────┐     ┌────────────────┐
+  //  │构造 ro, rd │────▶│intersectBox│────▶│有效相交?  │─是─▶│128 步 march│────▶│噪声密度+边缘 fade│────▶│ HG 散射累加  │────▶│Beer-Lambert 更新T│────▶│天空+散射合成  │────▶│伽马提亮 + alpha│
+  //  └────────────┘      └────────────┘     └────┬─────┘      └────────────┘      └─────────────────┘      └─────────────┘      └──────────────────┘     └──────────────┘     └────────────────┘
+  //                                           │
+  //                                          否
+  //                                           ▼
+  //                                    ┌────────────┐
+  //                                    │  透明退出   │
+  //                                    └────────────┘
+  //
+  //  说明：128 步 march → Beer-Lambert 更新 T 在 for 循环内（最多 128 次，T<0.01 可 break）；
+  //        天空+散射合成、伽马提亮+alpha 在循环结束后执行。
+  //
+  //  对应代码：
+  //   构造 ro, rd          → ro = cameraPosition; rd = normalize(vWorld - cameraPosition);
+  //   intersectBox         → intersect = intersectBox(ro, rd, uBoxMin, uBoxMax);
+  //   有效相交? / 透明退出  → if (dExit < 0.0 || dEnter > dExit) { gl_FragColor = vec4(0.0); return; }
+  //   128 步 march         → for (i = 0; i < 128; i++) { currentPos = ro + rd * d; ... }
+  //   噪声密度 + 边缘 fade  → texture(worley) → density; edgeFactor;
+  //   HG 散射累加          → accumulatedColor += uCloudColor * hgPhase * ... * transmittance;
+  //   Beer-Lambert 更新 T  → transmittance *= exp(-stepOpticalDepth);
+  //   天空 + 散射合成       → finalColor = skyColor * transmittance + accumulatedColor;
+  //   伽马提亮 + alpha     → finalColor = 1.0 - pow(...); finalAlpha = 1.0 - transmittance;
+  // ---------------------------------------------------------------------
   void main() {
-    vec3 color = vec3(0.0);
+    // ro：射线原点（相机）；rd：单位视线方向（当前像素 → 相机）
     vec3 ro = cameraPosition;
-    // 射线方向 = 像素世界坐标 - 相机世界坐标
     vec3 rd = normalize(vWorld - cameraPosition);
     
-    // 计算一次相交区间
+    // intersectBox：求射线与云体积 AABB 的进入/离开距离 [dEnter, dExit]
     vec2 intersect = intersectBox(ro, rd, uBoxMin, uBoxMax);
     float dEnter = intersect.x;
     float dExit = intersect.y;
     
-    // 无效则提前退出
+    // 射线未穿过盒子：整盒在身后，或三轴 slab 无交集
     if (dExit < 0.0 || dEnter > dExit) {
       gl_FragColor = vec4(0.0);
       return;
     }
     
-    // 限制步进在box内
+    // 相机在盒内时 dEnter 可能为负，从 0 开始步进避免重复采样盒外
     dEnter = max(dEnter, 0.0);
     
-    // 光线步进只在这个区间内进行
+    // 体积渲染：在 [dEnter, dExit] 内固定步数做 ray marching
     float maxStep = 128.0;
     float stepSize = (dExit - dEnter) / maxStep;
-    vec3 accumulatedColor = vec3(0.0); // 累积颜色
-    float transmittance = 1.0; // 透射率
+    vec3 accumulatedColor = vec3(0.0); // 沿射线累积的散射光
+    float transmittance = 1.0;         // 剩余透射率 T，初始 1 表示完全透明
     
     for (float i = 0.0; i < maxStep; i+=1.0) {
       float d = dEnter + float(i) * stepSize;
       vec3 currentPos = ro + rd * d;
       
-      // 现在 worldToTexCoord 已经定义，可以正常调用
+      // 采样 Worley 3D 噪声：R/G 通道分别为低/高频，差分得到云状密度
       vec3 texCoord = worldToTexCoord(currentPos, uBoxMin, uBoxMax);
       vec3 animatedCoord = texCoord + vec3(uTime * 0.2, uTime * 0.1, 0.0);
       vec4 noiseSample = texture(worleyTexture, animatedCoord);
       
       float lowFreq = noiseSample.r;
       float highFreq = noiseSample.g * 0.5;
-      float densityNoise = lowFreq - highFreq;
-      float density = max(0.0, densityNoise - 0.3) * uCloudDensity;
+      float densityNoise = lowFreq - highFreq; // 细节 = 大尺度减去小尺度
+      float density = max(0.0, densityNoise - 0.3) * uCloudDensity; // 阈值 + 密度缩放
       
+      // 盒边 fade：靠近 0/1 的 UV 压低密度，避免硬边界
       vec3 edgeFactor = smoothstep(0.0, 0.1, texCoord) * smoothstep(1.0, 0.9, texCoord);
       density *= edgeFactor.x * edgeFactor.y * edgeFactor.z;
       
       if (density > 0.001) {
-        float lightTransmittance = exp(-density * 2.0);
+        // 视线与太阳夹角 → HG 相位；再乘密度、步长、当前 T 得到本步散射贡献
         float cosTheta = dot(rd, normalize(uSunDirection));
         float phase = hgPhase(cosTheta, 0.3);
         
         vec3 scattering = uCloudColor * phase * density * stepSize * transmittance;
         accumulatedColor += scattering;
         
+        // Beer-Lambert：光学深度 τ = σ·Δs，T *= exp(-τ)
         float stepOpticalDepth = density * stepSize * 2.0;
         transmittance *= exp(-stepOpticalDepth);
         
-        if (transmittance < 0.01) break;
+        if (transmittance < 0.01) break; // 几乎不透明，提前结束步进
       }
     }
     
-    // 添加背景色（天空渐变）
+    // 合成：透过云后的天空色 + 散射到的云色
     vec3 skyColor = mix(vec3(0.3, 0.5, 0.8), vec3(0.6, 0.8, 1.0), rd.y * 0.5 + 0.5);
     vec3 finalColor = skyColor * transmittance + accumulatedColor;
     
-    // 增强对比度，让云更白
-    finalColor = 1.0 - pow(finalColor, vec3(0.8)); // 伽马校正提亮
+    // 反伽马提亮，增强云与天空对比
+    finalColor = 1.0 - pow(finalColor, vec3(0.8));
     
-    // 计算最终 alpha（基于累积密度）
-    float finalAlpha = 1.0 - transmittance;
+    float finalAlpha = 1.0 - transmittance; // 不透明度 ≈ 1 - 剩余透射率
     
     gl_FragColor = vec4(finalColor, finalAlpha);
   }
@@ -316,7 +349,7 @@ const generateWorleyNoise3D = (width: any, height: any, depth: any) => {
 
   const gridSize = 4
 
-  const featurePoints = []
+  const featurePoints: any = []
 
   for (let z = 0; z < gridSize; z++) { // z: 0, 1, 2, 3
     for (let y = 0; y < gridSize; y++) { // y: 0, 1, 2, 3
