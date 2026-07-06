@@ -8,7 +8,7 @@
 ***
 
 #### 学习中：{ style="color: #3cbbff;"}
- - 1、web3【学习中】
+ - 1、web3
  - 2、AI接口调用师【非AI炼丹师】
 ***
 
@@ -16,4 +16,3 @@
  - 1、shaderToy的海洋倒影{ style="color: #d400f0ff;"}
  - 2、glsl版本体积云{ style="color: #d400f0ff;"}
 ***
-最后更新时间：2026-07-06 11:03
